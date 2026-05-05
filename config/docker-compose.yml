@@ -18,3 +18,7 @@ services:
       - ../gui:/app
     depends_on:
       - app
+
+  api:
+    env_file:
+      - ../app/.env
