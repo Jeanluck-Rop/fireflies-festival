@@ -1,0 +1,20 @@
+services:
+  app:
+    build:
+      context: ..
+      dockerfile: config/app.Dockerfile
+    ports:
+      - "8000:8000"
+    volumes:
+      - ../app:/app
+
+  gui:
+    build:
+      context: ..
+      dockerfile: config/gui.Dockerfile
+    ports:
+      - "5173:5173"
+    volumes:
+      - ../gui:/app
+    depends_on:
+      - app
