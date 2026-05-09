@@ -1,0 +1,12 @@
+*~
+assets/*~
+components/*~
+components/auth/*~
+components/parks/*~
+components/reservations/*~
+components/ui/*~
+router/*~
+services/*~
+stores/*~
+views/*~
+views/admin/*~
