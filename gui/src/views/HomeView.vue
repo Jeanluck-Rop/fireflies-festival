@@ -1,6 +1,5 @@
 <template>
   <div class="min-h-screen flex flex-col">
-    <AppHeader :user="{ id: 1, name: 'John Doe', email: 'john@example.com' }" />
     <main class="flex-1 flex flex-col items-center justify-center">
       <div>
         <h1 class="text-4xl font-bold text-center text-bone">
@@ -18,5 +17,4 @@
 </template>
 
 <script setup lang="ts">
-import AppHeader from "../components/ui/AppHeader.vue";
 </script>
