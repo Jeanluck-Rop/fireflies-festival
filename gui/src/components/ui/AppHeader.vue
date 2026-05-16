@@ -20,32 +20,27 @@
           </AppLink>
         </div>
 
-        <ul class="flex items-center gap-2 absolute left-1/2 -translate-x-1/2">
+	<div class="flex-1" />
+	<ul class="flex items-center gap-1">
           <li><AppLink href="/" variant="transparent">Inicio</AppLink></li>
           <li><AppLink href="/parques" variant="transparent">Parques</AppLink></li>
+	  <li><AppLink href="/reservar" variant="transparent">Reservar</AppLink></li>
         </ul>
 
+	<!--  Separador: <div class="w-px h-4 bg-white/10 mx-1" />-->
+	
         <div class="flex items-center gap-2">
           <template v-if="!user">
-            <AppLink href="/login" variant="transparent">
-              Iniciar sesión
-            </AppLink>
-            <AppLink href="/registro" variant="yellow">
-              Registrarse
-            </AppLink>
+            <AppLink href="/login" variant="outline">Iniciar sesión</AppLink>
+            <AppLink href="/registro" variant="yellow">Registrarse</AppLink>
           </template>
+	  
           <template v-else>
-            <AppLink href="/reservar" variant="transparent">
-              Reservar
-            </AppLink>
-            <AppLink href="/reservaciones" variant="transparent">
-              Mis Reservaciones
-            </AppLink>
+            <AppLink href="/reservaciones" variant="transparent">Mis Reservaciones</AppLink>
             <div class="relative" ref="dropdownRef">
+	      
               <button class="flex items-center gap-2 pl-2 pr-1 py-1 rounded-full hover:bg-white/5 transition" @click="profileOpen = !profileOpen">
-                <span class="hidden text-[13px]">
-                  {{ userShortName }}
-                </span>
+                <span class="hidden text-[13px]">{{ userShortName }}</span>
                 <span class="w-9 h-9 rounded-full bg-linear-to-br from-[#7BD8B0] to-[#E8FF7A]
                 inline-flex items-center justify-center
                 text-[#07090A] font-semibold text-[13px]
@@ -53,6 +48,7 @@
                   {{ userInitials }}
                 </span>
               </button>
+	      
               <transition name="pop">
                 <div v-if="profileOpen" class="absolute right-0 mt-2 w-60 glass rounded-2xl p-2 shadow-2xl">
                   <div class="px-3 py-3 border-b border-white/5 flex items-center gap-3">
@@ -62,26 +58,26 @@
                       {{ userInitials }}
                     </span>
                     <div class="min-w-0">
-                      <div class="text-[14px] font-medium leading-tight truncate">
-                        {{ user.name }}
-                      </div>
-                      <div class="text-[11.5px] text-bone-soft truncate">
-                        {{ user.email }}
-                      </div>
+                      <div class="text-[14px] font-medium leading-tight truncate">{{ user.name }}</div>
+                      <div class="text-[11.5px] text-bone-soft truncate">{{ user.email }}</div>
                     </div>
                   </div>
                   <ul class="py-1 text-[13.5px]">
                     <li><AppLink href="/perfil" variant="popover">Perfil</AppLink></li>
                     <li><AppLink href="/ayuda" variant="popover">Ayuda</AppLink></li>
-                    <li class="border-t border-white/5 mt-1 pt-1"><AppLink href="/cerrar-sesion" variant="popover" class="hover:text-[#FF8A7B]">Cerrar sesión</AppLink></li>
+                    <li class="border-t border-white/5 mt-1 pt-1">
+		      <AppLink href="/cerrar-sesion" variant="popover" class="hover:text-[#FF8A7B]">Cerrar sesión</AppLink>
+		    </li>
                   </ul>
                 </div>
               </transition>
             </div>
           </template>
         </div>
+	
       </nav>
     </div>
+    
   </header>
 </template>
 
