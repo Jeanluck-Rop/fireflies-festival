@@ -12,9 +12,44 @@
           luciérnagas.
         </p>
       </div>
+      <br>
+      <p>Probando inputs</p>
+      <div>
+        <AppInput
+          v-model="email"
+          label="Correo Electrónico"
+          placeholder="Ingresa tu correo"
+          type="email"
+          icon
+          icon-name="email"
+        />
+        <AppInput
+          v-model="password"
+          label="Contraseña"
+          placeholder="Ingresa tu contraseña"
+          type="password"
+          icon
+          icon-name="lock"
+          hint="Mínimo 8 caracteres"
+        />
+        <AppInput
+          label="Nombre de Usuario"
+          placeholder="Ingresa tu nombre de usuario"
+          type="text"
+          icon
+          icon-name="user"
+        />
+      </div>
     </main>
   </div>
 </template>
 
 <script setup lang="ts">
+
+import AppHeader from "../components/ui/AppHeader.vue";
+import AppInput from "../components/ui/AppInput.vue";
+import { ref } from "vue";
+const email = ref("");
+const password = ref("");
+
 </script>
