@@ -31,7 +31,7 @@
           <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
         </svg>
       </span>
-
+      
       <input
         v-model="model"
         :type="inputType"
@@ -66,36 +66,41 @@
         </svg>
       </button>
     </div>
+    <span v-if="error" class="text-[var(--color-danger)] text-[11px] mt-1 block">
+      {{ error }}
+    </span>
+    
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
-
-interface Props {
-  label?: string
-  hint?: string
-  placeholder?: string
-  type?: 'text' | 'email' | 'password'
-  disabled?: boolean
-  icon?: boolean
-  iconName?: 'email' | 'lock' | 'user' | string
-}
-
-const props = withDefaults(defineProps<Props>(), {
-  type: 'text',
-  disabled: false,
-  icon: false,
-})
-
-const model = defineModel<string>()
-const showPassword = ref(false)
-
-const inputType = computed(() =>
-  props.type === 'password' ? (showPassword.value ? 'text' : 'password') : props.type,
-)
-
-const togglePassword = () => {
-  showPassword.value = !showPassword.value
-}
+ import { computed, ref } from 'vue'
+ 
+ interface Props {
+   label?: string
+   hint?: string
+   placeholder?: string
+   type?: 'text' | 'email' | 'password'
+   disabled?: boolean
+   icon?: boolean
+   iconName?: 'email' | 'lock' | 'user' | string
+   error?: string
+ }
+ 
+ const props = withDefaults(defineProps<Props>(), {
+   type: 'text',
+   disabled: false,
+   icon: false,
+ })
+ 
+ const model = defineModel<string>()
+ const showPassword = ref(false)
+ 
+ const inputType = computed(() =>
+   props.type === 'password' ? (showPassword.value ? 'text' : 'password') : props.type,
+ )
+ 
+ const togglePassword = () => {
+   showPassword.value = !showPassword.value
+ }
 </script>
