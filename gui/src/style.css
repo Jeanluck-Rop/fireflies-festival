@@ -3,47 +3,46 @@
 :root {
   color-scheme: dark;
 
-  /*Paleta de colores */
-  --color-bg:          #07090A;
-  --color-surface:     rgba(255, 255, 255, 0.05);
-  --color-border:      rgba(255, 255, 255, 0.10);
+  /* Paleta de colores */
+  --color-bg: #07090A;
+  /* --color-bg: #090D0A; */
+  --color-surface: rgba(255, 255, 255, 0.05);
+  --color-border: rgba(255, 255, 255, 0.10);
 
   /* Texto */
-  --color-bone:        #F4F1E8;
-  --color-bone-soft:   #B8B4A8;
-  --color-bone-mute:   #7A776E;
+  --color-bone: #F4F1E8;
+  --color-bone-soft: #B8B4A8;
+  --color-bone-mute: #7A776E;
 
-  /* Acento principal, amarillo luciernaga */
-  --color-accent:      #E8FF7A;
-  --color-accent-dim:  rgba(232, 255, 122, 0.4);
+  /* Color luciernaga */
+  --color-accent: #E8FF7A;
+  --color-accent-dim: rgba(232, 255, 122, 0.4);
 
-  /* Acento secundario verde */
-  --color-green:       #7BD8B0;
+  /* Color secundario */
+  --color-green: #7BD8B0;
 
-  /* Estado */
-  --color-danger:      #FF8A7B;
+  /* Errores */
+  --color-danger: #FF8A7B;
 
-  /* Tipografía */
-  --font-sans:   "Geist", system-ui, sans-serif;
-  --font-serif:  "Playfair Display", Georgia, serif;
-  --font-mono:   "Geist Mono", monospace;
-
-  --text-xs:   11px;
-  --text-sm:   13px;
+  /* Tipografia */
+  --font-sans: "Geist", system-ui, sans-serif;
+  --font-serif: "Playfair Display", Georgia, serif;
+  --font-mono: "Geist Mono", monospace;
+  --text-xs: 11px;
+  --text-sm: 13px;
   --text-base: 14px;
-  --text-lg:   16px;
-  --text-xl:   22px;
-  --text-2xl:  32px;
-  --text-4xl:  40px;
+  --text-lg: 16px;
+  --text-xl: 22px;
+  --text-2xl: 32px;
+  --text-4xl: 40px;
 
-  /* Espaciado y forma */
-  --radius-sm:   8px;
-  --radius-md:   12px;
-  --radius-lg:   16px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
   --radius-full: 9999px;
 
   /* Transiciones */
-  --transition-fast:   150ms ease;
+  --transition-fast: 150ms ease;
   --transition-normal: 300ms ease;
 }
 

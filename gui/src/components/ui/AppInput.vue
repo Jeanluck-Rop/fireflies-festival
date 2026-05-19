@@ -2,8 +2,8 @@
   <div class="w-full mb-4">
     <label
       v-if="label"
-      class="flex items-center justify-between mb-2 font-mono text-[11px] tracking-[0.14em] uppercase text-bone-soft"
-    >
+      class="flex items-center justify-between mb-2 font-sans text-[11px] tracking-[0.14em] uppercase text-bone-soft"
+      >
       <span>{{ label }}</span>
       <span
         v-if="hint"

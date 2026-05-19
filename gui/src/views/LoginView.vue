@@ -7,7 +7,7 @@
 <script setup lang="ts">
  import { ref } from 'vue'
  import { useRouter, useRoute } from 'vue-router'
- import FormLogin from '../components/auth/FormLogin.vue'
+ import FormLogin from '../components/auth/FormAuth.vue'
  import { authService } from '../services/authService'
 
  const router = useRouter()

@@ -1,8 +1,8 @@
 <template>
   <svg
     viewBox="0 0 40 40"
-    class="w-9 h-9 firefly-base"
-    :class="animationClass"
+    class="firefly-base"
+    :class="[animationClass, props.size]"
     fill="none"
     xmlns="http://www.w3.org/2000/svg"
     aria-hidden="true"
@@ -32,14 +32,16 @@
 import { computed } from 'vue';
 
 const props = withDefaults(defineProps<{
-  pulse?: boolean;
-  drift?: boolean;
-}>(), {
-  pulse: true,
-  drift: true
-});
+   pulse?: boolean
+   drift?: boolean
+   size?: string //para el redimencionar en FormAuth
+ }>(), {
+   pulse: true,
+   drift: true,
+   size: 'w-9 h-9' 
+ });
 
-const animationClass = computed(() => {
+ const animationClass = computed(() => {
   if (props.pulse && props.drift) return 'anim-both';
   if (props.pulse) return 'anim-pulse';
   if (props.drift) return 'anim-drift';
