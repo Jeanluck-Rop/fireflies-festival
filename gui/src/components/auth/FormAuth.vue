@@ -1,0 +1,549 @@
+<template>
+  <div class="auth-scene">
+    <div class="auth-card" :class="'mode-' + mode">
+      
+      <!-- Panel formulario Login -->
+      <div class="form-panel panel-login">
+        <div class="form-inner">
+          <h1 class="form-title">Iniciar sesión</h1>
+          <p class="form-sub">Bienvenido de vuelta</p>
+	  
+          <div class="fields">
+	    <AppInput
+	      v-model="login.email"
+	      label="Correo electrónico"
+	      placeholder="Ingresa tu correo electrónico"
+	      type="email"
+	      :icon="true"
+	      icon-name="email"
+	      :error="loginErrors.email"
+	      @input="loginErrors.email = ''"/>
+	    <AppInput
+	      v-model="login.password"
+	      label="Contraseña"
+	      placeholder="Ingresa tu contraseña"
+	      type="password"
+	      :icon="true"
+	      icon-name="lock"
+	      :error="loginErrors.password"
+	      @input="loginErrors.password = ''"/>
+	  </div>
+	  
+	  <button class="link-btn" @click="setMode('recovery')">
+            ¿Olvidaste tu contraseña?
+          </button>
+	    
+	  <AppButton
+	    variant="primary"
+	    :loading="props.loading"
+	    class="submit-btn"
+	    @click="handleLogin">
+	    Acceder
+	  </AppButton>
+	</div>
+      </div>
+	
+      <!-- Panel formulario Signup -->
+      <div class="form-panel panel-signup">
+        <div class="form-inner">
+          <h1 class="form-title">Crear cuenta</h1>
+          <p class="form-sub">Únete al festival</p>
+	    
+          <div class="fields">
+            <AppInput
+	      v-model="signup.name"
+	      label="Nombre"
+	      placeholder="Ingresa tu nombre"
+	      type="text"
+	      :icon="true"
+	      icon-name="user"
+	      :error="signupErrors.name"
+	      @input="signupErrors.name = ''"/>
+            <AppInput
+	      v-model="signup.email"
+	      label="Correo electrónico"
+	      placeholder="Ingresa tu correo electrónico"
+	      type="email"
+	      :icon="true"
+	      icon-name="email"
+	      :error="signupErrors.email"
+	      @input="signupErrors.email = ''"/>
+            <AppInput
+	      v-model="signup.password"
+	      label="Contraseña"
+	      placeholder="Escribe una contraseña"
+	      type="password"
+	      :icon="true"
+	      icon-name="lock"
+	      :error="signupErrors.password"
+	      @input="signupErrors.password = ''"/>
+          </div>
+	    
+          <AppButton
+            variant="primary"
+            :loading="props.loading"
+            class="submit-btn"
+            @click="handleSignup">
+            Registrarse
+          </AppButton>
+        </div>
+      </div>
+	
+      <!-- Panel formulario Recovery -->
+      <div class="form-panel panel-recovery">
+        <div class="form-inner">
+          <h1 class="form-title">Recuperar contraseña</h1>
+          <p class="form-sub">Te enviamos un código a tu correo</p>
+	  
+          <div class="fields">
+            <AppInput
+	      v-model="recovery.email"
+	      label="Correo electrónico"
+	      placeholder="tu@correo.com"
+	      type="email"
+	      :icon="true"
+	      icon-name="email"
+	      :error="recoveryErrors.email"
+	      @input="recoveryErrors.email = ''"/>
+          </div>
+	    
+          <AppButton
+            variant="primary"
+            :loading="props.loading"
+            class="submit-btn"
+            @click="handleRecovery">
+            Enviar código
+          </AppButton>
+
+          <button class="link-btn back-btn" @click="setMode('login')">
+            Volver a iniciar sesión
+          </button>
+        </div>
+      </div>
+      
+      <!-- Panel deslizante -->
+      <div class="slide-panel">
+        <div class="slide-inner">
+	    
+          <!-- Luciernaga -->
+	  <FireflyLogo :pulse="true" :drift="false" size="w-16 h-16" />
+	    
+          <transition name="slide-content" mode="out-in">
+            <div :key="slideContent.title" class="slide-text">
+	      <h2 class="slide-title">{{ slideContent.title }}</h2>
+	      <p class="slide-sub">{{ slideContent.sub }}</p>
+	      <button class="slide-cta" @click="slideContent.action">
+                {{ slideContent.cta }}
+	      </button>
+            </div>
+          </transition>
+	  
+          <!-- Particulas decorativas -->
+          <span class="particle p1" aria-hidden="true"/>
+          <span class="particle p2" aria-hidden="true"/>
+          <span class="particle p3" aria-hidden="true"/>
+        </div>
+      </div>
+      
+    </div>
+  </div>
+</template>
+
+<script setup lang="ts">
+ import { ref, computed, reactive } from 'vue'
+ import AppInput from '../ui/AppInput.vue'
+ import AppButton from '../ui/AppButton.vue'
+ import FireflyLogo from '../ui/FireflyLogo.vue'
+ import bgImage from '../../assets/fireflires_auth_background2.jpg'
+
+ type Mode = 'login' | 'signup' | 'recovery'
+
+ const bg = bgImage
+ 
+ const props = defineProps<{
+   initialMode?: Mode
+   loading?: boolean
+ }>()
+
+ const emit = defineEmits<{
+   login: [email: string, password: string]
+   signup: [name: string, email: string, password: string]
+   recovery: [email: string]
+ }>()
+
+ const mode = ref<Mode>(props.initialMode ?? 'login')
+
+ const login = reactive({ email: '', password: '' })
+ const signup = reactive({ name: '', email: '', password: '' })
+ const recovery = reactive({ email: '' })
+
+ const loginErrors = reactive({ email: '', password: '' })
+ const signupErrors = reactive({ name: '', email: '', password: '' })
+ const recoveryErrors = reactive({ email: '' })
+
+ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+
+ function setMode(m: Mode) {
+   mode.value = m
+ }
+
+ // Validaciones
+ function validateLogin() {
+   loginErrors.email = ''
+   loginErrors.password = ''
+   if (!login.email)
+     loginErrors.email = 'El correo es requerido'
+   else if (!EMAIL_RE.test(login.email))
+     loginErrors.email = 'Formato de correo inválido'
+   if (!login.password)
+     loginErrors.password = 'La contraseña es requerida'
+   else if (login.password.length < 8)
+     loginErrors.password = 'Mínimo 8 caracteres'
+   return !loginErrors.email && !loginErrors.password
+ }
+
+ function validateSignup() {
+   signupErrors.name = ''
+   signupErrors.email = ''
+   signupErrors.password = ''
+   if (!signup.name || signup.name.length < 2)
+     signupErrors.name = 'Nombre requerido (mín. 2 caracteres)'
+   if (!signup.email)
+     signupErrors.email = 'El correo es requerido'
+   else if (!EMAIL_RE.test(signup.email))
+     signupErrors.email = 'Formato de correo inválido'
+   if (!signup.password)
+     signupErrors.password = 'La contraseña es requerida'
+   else if (signup.password.length < 8)
+     signupErrors.password = 'Mínimo 8 caracteres'
+   return !signupErrors.name && !signupErrors.email && !signupErrors.password
+ }
+
+ function validateRecovery() {
+   recoveryErrors.email = ''
+   if (!recovery.email)
+     recoveryErrors.email = 'El correo es requerido'
+   else if (!EMAIL_RE.test(recovery.email))
+     recoveryErrors.email = 'Formato de correo inválido'
+   return !recoveryErrors.email
+ }
+
+ // Handlers
+ function handleLogin() {
+   if (validateLogin())
+     emit('login', login.email, login.password)
+ }
+ function handleSignup() {
+   if (validateSignup())
+     emit('signup', signup.name, signup.email, signup.password)
+ }
+ function handleRecovery() {
+   if (validateRecovery())
+     emit('recovery', recovery.email)
+ }
+
+ // Contenido del panel deslizante
+ const slideContent = computed(() => {
+   if (mode.value === 'login') return {
+     title:  '¿Nuevo por aquí?',
+     sub: 'Crea tu cuenta y reserva tu lugar en el festival de luciérnagas',
+     cta: 'Crear cuenta',
+     action: () => setMode('signup'),
+   }
+   if (mode.value === 'signup') return {
+     title: '¿Ya tienes cuenta?',
+     sub: 'Inicia sesión para ver tus reservaciones y explorar los parques',
+     cta: 'Iniciar sesión',
+     action: () => setMode('login'),
+   }
+   return {
+     title: 'Recupera tu acceso',
+     sub: 'Te enviaremos un código de verificación a tu correo registrado',
+     cta: 'Volver al inicio',
+     action: () => setMode('login'),
+   }
+ })
+</script>
+
+<style scoped>
+ /* Fondo */
+ .auth-scene {
+   min-height: 100vh;
+   display: flex;
+   align-items: center;
+   justify-content: center;
+   padding: 2rem 1rem;
+   
+   /* 1er opcion
+   background: var(--color-bg); */
+   
+   /* 2da opcion  */
+   background:
+     radial-gradient(ellipse at 20% 50%, rgba(123,216,176,0.12) 0%, transparent 50%),
+     radial-gradient(ellipse at 80% 20%, rgba(232,255,122,0.07) 0%, transparent 45%),
+     radial-gradient(ellipse at 60% 80%, rgba(123,216,176,0.06) 0%, transparent 40%),
+     #07090A;
+
+   /* 3er ocpion 
+   background-image: v-bind("'url(' + bg + ')'"); */
+ }
+
+ /* 4ta opcion (va junto con 2da opcion) */
+ .auth-scene::before {
+   content: '';
+   position: absolute;
+   inset: 0;
+   background-image: v-bind("'url(' + bg + ')'");
+   opacity: 0.45;
+   z-index: 0;
+ }
+ 
+ /* Contenedor del forms  */
+ .auth-card {
+   position: relative;
+   width: min(720px, 100%);
+   height: 520px;
+   border-radius: 24px;
+   overflow: hidden;
+   display: flex;
+   background: rgba(255,255,255,0.03);
+   border: 1px solid var(--color-border);
+   box-shadow:
+     0 0 0 1px rgba(232,255,122,0.04),
+     0 32px 64px rgba(0,0,0,0.5);
+ }
+
+ /* Paneles de formulario */
+ .form-panel {
+   position: absolute;
+   top: 0;
+   width: 55%;
+   height: 100%;
+   display: flex;
+   align-items: center;
+   justify-content: center;
+   transition: transform 0.65s cubic-bezier(.77,0,.18,1), opacity 0.4s ease;
+   z-index: 2;
+   background: transparent;
+   backdrop-filter: blur(20px);
+   -webkit-backdrop-filter: blur(20px);
+ }
+
+ .panel-login { left: 0; }
+
+ .panel-signup,
+ .panel-recovery { right: 0; left: auto; }
+ 
+ /* Login visible por defecto */
+ .mode-login  .panel-login    { transform: translateX(0);    opacity: 1; pointer-events: all }
+ .mode-login  .panel-signup   { transform: translateX(110%); opacity: 0; pointer-events: none }
+ .mode-login  .panel-recovery { transform: translateX(110%);opacity: 0; pointer-events: none }
+ 
+ /* Signup form a la derecha, slide a la izquierda */
+ .mode-signup .panel-login    { transform: translateX(-110%);opacity: 0; pointer-events: none }
+ .mode-signup .panel-signup   { transform: translateX(0);    opacity: 1; pointer-events: all }
+ .mode-signup .panel-recovery { transform: translateX(-110%);opacity: 0; pointer-events: none }
+ 
+ /* Recovery */
+ .mode-recovery .panel-login    { transform: translateX(-110%); opacity: 0; pointer-events: none }
+ .mode-recovery .panel-signup   { transform: translateX(-110%); opacity: 0; pointer-events: none }
+ .mode-recovery .panel-recovery { transform: translateX(0);     opacity: 1; pointer-events: all }
+
+
+ .form-inner {
+   width: 100%;
+   padding: 2.5rem 2.5rem 2.5rem 2.5rem;
+   display: flex;
+   flex-direction: column;
+   gap: 1rem;
+ }
+
+ .form-title {
+   font-size: 26px;
+   font-weight: 600;
+   color: var(--color-bone);
+   letter-spacing: -0.02em;
+   line-height: 1.2;
+ }
+
+ .form-sub {
+   font-size: 13px;
+   color: var(--color-bone-soft);
+   margin-top: -0.5rem;
+ }
+
+ .fields {
+   display: flex;
+   flex-direction: column;
+   gap: 0.25rem;
+ }
+
+ .submit-btn {
+   width: 100%;
+   margin-top: 0.25rem;
+ }
+
+ .link-btn {
+   background: none;
+   border: none;
+   color: var(--color-bone-mute);
+   font-size: 12px;
+   cursor: pointer;
+   text-align: left;
+   padding: 0;
+   transition: color 0.2s;
+   width: fit-content;
+ }
+ .link-btn:hover { color: var(--color-bone-soft) }
+
+ .back-btn {
+   text-align: center;
+   width: 100%;
+   margin-top: 0.25rem;
+ }
+
+ /* Panel deslizante */
+ .slide-panel {
+   position: absolute;
+   top: 0;
+   right: 0;
+   width: 45%;
+   height: 100%;
+   background:
+     radial-gradient(ellipse at 30% 40%, rgba(123,216,176,0.18) 0%, transparent 60%),
+     radial-gradient(ellipse at 70% 70%, rgba(232,255,122,0.10) 0%, transparent 55%),
+     #0d1a10;
+   border-left: 1px solid rgba(123,216,176,0.15);
+   z-index: 3;
+   transition: transform 0.65s cubic-bezier(.77,0,.18,1), border-radius 0.65s ease;
+   border-radius: 0 24px 24px 0;
+   overflow: hidden;
+ }
+
+ /* Slide se mueve a la izquierda en signup y recovery */
+ .mode-signup   .slide-panel,
+ .mode-recovery .slide-panel {
+   transform: translateX(-122%);
+   border-radius: 24px 0 0 24px;
+   border-left: none;
+   border-right: 1px solid rgba(123,216,176,0.15);
+ }
+
+ .slide-inner {
+   position: relative;
+   height: 100%;
+   display: flex;
+   flex-direction: column;
+   align-items: center;
+   justify-content: center;
+   padding: 2.5rem 2rem;
+   gap: 1.5rem;
+ }
+
+ /* Texto del slide */
+ .slide-text {
+   text-align: center;
+   display: flex;
+   flex-direction: column;
+   align-items: center;
+   gap: 0.75rem;
+ }
+
+ .slide-title {
+   font-size: 20px;
+   font-weight: 600;
+   color: var(--color-accent);
+   line-height: 1.3;
+   letter-spacing: -0.01em;
+ }
+
+ .slide-sub {
+   font-size: 13px;
+   color: rgba(232,255,122,0.5);
+   line-height: 1.6;
+   max-width: 200px;
+ }
+
+ .slide-cta {
+   margin-top: 0.5rem;
+   padding: 0.55rem 1.6rem;
+   border-radius: 999px;
+   border: 1.5px solid var(--color-accent);
+   background: transparent;
+   color: var(--color-accent);
+   font-size: 13px;
+   font-weight: 500;
+   cursor: pointer;
+   transition: background 0.2s, color 0.2s;
+   letter-spacing: 0.02em;
+ }
+ .slide-cta:hover {
+   background: var(--color-accent);
+   color: #161D1A;
+ }
+
+ /* Transicion del contenido interno del slide */
+ .slide-content-enter-active,
+ .slide-content-leave-active {
+   transition: opacity 0.25s ease, transform 0.25s ease;
+ }
+ .slide-content-enter-from { opacity: 0; transform: translateY(8px) }
+ .slide-content-leave-to   { opacity: 0; transform: translateY(-8px) }
+
+ /* Particulas decorativas */
+ .particle {
+   position: absolute;
+   border-radius: 50%;
+   background: var(--color-accent);
+   opacity: 0.15;
+   animation: particle-drift 6s ease-in-out infinite;
+ }
+ .p1 { width: 4px;  height: 4px;  top: 20%; left: 15%; animation-delay: 0s }
+ .p2 { width: 3px;  height: 3px;  top: 65%; left: 75%; animation-delay: 1.5s }
+ .p3 { width: 5px;  height: 5px;  top: 45%; left: 85%; animation-delay: 3s }
+
+ @keyframes particle-drift {
+   0%, 100% { transform: translate(0, 0);         opacity: 0.15 }
+   33%       { transform: translate(-6px, -10px);  opacity: 0.4  }
+   66%       { transform: translate(8px, -5px);    opacity: 0.2  }
+ }
+
+ /* Responsive */
+ @media (max-width: 600px) {
+   .auth-card {
+     height: auto;
+     flex-direction: column;
+     border-radius: 16px;
+   }
+   .form-panel {
+     position: relative;
+     width: 100%;
+     height: auto;
+     transform: none !important;
+     opacity: 1 !important;
+     pointer-events: all !important;
+   }
+   .mode-login  .panel-signup,
+   .mode-login  .panel-recovery,
+   .mode-signup .panel-login,
+   .mode-signup .panel-recovery,
+   .mode-recovery .panel-login,
+   .mode-recovery .panel-signup {
+     display: none;
+   }
+   .slide-panel {
+     position: relative;
+     width: 100%;
+     height: 160px;
+     border-radius: 0 0 16px 16px !important;
+     border-left: none !important;
+     border-top: 1px solid rgba(123,216,176,0.15);
+     transform: none !important;
+   }
+   .mode-signup .slide-panel,
+   .mode-recovery .slide-panel {
+     border-radius: 0 0 16px 16px !important;
+   }
+   .firefly-deco { display: none }
+ }
+</style>
