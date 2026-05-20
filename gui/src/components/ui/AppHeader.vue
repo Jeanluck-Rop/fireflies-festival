@@ -22,14 +22,12 @@
 
 	<div class="flex-1" />
 	<ul class="flex items-center gap-1">
-          <li><AppLink href="/" variant="transparent">Inicio</AppLink></li>
-          <li><AppLink href="/parques" variant="transparent">Parques</AppLink></li>
+          <li><AppLink href="/" variant="nav">Inicio</AppLink></li>
+          <li><AppLink href="/parques" variant="nav">Parques</AppLink></li>
 	  <li>
-	    <AppLink :href="auth.isLoggedIn ? '/reservar' : '/auth'" variant="transparent">Reservar</AppLink>
+	    <AppLink :href="auth.isLoggedIn ? '/reservar' : '/auth'" variant="nav">Reservar</AppLink>
 	  </li>
         </ul>
-
-
 	
         <div class="flex items-center gap-2">
           <template v-if="!user">
@@ -40,7 +38,7 @@
           <template v-else>
 	    <div class="w-px h-4 bg-white/10 mx-1" />
 	    
-            <AppLink href="/reservaciones" variant="transparent">Mis Reservaciones</AppLink>
+            <AppLink href="/reservaciones" variant="nav">Mis Reservaciones</AppLink>
             <div class="relative" ref="dropdownRef">
 	      
               <button class="flex items-center gap-2 pl-2 pr-1 py-1 rounded-full hover:bg-white/5 transition" @click="profileOpen = !profileOpen">
@@ -70,7 +68,11 @@
                     <li><AppLink href="/perfil" variant="popover">Perfil</AppLink></li>
                     <li><AppLink href="/ayuda" variant="popover">Ayuda</AppLink></li>
                     <li class="border-t border-white/5 mt-1 pt-1">
-		      <AppLink href="/cerrar-sesion" variant="popover" class="hover:text-[#FF8A7B]">Cerrar sesión</AppLink>
+		      <button
+			class="flex items-center gap-2.5 px-3 py-2.5 rounded-lg hover:bg-white/5 w-full text-left text-[13.5px] hover:text-[#FF8A7B] transition-colors"
+			@click="handleLogout">
+			Cerrar sesión
+		      </button>
 		    </li>
                   </ul>
                 </div>
@@ -86,11 +88,14 @@
 </template>
 
 <script setup lang="ts">
+ import { useRouter } from 'vue-router'
  import { ref, onMounted, onUnmounted, computed } from 'vue';
+ import { useAuthStore } from '../../stores/auth';
+ import { authService } from '../../services/authService'
  import AppLink from './AppLink.vue';
  import FireflyLogo from './FireflyLogo.vue';
- import { useAuthStore } from '../../stores/auth';
-
+ 
+ const router = useRouter()
  const auth = useAuthStore();
  const showHeader = ref(true);
  let lastScrollY = 0;
@@ -120,6 +125,12 @@
      profileOpen.value = false;
    }
  };
+
+ async function handleLogout() {
+   await authService.logout()
+   router.push('/')
+ }
+ 
  onMounted(() => document.addEventListener('click', handleClickOutside));
  onUnmounted(() => document.removeEventListener('click', handleClickOutside));
 

@@ -52,12 +52,25 @@ export const authService = {
   async logout() {
     const auth = useAuthStore()
 
-    if (!IS_DEV || API) {
-      await fetch(`${API}/api/auth/logout/`, {
-	method: 'POST',
-	headers: { Authorization: `Bearer ${auth.token}` }
-      })
+    if (IS_DEV && !API) {
+      auth.clearAuth()
+      return
     }
+    
+    // TODO backend: invalidar token en el servidor antes de limpiar el front
+    // El back debe eliminar el token de su lista de tokens válidos
+    // Solo al recibir confirmación (res.ok) limpiamos el front y redirigimos
+    // try {
+    //   const res = await fetch(`${API}/api/auth/logout/`, {
+    //     method: 'POST',
+    //     headers: { Authorization: `Bearer ${auth.token}` }
+    //   })
+    //   if (!res.ok) throw new Error('Error al cerrar sesión')
+    // } catch (e) {
+    //   console.error(e)
+    // } finally {
+    //   auth.clearAuth()  // limpia siempre, incluso si el back falla
+    // }
     
     auth.clearAuth()
   }

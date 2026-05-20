@@ -15,7 +15,7 @@ export const useAuthStore = defineStore('auth', () => {
     token.value = newToken
     user.value = newUser
     if (!IS_DEV) {
-      //Bakcend feat, aqui lleva el token como un JWT real
+      //Bakcend feat, aqui llega el token como un JWT real
       localStorage.setItem('token', newToken)
       localStorage.setItem('user', JSON.stringify(newUser))
     }

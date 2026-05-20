@@ -269,18 +269,18 @@
  const login = reactive({ email: '', password: '' })
  const signup = reactive({ name: '', email: '', password: '' })
  const recovery = reactive({
-   email:           '',
-   code:            '',
-   newPassword:     '',
+   email: '',
+   code: '',
+   newPassword: '',
    confirmPassword: ''
  })
 
  const loginErrors = reactive({ email: '', password: '' })
  const signupErrors = reactive({ name: '', email: '', password: '' })
  const recoveryErrors = reactive({
-   email:           '',
-   code:            '',
-   newPassword:     '',
+   email: '',
+   code: '',
+   newPassword: '',
    confirmPassword: ''
  })
 
