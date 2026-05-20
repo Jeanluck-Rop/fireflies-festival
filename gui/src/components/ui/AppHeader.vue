@@ -25,7 +25,7 @@
           <li><AppLink href="/" variant="transparent">Inicio</AppLink></li>
           <li><AppLink href="/parques" variant="transparent">Parques</AppLink></li>
 	  <li>
-	    <AppLink :href="auth.isLoggedIn ? '/reservar' : '/login'" variant="transparent">Reservar</AppLink>
+	    <AppLink :href="auth.isLoggedIn ? '/reservar' : '/auth'" variant="transparent">Reservar</AppLink>
 	  </li>
         </ul>
 
@@ -33,8 +33,8 @@
 	
         <div class="flex items-center gap-2">
           <template v-if="!user">
-            <AppLink href="/login" variant="outline">Iniciar sesión</AppLink>
-            <AppLink href="/registro" variant="yellow">Registrarse</AppLink>
+            <AppLink href="/auth" variant="outline">Iniciar sesión</AppLink>
+            <AppLink href="/auth?mode=signup" variant="yellow">Registrarse</AppLink>
           </template>
 	  
           <template v-else>

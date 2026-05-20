@@ -13,7 +13,7 @@
  const auth = useAuthStore()
  const route = useRoute()
 
- const ROUTES_WITHOUT_HEADER = ['/login', '/registro']
+ const ROUTES_WITHOUT_HEADER = ['/auth']
 
  const hideHeader = computed(() =>
    ROUTES_WITHOUT_HEADER.includes(route.path)
