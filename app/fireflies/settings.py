@@ -119,7 +119,7 @@ REST_FRAMEWORK = {
 # Configuración de Djoser
 DJOSER = {
     'LOGIN_FIELD': 'email',
-    'USER_CREATE_PASSWORD_RETYPE': True, # Pide confirmar la contraseña al registrarse
+    'USER_CREATE_PASSWORD_RETYPE': False, # Pide confirmar la contraseña al registrarse
     'SEND_CONFIRMATION_EMAIL': False, # Lo activaremos más adelante
     'PASSWORD_RESET_CONFIRM_URL': 'password/reset/confirm/{uid}/{token}', # URL de tu frontend en Vue
     'SERIALIZERS': {
@@ -128,3 +128,14 @@ DJOSER = {
         'current_user': 'djoser.serializers.UserSerializer',
     },
 }
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+
+EMAIL_HOST_USER = config('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
+
+SITE_NAME = 'Festival de las Luciérnagas 2026'
+DOMAIN = 'localhost:8000'
