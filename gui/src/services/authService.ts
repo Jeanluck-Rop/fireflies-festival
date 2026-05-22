@@ -12,41 +12,51 @@ export const authService = {
     if (IS_DEV && !API) {
       //Simulamos delay
       await new Promise(r => setTimeout(r, 600))
-      auth.setAuth('mock-token-123', { id: 1, name: 'Fulanito', email })
+      auth.setAuth('mock-token-123', { id: 1, nombre: 'Fulanito', apellidos: 'Perez', email, rol: 'CLIENTE' })
       return
     }
     
-    //Descomentamos cuando el back este listo
-    //const res = await fetch(`${API}/api/auth/login/`, {
-    //   method: 'POST',
-    //   headers: { 'Content-Type': 'application/json' },
-    //   body: JSON.stringify({ email, password })
-    // })
-    // if (!res.ok) throw new Error('Credenciales incorrectas')
-    // const data = await res.json()
-    // auth.setAuth(data.token, data.user)
+    const res = await fetch(`${API}/auth/jwt/create/`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password })
+    })
+    if (!res.ok) throw new Error('Credenciales incorrectas')
+    const tokens = await res.json()
+    
+    // Obtener datos del usuario con el token
+    const userRes = await fetch(`${API}/auth/users/me/`, {
+      headers: { 
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${tokens.access}`
+      }
+    })
+    if (!userRes.ok) throw new Error('Error al obtener datos del usuario')
+    const userData = await userRes.json()
+    auth.setAuth(tokens.access, userData)
   },
 
-  async signup(name: string, email: string, password: string) {
+  async signup(nombre: string, apellidos: string, email: string, password: string) {
     const auth = useAuthStore()
 
     //Modo dev no borrar
     if (IS_DEV && !API) {
       await new Promise(r => setTimeout(r, 600))
-      auth.setAuth('mock-token-123', { id: 2, name, email })
+      auth.setAuth('mock-token-123', { id: 2, nombre, apellidos, email, rol: 'CLIENTE' })
       return
     }
     
-    //Descomentamos cuando el back este listo
-    // const res = await fetch(`${API}/api/auth/signup/`, {
-    //   method: 'POST',
-    //   headers: { 'Content-Type': 'application/json' },
-    //   body: JSON.stringify({ name, email, password })
-    // })
-    // if (!res.ok)
-    //   throw new Error('Error al registrarse')
-    // const data = await res.json()
-    // auth.setAuth(data.token, data.user)
+    const res = await fetch(`${API}/auth/users/`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ nombre, apellidos, email, password })
+    })
+    if (!res.ok) {
+      const errorData = await res.json()
+      console.error(errorData)
+      throw new Error('Error al registrarse')
+    }
+    await this.login(email, password)
    },
   
   async logout() {
@@ -57,6 +67,8 @@ export const authService = {
       return
     }
     
+    //NO ES NECESARIO PORQUE EL BACK USA JWT SIN ESTADO
+
     // TODO backend: invalidar token en el servidor antes de limpiar el front
     // El back debe eliminar el token de su lista de tokens válidos
     // Solo al recibir confirmación (res.ok) limpiamos el front y redirigimos
