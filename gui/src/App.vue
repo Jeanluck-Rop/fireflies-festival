@@ -1,18 +1,21 @@
-<script setup lang="ts">
-  import { onMounted, ref } from 'vue'
-
-const message = ref("Loading...")
-
-onMounted(async () => {
-  const res = await fetch("http://localhost:8000/api/test/")
-  const data = await res.json()
-  message.value = data.message
-})
-</script>
-
 <template>
-<h1>Fireflies Festival</h1>
-<div class="p-4">
-  <h2 class="text-2xl font-bold text-green-600">{{ message }}</h2>
-</div>
+  <AppHeader v-if="!hideHeader" :user="auth.user" />
+  <RouterView />
 </template>
+
+<script setup lang="ts">
+ import { computed } from 'vue'
+ import { useRoute } from 'vue-router'
+ import { useAuthStore } from './stores/auth'
+
+ import AppHeader from './components/ui/AppHeader.vue'
+
+ const auth = useAuthStore()
+ const route = useRoute()
+
+ const ROUTES_WITHOUT_HEADER = ['/auth']
+
+ const hideHeader = computed(() =>
+   ROUTES_WITHOUT_HEADER.includes(route.path)
+ )
+</script>
