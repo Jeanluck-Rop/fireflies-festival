@@ -3,6 +3,7 @@
     <HeroSection />
     <HowToSection />
     <CabinVsCamping />
+    <FooterSection />
   </div>
 </template>
 
@@ -10,4 +11,5 @@
 import HeroSection from '../components/landing/HeroSection.vue';
 import HowToSection from '../components/landing/HowToSection.vue';
 import CabinVsCamping from '../components/landing/CabinVsCamping.vue';
+import FooterSection from '../components/landing/FooterSection.vue';
 </script>
