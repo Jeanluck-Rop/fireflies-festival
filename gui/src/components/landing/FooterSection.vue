@@ -1,6 +1,6 @@
 <template>
   <footer class="border-t border-white/5 bg-black">
-    <div class="mx-auto max-w-6xl px-4 pt-14 pb-8">
+    <div class="animate-fade-up mx-auto max-w-6xl px-4 pt-14 pb-8">
       <div class="grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
 
         <div class="flex flex-col gap-5 lg:col-span-1">

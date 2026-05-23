@@ -104,7 +104,7 @@
         Pasa el cursor sobre cada panel para expandir
       </p>
 
-      <div class="mt-6 grid gap-3 rounded-3xl border border-white/6 bg-white/2 p-2 sm:grid-cols-3">
+      <div class="animate-fade-up mt-6 grid gap-3 rounded-3xl border border-white/6 bg-white/2 p-2 sm:grid-cols-3">
         <div v-for="row in [
           { l: 'Mejor para', a: 'Confort y descanso', b: 'Aventura y conexión' },
           { l: 'Equipo incluido', a: 'Todo, listo para llegar', b: 'Tienda básica + linterna' },

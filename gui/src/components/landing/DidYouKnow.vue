@@ -2,7 +2,7 @@
   <section class="relative py-28 sm:py-36 border-t border-white/5">
     <div class="mx-auto max-w-6xl px-4">
       <div class="grid items-end gap-8 sm:grid-cols-2">
-        <div>
+        <div class="animate-fade-up">
           <span class="inline-flex items-center gap-2 text-[11px] font-medium uppercase tracking-[0.25em] text-(--color-accent)/90">
             <span class="h-px w-6 bg-(--color-accent)/60"></span>
             ¿Sabías qué?
@@ -12,7 +12,7 @@
             de la <em class="italic font-serif text-glow">luz viva.</em>
           </h2>
         </div>
-        <p class="text-[15px] mb-5 leading-relaxed text-(--color-bone)/65">
+        <p class="animate-fade-up text-[15px] mb-5 leading-relaxed text-(--color-bone)/65">
           Cada destello en el bosque es una conversación química. Conoce algunas razones por las que estos pequeños faros merecen toda nuestra atención y cuidado.
         </p>
       </div>
