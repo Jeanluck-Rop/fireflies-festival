@@ -49,7 +49,7 @@
               <div class="pointer-events-none absolute -right-16 -top-16 h-40 w-40 rounded-full bg-(--color-accent)/0 blur-3xl transition-all duration-700 group-hover:bg-(--color-accent)/15"></div>
               <div class="flex items-center justify-between">
                 <span class="font-mono text-[10.5px] tracking-[0.22em] text-(--color-bone)/50 uppercase">Paso 0{{ i+1 }}</span>
-                <span class="font-serif text-[44px] text-(--color-accent) text-glow leading-none transition-all duration-500 group-hover:scale-110 group-hover:opacity-100 opacity-80">0{{ i+1 }}</span>
+                <span class="font-display text-[44px] text-(--color-accent) text-glow leading-none transition-all duration-500 group-hover:scale-110 group-hover:opacity-100 opacity-80">0{{ i+1 }}</span>
               </div>
 
               <div class="inline-flex w-14 h-14 items-center justify-center rounded-2xl border border-(--color-accent)/30 bg-(--color-accent)/[0.07] transition-all duration-500 group-hover:bg-(--color-accent)/10 group-hover:scale-105">
@@ -106,11 +106,6 @@ const steps = [
 </script>
 
 <style scoped>
-.text-glow {
-  color: var(--color-accent);
-  text-shadow: 0 0 24px rgba(245, 213, 122, 0.45), 0 0 60px rgba(245, 213, 122, 0.18);
-}
-
 .section-title {
   font-family: Georgia, serif;
   font-weight: 400;
