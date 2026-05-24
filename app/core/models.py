@@ -240,7 +240,7 @@ class ImagenParque(models.Model):
         on_delete=models.CASCADE,
         related_name="imagenes",
     )
-    url = models.CharField(max_length=100)
+    imagen = models.ImageField(upload_to='parques')
 
     class Meta:
         db_table = "imagen_parque"
@@ -254,7 +254,7 @@ class ImagenHospedaje(models.Model):
         on_delete=models.CASCADE,
         related_name="imagenes",
     )
-    url = models.CharField(max_length=100)
+    imagen = models.ImageField(upload_to='hospedajes')
 
     class Meta:
         db_table = "imagen_hospedaje"
