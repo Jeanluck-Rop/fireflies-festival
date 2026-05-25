@@ -9,7 +9,7 @@ export const authService = {
     const auth = useAuthStore()
 
     //Modo dev no borrar
-    if (IS_DEV && !API) {
+    if (IS_DEV) {
       //Simulamos delay
       await new Promise(r => setTimeout(r, 600))
       auth.setAuth('mock-token-123', { id: 1, nombre: 'Fulanito', apellidos: 'Perez', email, rol: 'CLIENTE' })
@@ -40,7 +40,7 @@ export const authService = {
     const auth = useAuthStore()
 
     //Modo dev no borrar
-    if (IS_DEV && !API) {
+    if (IS_DEV) {
       await new Promise(r => setTimeout(r, 600))
       auth.setAuth('mock-token-123', { id: 2, nombre, apellidos, email, rol: 'CLIENTE' })
       return
@@ -62,7 +62,7 @@ export const authService = {
   async logout() {
     const auth = useAuthStore()
 
-    if (IS_DEV && !API) {
+    if (IS_DEV) {
       auth.clearAuth()
       return
     }

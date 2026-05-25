@@ -52,7 +52,7 @@ export const parkService = {
     const store = useParksStore()
     store.loading = true
 
-    if (IS_DEV && !API) {
+    if (IS_DEV) {
       await new Promise(r => setTimeout(r, 700))
       store.setParks(MOCK_PARQUES)
       store.loading = false

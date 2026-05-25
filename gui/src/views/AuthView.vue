@@ -27,9 +27,9 @@
    router.push(redirect)
  }
 
- async function handleSignup(name: string, email: string, password: string) {
+ async function handleSignup(nombre: string, apellidos: string, email: string, password: string) {
    loading.value = true
-   await authService.signup(name, email, password)
+   await authService.signup(nombre, apellidos, email, password)
    loading.value = false
    router.push('/')
  }

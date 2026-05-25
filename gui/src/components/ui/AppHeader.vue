@@ -60,7 +60,9 @@
                       {{ userInitials }}
                     </span>
                     <div class="min-w-0">
-                      <div class="text-[14px] font-medium leading-tight truncate">{{ user.name }}</div>
+                      <div class="text-[14px] font-medium leading-tight truncate">
+			{{ user.nombre }} {{ user.apellidos }}
+		      </div>
                       <div class="text-[11.5px] text-bone-soft truncate">{{ user.email }}</div>
                     </div>
                   </div>
@@ -91,7 +93,9 @@
  import { useRouter } from 'vue-router'
  import { ref, onMounted, onUnmounted, computed } from 'vue';
  import { useAuthStore } from '../../stores/auth';
- import { authService } from '../../services/authService'
+ import { authService } from '../../services/authService';
+import type { Usuario } from '../../stores/auth'
+
  import AppLink from './AppLink.vue';
  import FireflyLogo from './FireflyLogo.vue';
  
@@ -110,11 +114,7 @@
  onUnmounted(() => window.removeEventListener('scroll', handleScroll));
 
  const props = defineProps<{
-   user: {
-     id: number;
-     name: string;
-     email: string;
-   } | null;
+   user: Usuario | null;
  }>();
 
  const profileOpen = ref(false);
@@ -135,14 +135,16 @@
  onUnmounted(() => document.removeEventListener('click', handleClickOutside));
 
  const userInitials = computed(() => {
-   if (!props.user) return '';
-   const names = props.user.name.split(' ').slice(0, 2);
-   return names.map(n => n[0]).join('').toUpperCase();
+   if (!props.user)
+     return '';
+   const n = props.user.nombre[0] ?? '';
+   const a = props.user.apellidos[0] ?? '';
+   return (n + a).toUpperCase();
  });
  const userShortName = computed(() => {
-   if (!props.user) return '';
-   const names = props.user.name.trim().split(' ');
-   return names.length > 1 ? `${names[0]} ${names[1][0]}.` : names[0];
+   if (!props.user)
+     return '';
+   return `${props.user.nombre} ${props.user.apellidos[0]}.`
  });
 </script>
 

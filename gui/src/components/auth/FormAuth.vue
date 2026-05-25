@@ -50,14 +50,23 @@
           <p class="form-sub">Únete al festival</p>
 	  <div class="fields">
             <AppInput
-	      v-model="signup.name"
+	      v-model="signup.nombre"
 	      label="Nombre"
-	      placeholder="Ingresa tu nombre"
+	      placeholder="Tu nombre"
 	      type="text"
 	      :icon="true"
 	      icon-name="user"
-	      :error="signupErrors.name"
-	      @input="signupErrors.name = ''"/>
+	      :error="signupErrors.nombre"
+	      @input="signupErrors.nombre = ''"/>
+	    <AppInput
+	      v-model="signup.apellidos"
+	      label="Apellidos"
+	      placeholder="Tus apellidos"
+	      type="text"
+	      :icon="true"
+	      icon-name="user"
+	      :error="signupErrors.apellidos"
+	      @input="signupErrors.apellidos = ''"/>
             <AppInput
 	      v-model="signup.email"
 	      label="Correo electrónico"
@@ -260,14 +269,14 @@
 
  const emit = defineEmits<{
    login: [email: string, password: string]
-   signup: [name: string, email: string, password: string]
+   signup: [nombre: string, apellidos: string, email: string, password: string]
    recovery: [email: string]
  }>()
 
  const mode = ref<Mode>(props.initialMode ?? 'login')
 
  const login = reactive({ email: '', password: '' })
- const signup = reactive({ name: '', email: '', password: '' })
+ const signup = reactive({ nombre: '', apellidos: '', email: '', password: '' })
  const recovery = reactive({
    email: '',
    code: '',
@@ -276,7 +285,7 @@
  })
 
  const loginErrors = reactive({ email: '', password: '' })
- const signupErrors = reactive({ name: '', email: '', password: '' })
+ const signupErrors = reactive({ nombre: '', apellidos: '', email: '', password: '' })
  const recoveryErrors = reactive({
    email: '',
    code: '',
@@ -336,11 +345,14 @@
  }
 
  function validateSignup() {
-   signupErrors.name = ''
+   signupErrors.nombre   = ''
+   signupErrors.apellidos = ''
    signupErrors.email = ''
    signupErrors.password = ''
-   if (!signup.name || signup.name.length < 2)
-     signupErrors.name = 'Nombre requerido (mín. 2 caracteres)'
+   if (!signup.nombre || signup.nombre.length < 2)
+     signupErrors.nombre = 'Nombre requerido (mín. 2 caracteres)'
+   if (!signup.apellidos || signup.apellidos.length < 2)
+     signupErrors.apellidos = 'Apellidos requeridos'
    if (!signup.email)
      signupErrors.email = 'El correo es requerido'
    else if (!EMAIL_RE.test(signup.email))
@@ -349,7 +361,7 @@
      signupErrors.password = 'La contraseña es requerida'
    else if (signup.password.length < 8)
      signupErrors.password = 'Mínimo 8 caracteres'
-   return !signupErrors.name && !signupErrors.email && !signupErrors.password
+   return !signupErrors.nombre && !signupErrors.apellidos && !signupErrors.email && !signupErrors.password
  }
 
  function handleLogin() {
@@ -358,7 +370,7 @@
  }
  function handleSignup() {
    if (validateSignup())
-     emit('signup', signup.name, signup.email, signup.password)
+     emit('signup', signup.nombre, signup.apellidos, signup.email, signup.password)
  }
  
  // Fase 1: solicitamos correo
@@ -565,7 +577,7 @@
  .auth-card {
    position: relative;
    width: min(720px, 100%);
-   height: 520px;
+   height: 600px;
    border-radius: 24px;
    overflow: hidden;
    display: flex;
