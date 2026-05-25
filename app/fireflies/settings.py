@@ -142,4 +142,4 @@ EMAIL_HOST_USER = config('EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
 
 SITE_NAME = 'Festival de las Luciérnagas 2026'
-DOMAIN = 'localhost:8000'
+DOMAIN = 'localhost:5173'
