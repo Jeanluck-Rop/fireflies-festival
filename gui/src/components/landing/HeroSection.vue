@@ -40,9 +40,16 @@
         <AppLink href="/parques" variant="outline" :icon="MapPinned">
           Explorar Parques
         </AppLink>
-        <AppLink href="/auth?mode=signup" variant="yellow" :iconRight="UserPlus">
-          Registrarse
-        </AppLink>
+        <template v-if="!auth.isLoggedIn">
+          <AppLink href="/auth?mode=signup" variant="yellow" :iconRight="UserPlus">
+            Registrarse
+          </AppLink>
+        </template>
+        <template v-else>
+          <AppLink href="/reservar" variant="yellow" :iconRight="CalendarSearch">
+            Reservar Ahora
+          </AppLink>
+        </template>
       </div>
 
       <ul class="animate-fade-up delay-400 mt-10 flex flex-wrap items-center justify-center gap-2.5">
@@ -73,9 +80,12 @@
 
 <script setup lang="ts">
 import AppLink from '../ui/AppLink.vue';
-import { MapPinned, UserPlus, MoonStar, MonitorSmartphone, Shrub, CalendarDays } from 'lucide-vue-next';
+import { MapPinned, UserPlus, MoonStar, MonitorSmartphone, Shrub, CalendarDays, CalendarSearch } from 'lucide-vue-next';
 import { startFireflies } from '../../utils/fireflies';
 import { onMounted, onBeforeUnmount, ref } from 'vue';
+import { useAuthStore } from '../../stores/auth';
+
+const auth = useAuthStore();
 
 const canvasRef = ref<HTMLCanvasElement | null>(null);
 let stop: (() => void) | null = null
