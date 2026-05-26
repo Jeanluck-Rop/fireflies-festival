@@ -28,5 +28,3 @@ src/*~
 src/assets/*~
 src/views/*~
 src/components/*~
-
-.env
