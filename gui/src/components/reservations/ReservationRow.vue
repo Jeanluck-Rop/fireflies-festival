@@ -186,7 +186,7 @@
  import IconCompletada from '../svg/IconCompletada.vue'
  import IconInfo from '../svg/IconInfo.vue'
 
- const IS_DEV = import.meta.env.DEV
+ const USE_MOCK = import.meta.env.VITE_USE_MOCK === 'true'
  const API = import.meta.env.VITE_API_URL || null
  
  const props = defineProps<{
@@ -219,7 +219,7 @@
 
  //Confirmar cancelacion
  async function confirmarCancelacion() {
-   if (IS_DEV) {
+   if (USE_MOCK) {
      showDialog.value = false
      emit('cancelar', props.reservacion)
      return

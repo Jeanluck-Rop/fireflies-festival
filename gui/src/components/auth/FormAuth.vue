@@ -249,14 +249,14 @@
 </template>
 
 <script setup lang="ts">
- import { ref, computed, reactive, onUnmounted } from 'vue'
+ import { ref, computed, reactive, onUnmounted, watch } from 'vue'
  import { useRouter } from 'vue-router' 
  import AppInput from '../ui/AppInput.vue'
  import AppButton from '../ui/AppButton.vue'
  import FireflyLogo from '../ui/FireflyLogo.vue'
  import bgImage from '../../assets/fireflires_auth_background2.jpg'
 
- const IS_DEV = import.meta.env.DEV
+ const USE_MOCK = import.meta.env.VITE_USE_MOCK === 'true'
  const router = useRouter()
  const bg = bgImage
  
@@ -265,6 +265,8 @@
  const props = defineProps<{
    initialMode?: Mode
    loading?: boolean
+   loginError?: 'credentials' | null
+   signupError?: 'email_in_use' | null
  }>()
 
  const emit = defineEmits<{
@@ -275,6 +277,21 @@
 
  const mode = ref<Mode>(props.initialMode ?? 'login')
 
+ // Cuando AuthView informa error de credenciales en login
+ watch(() => props.loginError, (err) => {
+   if (err === 'credentials') {
+     loginErrors.email    = 'Verifica la dirección de correo ingresada'
+     loginErrors.password = 'Verifica la contraseña ingresada'
+   }
+ })
+ 
+ // Cuando AuthView informa correo ya en uso en signup
+ watch(() => props.signupError, (err) => {
+   if (err === 'email_in_use') {
+     signupErrors.email = 'Utiliza otra dirección de correo electrónico'
+   }
+ })
+ 
  const login = reactive({ email: '', password: '' })
  const signup = reactive({ nombre: '', apellidos: '', email: '', password: '' })
  const recovery = reactive({
@@ -387,7 +404,7 @@
 
    recoveryLoading.value = true
 
-   if (IS_DEV) {
+   if (USE_MOCK) {
      // MOCK: simula envio exitoso
      await new Promise(r => setTimeout(r, 600))
      recoveryStep.value = 2
@@ -423,7 +440,7 @@
    }
    recoveryLoading.value = true
 
-   if (IS_DEV) {
+   if (USE_MOCK) {
      //MOCK: cualquier codigo es valido
      await new Promise(r => setTimeout(r, 600))
      recoveryStep.value = 3
@@ -452,7 +469,7 @@
  async function handleResend() {
    recoveryLoading.value = true
 
-   if (IS_DEV) {
+   if (USE_MOCK) {
      //MOCK: solo reiniciamos el contador
      await new Promise(r => setTimeout(r, 400))
      startCountdown()     
@@ -488,7 +505,7 @@
 
    recoveryLoading.value = true
 
-   if (IS_DEV) {
+   if (USE_MOCK) {
      //MOCK: exito directo, mostrar checkmark, redirigir
      await new Promise(r => setTimeout(r, 600))
      recoveryStep.value = 4
@@ -548,22 +565,13 @@
    align-items: center;
    justify-content: center;
    padding: 2rem 1rem;
-   
-   /* 1er opcion
-      background: var(--color-bg); */
-   
-   /* 2da opcion  */
    background:
      radial-gradient(ellipse at 20% 50%, rgba(123,216,176,0.12) 0%, transparent 50%),
      radial-gradient(ellipse at 80% 20%, rgba(232,255,122,0.07) 0%, transparent 45%),
      radial-gradient(ellipse at 60% 80%, rgba(123,216,176,0.06) 0%, transparent 40%),
      #07090A;
-
-   /* 3er ocpion 
-      background-image: v-bind("'url(' + bg + ')'"); */
  }
 
- /* 4ta opcion (va junto con 2da opcion) */
  .auth-scene::before {
    content: '';
    position: absolute;
@@ -576,8 +584,8 @@
  /* Contenedor del forms  */
  .auth-card {
    position: relative;
-   width: min(720px, 100%);
-   height: 600px;
+   width: min(780px, 100%);
+   height: 650px;
    border-radius: 24px;
    overflow: hidden;
    display: flex;
