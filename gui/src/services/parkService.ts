@@ -51,20 +51,30 @@ export const parkService = {
   async getParks() {
     const store = useParksStore()
     store.loading = true
-
-    if (IS_DEV) {
-      await new Promise(r => setTimeout(r, 700))
-      store.setParks(MOCK_PARQUES)
+    try {
+      /*
+      if (IS_DEV) {
+        await new Promise(r => setTimeout(r, 700))
+        store.setParks(MOCK_PARQUES)
+        store.loading = false
+        return
+      }
+      */
+      const res = await fetch(`${API}/api/parques/`)
+      if (!res.ok) {
+        const errorData = await res.json()
+        console.error(errorData)
+        throw new Error('Error al obtener información de los parques.')
+      }
+      const parques = await res.json().catch(() => ({}))
+      store.setParks(parques)
       store.loading = false
-      return
     }
-
-    // TODO: conexion con back
-    // const res = await fetch(`${API}/api/parques/`)
-    // if (!res.ok)
-    //   throw new Error('Error cargando parques')
-    // const data = await res.json()
-    // store.setParks(data)
-    store.loading = false
+    catch (error) {
+      console.error('Error de red o de servidor:', error)
+      throw error
+    } finally {
+      store.loading = false
+    }
   }
 }
