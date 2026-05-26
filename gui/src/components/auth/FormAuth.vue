@@ -116,107 +116,54 @@
 		:error="recoveryErrors.email"
 		@input="recoveryErrors.email = ''"/>
             </div>
-	    
-            <AppButton
-              variant="primary"
-              :loading="props.loading"
-              class="submit-btn"
-              @click="handleRecoveryStep1">
-              Enviar código
-            </AppButton>
-	  </template>
-
-	  <!-- Fase 2: codigo de validacion -->
-          <template v-else-if="recoveryStep === 2">
-            <h1 class="form-title">Código de verificación</h1>
-            <p class="form-sub">Revisa tu correo <strong class="email-highlight">{{ recovery.email }}</strong></p>
-            <div class="fields">
-              <AppInput
-                v-model="recovery.code"
-                label="Código de verificación"
-                placeholder="Ingresa el código"
-                type="text"
-                :icon="true"
-                icon-name="lock"
-                :error="recoveryErrors.code"
-                @input="recoveryErrors.code = ''"/>
-            </div>
-
-            <!-- Contador / Reenviar -->
-            <div class="resend-row">
-              <span v-if="resendCountdown > 0" class="resend-countdown">
-                Reenviar código en {{ resendCountdown }}s
-              </span>
-              <button
-                v-else
-                class="link-btn"
-                :disabled="recoveryLoading"
-                @click="handleResend">
-                Reenviar código
-              </button>
-            </div>
 	    <AppButton
 	      variant="primary"
 	      :loading="recoveryLoading"
 	      class="submit-btn"
-	      @click="handleRecoveryStep2">
-              Verificar código
-            </AppButton>
-            <AppButton
+	      @click="handleRecoveryStep1">
+	      Enviar enlace
+	    </AppButton>
+	  </template>
+
+	  <!-- Fase 2: codigo de validacion -->
+          <template v-else-if="recoveryStep === 2">
+	    <h1 class="form-title">Revisa tu correo</h1>
+	    <p class="form-sub">
+	      Enviamos un enlace a
+	      <strong class="email-highlight">{{ recovery.email }}</strong>.
+	      Haz click en él para continuar.
+	    </p>
+	    <p class="form-sub" style="margin-top: 0.5rem; font-size: 13px;">
+	      El enlace expira en 24 horas.
+	    </p>
+	    <AppButton
+	      variant="primary"
+	      :loading="recoveryLoading"
+	      class="submit-btn"
+	      @click="handleResend">
+	      {{ recoveryLoading ? 'Reenviando...' : 'Reenviar enlace' }}
+	    </AppButton>
+	    <AppButton
 	      variant="outline"
 	      class="submit-btn"
 	      @click="recoveryStep = 1">
 	      Cambiar correo
 	    </AppButton>
-          </template>
+	  </template>
 
           <!-- Fase 3: nueva contrasena -->
           <template v-else-if="recoveryStep === 3">
-            <h1 class="form-title">Nueva contraseña</h1>
-            <p class="form-sub">Elige una contraseña segura</p>
-            <div class="fields">
-              <AppInput
-                v-model="recovery.newPassword"
-                label="Nueva contraseña"
-                placeholder="Mínimo 8 caracteres"
-                type="password"
-                :icon="true"
-                icon-name="lock"
-                :error="recoveryErrors.newPassword"
-                @input="recoveryErrors.newPassword = ''"/>
-              <AppInput
-                v-model="recovery.confirmPassword"
-                label="Confirmar contraseña"
-                placeholder="Repite la contraseña"
-                type="password"
-                :icon="true"
-                icon-name="lock"
-                :error="recoveryErrors.confirmPassword"
-                @input="recoveryErrors.confirmPassword = ''"/>
-            </div>
-            <AppButton variant="primary" :loading="recoveryLoading" class="submit-btn" @click="handleRecoveryStep3">
-              Cambiar contraseña
-            </AppButton>
-          </template>
-	  
-          <!-- Fase 4: exito -->
-          <template v-else-if="recoveryStep === 4">
-            <div class="success-screen">
-              <svg class="success-check" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <circle cx="40" cy="40" r="38" stroke="#7BD8B0" stroke-width="2" stroke-opacity="0.3"/>
-                <circle cx="40" cy="40" r="30" fill="#7BD8B0" fill-opacity="0.08"/>
-                <path
-                  d="M24 40l11 11 21-22"
-                  stroke="#7BD8B0"
-                  stroke-width="3"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  class="check-path"/>
-              </svg>
-              <h2 class="success-title">Contraseña cambiada</h2>
-              <p class="success-sub">Tu contraseña fue actualizada correctamente</p>
-            </div>
-          </template>
+	    <div class="success-screen">
+	      <svg class="success-check" viewBox="0 0 80 80" fill="none">
+		<circle cx="40" cy="40" r="38" stroke="#7BD8B0" stroke-width="2" stroke-opacity="0.3"/>
+		<circle cx="40" cy="40" r="30" fill="#7BD8B0" fill-opacity="0.08"/>
+		<path d="M24 40l11 11 21-22" stroke="#7BD8B0" stroke-width="3"
+		      stroke-linecap="round" stroke-linejoin="round" class="check-path"/>
+	      </svg>
+	      <h2 class="success-title">Contraseña cambiada</h2>
+	      <p class="success-sub">Tu contraseña fue actualizada correctamente</p>
+	    </div>
+	  </template>
         </div>
       </div>
       
@@ -294,43 +241,17 @@
  
  const login = reactive({ email: '', password: '' })
  const signup = reactive({ nombre: '', apellidos: '', email: '', password: '' })
- const recovery = reactive({
-   email: '',
-   code: '',
-   newPassword: '',
-   confirmPassword: ''
- })
-
  const loginErrors = reactive({ email: '', password: '' })
  const signupErrors = reactive({ nombre: '', apellidos: '', email: '', password: '' })
- const recoveryErrors = reactive({
-   email: '',
-   code: '',
-   newPassword: '',
-   confirmPassword: ''
- })
 
  const recoveryStep = ref(1)
  const recoveryLoading = ref(false)
+ const recovery = reactive({
+   email: ''
+ })
  
- const RESEND_SECONDS = 45
- const resendCountdown = ref(0)
- let countdownTimer: ReturnType<typeof setInterval> | null = null
- 
- function startCountdown() {
-   resendCountdown.value = RESEND_SECONDS
-   if (countdownTimer) clearInterval(countdownTimer)
-   countdownTimer = setInterval(() => {
-     resendCountdown.value--
-     if (resendCountdown.value <= 0 && countdownTimer) {
-       clearInterval(countdownTimer)
-       countdownTimer = null
-     }
-   }, 1000)
- }
- 
- onUnmounted(() => {
-   if (countdownTimer) clearInterval(countdownTimer)
+ const recoveryErrors = reactive({
+   email: ''
  })
  
  const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -339,12 +260,8 @@
    mode.value = m
    if (m === 'recovery') {
      recoveryStep.value = 1
-     recovery.email = ''
-     recovery.code  = ''
-     recovery.newPassword     = ''
-     recovery.confirmPassword = ''
+     recovery.email       = ''
      recoveryErrors.email = ''
-     recoveryErrors.code  = ''
    }
  }
 
@@ -389,151 +306,55 @@
    if (validateSignup())
      emit('signup', signup.nombre, signup.apellidos, signup.email, signup.password)
  }
- 
- // Fase 1: solicitamos correo
+
+ //Fase 1: solicitar enlace
  async function handleRecoveryStep1() {
    recoveryErrors.email = ''
    if (!recovery.email) {
-     recoveryErrors.email = 'El correo electrónico es requerido';
+     recoveryErrors.email = 'El correo es requerido';
      return
    }
    if (!EMAIL_RE.test(recovery.email)) {
      recoveryErrors.email = 'Formato de correo inválido';
      return
    }
-
+   
    recoveryLoading.value = true
-
+   
    if (USE_MOCK) {
-     // MOCK: simula envio exitoso
      await new Promise(r => setTimeout(r, 600))
      recoveryStep.value = 2
-     startCountdown()
    } else {
-     // TODO backend: POST /api/auth/recovery/request/ { email }
+     // BACKEND: POST /auth/users/reset_password/
      // try {
-     //   const res = await fetch(`${API}/api/auth/recovery/request/`, {
+     //   const res = await fetch(`${API}/auth/users/reset_password/`, {
      //     method: 'POST',
      //     headers: { 'Content-Type': 'application/json' },
      //     body: JSON.stringify({ email: recovery.email })
      //   })
-     //   if (res.status === 404) {
-     //     recoveryErrors.email = 'Correo no encontrado'
-     //   } else if (res.ok) {
-     //     recoveryStep.value = 2
-     //     startCountdown()
-     //   }
+     //   // Djoser responde 204 siempre por seguridad
+     //   if (res.ok || res.status === 204) recoveryStep.value = 2
      // } catch {
-     //   recoveryErrors.email = 'Error al enviar el código'
+     //   recoveryErrors.email = 'Error al enviar el correo'
      // }
    }
-
+   
    recoveryLoading.value = false
  }
-
- //Fase 2, validar codigo
- async function handleRecoveryStep2() {
-   recoveryErrors.code = ''
-   if (!recovery.code) {
-     recoveryErrors.code = 'Ingresa el código de verificación';
-     return
-   }
-   recoveryLoading.value = true
-
-   if (USE_MOCK) {
-     //MOCK: cualquier codigo es valido
-     await new Promise(r => setTimeout(r, 600))
-     recoveryStep.value = 3
-   } else {
-     // TODO backend: POST /api/auth/recovery/validate/ { email, code }
-     // try {
-     //   const res = await fetch(`${API}/api/auth/recovery/validate/`, {
-     //     method: 'POST',
-     //     headers: { 'Content-Type': 'application/json' },
-     //     body: JSON.stringify({ email: recovery.email, code: recovery.code })
-     //   })
-     //   if (res.status === 400) {
-     //     recoveryErrors.code = 'Código inválido o expirado'
-     //   } else if (res.ok) {
-     //     recoveryStep.value = 3
-     //   }
-     // } catch {
-     //   recoveryErrors.code = 'Error al verificar el código'
-     // }
-   }
-
-   recoveryLoading.value = false
- }
-
- //Fase 2, reenviar codigo
+ 
+ //Reenviar enlace, mismo endpoint
  async function handleResend() {
    recoveryLoading.value = true
-
+   
    if (USE_MOCK) {
-     //MOCK: solo reiniciamos el contador
      await new Promise(r => setTimeout(r, 400))
-     startCountdown()     
    } else {
-     // TODO backend: POST /api/auth/recovery/request/ { email } (mismo endpoint)
-     // await fetch(...)
-     // startCountdown()
+     // BACKEND: POST /auth/users/reset_password/ { email: recovery.email }
    }
-
+   
    recoveryLoading.value = false
  }
-
- //Fase 3, nueva contrasena
- async function handleRecoveryStep3() {
-   recoveryErrors.newPassword = ''
-   recoveryErrors.confirmPassword = ''
-   if (!recovery.newPassword) {
-     recoveryErrors.newPassword = 'La contraseña es requerida';
-     return
-   }
-   if (recovery.newPassword.length < 8) {
-     recoveryErrors.newPassword = 'Mínimo 8 caracteres';
-     return
-   }
-   if (!recovery.confirmPassword) {
-     recoveryErrors.confirmPassword = 'Confirma tu contraseña';
-     return
-   }
-   if (recovery.newPassword !== recovery.confirmPassword) {
-     recoveryErrors.confirmPassword = 'Las contraseñas no coinciden';
-     return
-   }
-
-   recoveryLoading.value = true
-
-   if (USE_MOCK) {
-     //MOCK: exito directo, mostrar checkmark, redirigir
-     await new Promise(r => setTimeout(r, 600))
-     recoveryStep.value = 4
-     setTimeout(() => router.push('/auth'), 2000)
-   } else {
-     // TODO backend: POST /api/auth/recovery/reset/ { email, code, newPassword }
-     // try {
-     //   const res = await fetch(`${API}/api/auth/recovery/reset/`, {
-     //     method: 'POST',
-     //     headers: { 'Content-Type': 'application/json' },
-     //     body: JSON.stringify({
-     //       email:       recovery.email,
-     //       code:        recovery.code,
-     //       newPassword: recovery.newPassword
-     //     })
-     //   })
-     //   if (res.ok) {
-     //     recoveryStep.value = 4
-     //     setTimeout(() => router.push('/auth'), 2000)
-     //   }
-     // } catch {
-     //   recoveryErrors.confirmPassword = 'Error al cambiar la contraseña'
-     // }
-   }
-
-   recoveryLoading.value = false
- }
-
+ 
  // Contenido del panel deslizante
  const slideContent = computed(() => {
    if (mode.value === 'login') return {
@@ -849,15 +670,7 @@
    color: var(--color-bone);
    font-weight: 500;
  }
- .resend-row {
-   display: flex;
-   align-items: center;gi
-   min-height: 20px;
- }
- .resend-countdown {
-   font-size: 12px;
-   color: var(--color-bone-mute);
- }
+ 
  .link-btn:disabled { opacity: 0.4; cursor: not-allowed }
  .success-screen {
    display: flex;

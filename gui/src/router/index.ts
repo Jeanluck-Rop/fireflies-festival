@@ -9,7 +9,11 @@ const router = createRouter({
     { path: '/auth',  component: () => import('../views/AuthView.vue') },
     { path: '/reservar', component: () => import('../views/ReservationView.vue')},
     { path: '/parques', component: () => import('../views/ParksView.vue') },
-
+    {
+      path: '/password/reset/confirm/:uid/:token',
+      component: () => import('../views/PasswordResetConfirmView.vue')
+    },
+    
     //Private paths
     {
       path: '/reservaciones',
