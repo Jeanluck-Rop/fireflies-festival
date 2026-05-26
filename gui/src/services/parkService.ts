@@ -2,7 +2,7 @@ import { useParksStore } from '../stores/parks'
 import type { Parque } from '../stores/parks'
 
 const API = import.meta.env.VITE_API_URL || null
-const IS_DEV = import.meta.env.DEV
+const USE_MOCK = import.meta.env.VITE_USE_MOCK === 'true'
 
 //Datos Falsos
 const MOCK_PARQUES: Parque[] = [
@@ -52,7 +52,7 @@ export const parkService = {
     const store = useParksStore()
     store.loading = true
 
-    if (IS_DEV) {
+    if (USE_MOCK) {
       await new Promise(r => setTimeout(r, 700))
       store.setParks(MOCK_PARQUES)
       store.loading = false
