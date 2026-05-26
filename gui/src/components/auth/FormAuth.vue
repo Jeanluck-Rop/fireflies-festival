@@ -851,7 +851,7 @@
  }
  .resend-row {
    display: flex;
-   align-items: center;
+   align-items: center;gi
    min-height: 20px;
  }
  .resend-countdown {
