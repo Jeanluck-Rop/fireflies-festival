@@ -1,6 +1,7 @@
 <template>
   <AppHeader v-if="!hideHeader" :user="auth.user" />
   <RouterView />
+  <AppNotification />
 </template>
 
 <script setup lang="ts">
@@ -9,6 +10,7 @@
  import { useAuthStore } from './stores/auth'
 
  import AppHeader from './components/ui/AppHeader.vue'
+ import AppNotification from './components/ui/AppNotification.vue'
 
  const auth = useAuthStore()
  const route = useRoute()
