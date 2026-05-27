@@ -2,7 +2,7 @@ import { useParksStore } from '../stores/parks'
 import type { Parque } from '../stores/parks'
 
 const API = import.meta.env.VITE_API_URL || null
-const USE_MOCK = import.meta.env.VITE_USE_MOCK
+const USE_MOCK = import.meta.env.VITE_USE_MOCK === 'true'
 
 //Datos Falsos
 const MOCK_PARQUES: Parque[] = [

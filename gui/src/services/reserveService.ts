@@ -2,7 +2,7 @@ import { useReservationsStore } from '../stores/reservations'
 import type { Reservacion } from '../stores/reservations'
 
 const API = import.meta.env.VITE_API_URL || null
-const USE_MOCK = import.meta.env.VITE_USE_MOCK
+const USE_MOCK = import.meta.env.VITE_USE_MOCK === 'true'
 
 //Datos falsos
 const MOCK_RESERVACIONES: Reservacion[] = [
