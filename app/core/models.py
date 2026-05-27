@@ -163,6 +163,7 @@ class Reservacion(models.Model):
     precio = models.DecimalField(
         max_digits=10, 
         decimal_places=2,
+        default=0.00,
         validators=[MinValueValidator(0.01)],
         help_text="Precio de la reservación"
     )
