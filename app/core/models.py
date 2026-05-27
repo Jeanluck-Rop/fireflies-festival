@@ -160,6 +160,12 @@ class Reservacion(models.Model):
     fecha_inicio = models.DateField()
     fecha_fin = models.DateField()
     num_personas = models.PositiveIntegerField(validators=[MinValueValidator(1)])
+    precio = models.DecimalField(
+        max_digits=10, 
+        decimal_places=2,
+        validators=[MinValueValidator(0.01)],
+        help_text="Precio de la reservación"
+    )
     tipo_visita = models.CharField(max_length=10, choices=TipoVisita.choices)
     estado = models.CharField(
         max_length=12, choices=Estado.choices, default=Estado.ACTIVA
