@@ -85,6 +85,13 @@
 	      icon-name="lock"
 	      :error="signupErrors.password"
 	      @input="signupErrors.password = ''"/>
+
+        <div class="flex items-center gap-3">
+          <div class="strength flex-1">
+            <span :style="`width:${strength.pct}%; background:${strength.color}`"></span>
+          </div>
+          <span class="text-[11px] font-mono uppercase tracking-[0.14em]" :style="`color:${strength.color}`">{{ strength.label }}</span>
+        </div>
           </div>
 	    
           <AppButton
@@ -202,6 +209,7 @@
  import AppButton from '../ui/AppButton.vue'
  import FireflyLogo from '../ui/FireflyLogo.vue'
  import bgImage from '../../assets/fireflires_auth_background2.jpg'
+ import { zxcvbn, Match } from '@zxcvbn-ts/core';
 
  const USE_MOCK = import.meta.env.VITE_USE_MOCK === 'true'
  const router = useRouter()
@@ -214,6 +222,7 @@
    loading?: boolean
    loginError?: 'credentials' | null
    signupError?: 'email_in_use' | null
+   signupPasswordError?: string | null
  }>()
 
  const emit = defineEmits<{
@@ -236,6 +245,12 @@
  watch(() => props.signupError, (err) => {
    if (err === 'email_in_use') {
      signupErrors.email = 'Utiliza otra dirección de correo electrónico'
+   }
+ })
+ // Cuando AuthView informa error de contraseña en signup
+ watch(() => props.signupPasswordError, (err) => {
+   if (err) {
+     signupErrors.password = err
    }
  })
  
@@ -291,12 +306,91 @@
      signupErrors.email = 'El correo es requerido'
    else if (!EMAIL_RE.test(signup.email))
      signupErrors.email = 'Formato de correo inválido'
-   if (!signup.password)
-     signupErrors.password = 'La contraseña es requerida'
-   else if (signup.password.length < 8)
-     signupErrors.password = 'Mínimo 8 caracteres'
+   signupErrors.password = validatePassword(signup.password, signup.email) || ''
    return !signupErrors.nombre && !signupErrors.apellidos && !signupErrors.email && !signupErrors.password
  }
+
+const strength = computed(() => {
+  const p = signup.password || '';
+  const email = signup.email || '';
+  if (!p || p.length < 8) {
+    return { pct: 0, label: '—', color: '#5C645F' };
+  }
+  if (/^\d+$/.test(p)) {
+    return { pct: 25, label: 'Muy Débil', color: '#FF8A7B' };
+  }
+
+  const emailUser = email ? email.split('@')[0] : '';
+  const emailLimpio = emailUser.toLowerCase().replace(/[^a-zA-Z0-9]/g, '');
+  const result = zxcvbn(p, [email, emailUser, emailLimpio]);
+  const score = result.score;
+  const pclean = p.toLowerCase().replace(/[^a-zA-Z0-9]/g, '');
+  const emailClean = emailLimpio.replace(/[0-9]/g, '');
+  if (emailClean && pclean.includes(emailClean)) {
+    return { pct: 25, label: 'Muy Débil', color: '#FF8A7B' };
+  }
+  
+  const map = [
+    { pct: 25,  label: 'Muy Débil', color: '#FF8A7B' }, 
+    { pct: 40,  label: 'Débil',     color: '#FFB87B' }, 
+    { pct: 60,  label: 'Aceptable', color: '#E8FF7A' }, 
+    { pct: 80,  label: 'Buena',     color: '#7BD8B0' }, 
+    { pct: 100, label: 'Excelente', color: '#7BD882' },
+  ];
+
+  return map[score];
+});
+
+function validatePassword(password: string, email: string) {
+  if (!password) {
+    return 'La contraseña es requerida';
+  }
+  if (password.length < 8) {
+    return 'Mínimo 8 caracteres';
+  }
+  if (/^\d+$/.test(password)) {
+    return 'La contraseña no puede contener solo números';
+  }
+  if (!/[A-Z]/.test(password)) {
+    return 'Debe incluir al menos una mayúscula';
+  }
+  if (!/[a-z]/.test(password)) {
+    return 'Debe incluir al menos una minúscula';
+  }
+  if (!/[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(password)) {
+    return 'Debe incluir al menos un símbolo';
+  }
+  if (!/\d/.test(password)) {
+    return 'Debe incluir al menos un número';
+  }
+  
+  const nombreEmail = email.split('@')[0];
+  const emailLimpio = nombreEmail.toLowerCase().replace(/[^a-zA-Z0-9]/g, '');
+  const resultadoZxcvbn = zxcvbn(password, [email, nombreEmail, emailLimpio]);
+
+  if (resultadoZxcvbn.score < 2) {
+    const coincidioConEmail = resultadoZxcvbn.sequence.some(
+      (seq: Match) => seq.dictionaryName === 'user_inputs'
+    );
+
+    if (coincidioConEmail) {
+      return 'La contraseña no puede ser similar a tu correo electrónico';
+    }
+    return 'La contraseña es demasiado común o fácil de adivinar';
+  }
+  const pClean = password.toLowerCase().replace(/[^a-zA-Z0-9]/g, '');
+  const emailClean = emailLimpio.replace(/[0-9]/g, '');
+  if (emailClean && pClean.includes(emailClean)) {
+    return 'La contraseña no puede ser similar a tu correo electrónico';
+  }
+
+  const passStrength = strength.value;
+  if (passStrength.pct < 60) {
+    return 'La contraseña es demasiado débil. ' + passStrength.label;
+  }
+
+  return '';
+}
 
  function handleLogin() {
    if (validateLogin())
@@ -698,4 +792,18 @@
    color: var(--color-bone-soft);
    text-align: center;
  }
+
+ .strength {
+  height: 4px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+  overflow: hidden;
+  position: relative;
+}
+
+.strength span {
+  display: block;
+  height: 100%;
+  transition: width 0.3s ease, background-color 0.3s ease;
+}
 </style>
