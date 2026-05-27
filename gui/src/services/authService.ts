@@ -1,8 +1,7 @@
 import { useAuthStore } from '../stores/auth'
 
 const API = import.meta.env.VITE_API_URL || null
-//const IS_DEV = import.meta.env.DEV
-const IS_DEV = false
+const IS_DEV = import.meta.env.MOCK
 
 export const authService = {
   async login(email: string, password: string) {
