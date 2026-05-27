@@ -4,8 +4,8 @@
     <!-- Imagen del parque -->
     <div class="row-image" :class="estadoClass">
       <IconCompletada v-if="reservacion.estado === 'COMPLETADA'" size="22px" />
-      <IconCancelada  v-else-if="reservacion.estado === 'CANCELADA'"  size="22px" />
-      <IconEnProceso  v-else-if="reservacion.estado === 'EN_PROCESO'" size="22px" />
+      <IconCancelada v-else-if="reservacion.estado === 'CANCELADA'"  size="22px" />
+      <IconEnProceso v-else-if="reservacion.estado === 'EN_PROCESO'" size="22px" />
       <IconActiva v-else size="22px" />
     </div>
 
@@ -56,9 +56,9 @@
     <div class="row-estado">
       <span class="estado-badge" :class="estadoClass">
 	<IconCompletada v-if="reservacion.estado === 'COMPLETADA'" size="13px" />
-	<IconCancelada v-else-if="reservacion.estado === 'CANCELADA'"  size="13px" />
+	<IconCancelada v-else-if="reservacion.estado === 'CANCELADA'" size="13px" />
 	<IconEnProceso v-else-if="reservacion.estado === 'EN_PROCESO'" size="13px" />
-	<IconActiva v-else-if="reservacion.estado === 'ACTIVA'"     size="13px" />
+	<IconActiva v-else-if="reservacion.estado === 'ACTIVA'" size="13px" />
 	{{ estadoLabel }}
       </span>
       <span class="row-date">{{ formatCreatedAt(reservacion.created_at) }}</span>
@@ -74,7 +74,7 @@
         v-if="reservacion.estado === 'ACTIVA' || reservacion.estado === 'EN_PROCESO'"
         class="action-btn action-cancel-btn"
         :disabled="cancelando"
-        @click="showDialog = true">
+        @click="showCancel= true">
         Cancelar
       </button>
     </div>
@@ -145,29 +145,18 @@
     </transition>
     
     <!-- Dialogo de cancelacion -->
-    <transition name="dialog-fade">
-      <div v-if="showDialog" class="dialog-backdrop" @click.self="showDialog = false">
-        <div class="dialog-box">
-          <h3 class="dialog-title">Cancelar Reservación</h3>
-          <p class="dialog-text">
-            ¿Estás seguro de cancelar la reservación <strong>#{{ reservacion.id }}</strong>
-            en <strong>{{ reservacion.parque.nombre }}</strong>?
-            Ten en cuenta que este proceso es irreversible.
-          </p>
-          <div class="dialog-actions">
-            <button class="dialog-btn dialog-btn-cancel" @click="showCancel = false">
-              Volver
-            </button>
-            <button
-              class="dialog-btn dialog-btn-confirm"
-              :disabled="cancelando"
-              @click="confirmarCancelacion">
-              {{ cancelando ? 'Cancelando...' : 'Confirmar cancelación' }}
-            </button>
-          </div>
-        </div>
-      </div>
-    </transition>
+    <AppConfirmDialog
+      v-model="showCancel"
+      title="Cancelar Reservación"
+      confirm-label="Confirmar cancelación"
+      loading-label="Cancelando..."
+      :loading="cancelando"
+      variant="danger"
+      @confirm="confirmarCancelacion">
+      ¿Estás seguro de cancelar la reservación <strong>#{{ reservacion.id }}</strong>
+      en <strong>{{ reservacion.parque.nombre }}</strong>?
+      Ten en cuenta que este proceso es irreversible.
+    </AppConfirmDialog>
     
   </div>
 </template>
@@ -176,6 +165,7 @@
  import { ref, computed } from 'vue'
  import type { Reservacion } from '../../stores/reservations'
  import IconDot from '../svg/IconDot.vue'
+ import IconInfo from '../svg/IconInfo.vue'
  import IconHome from '../svg/IconHome.vue'
  import IconArrow from '../svg/IconArrow.vue'
  import IconActiva from '../svg/IconActiva.vue'
@@ -184,7 +174,7 @@
  import IconCancelada from '../svg/IconCancelada.vue'
  import IconEnProceso from '../svg/IconEnProceso.vue'
  import IconCompletada from '../svg/IconCompletada.vue'
- import IconInfo from '../svg/IconInfo.vue'
+ import AppConfirmDialog from '../ui/AppConfirmDialog.vue'
 
  const USE_MOCK = import.meta.env.VITE_USE_MOCK === 'true'
  const API = import.meta.env.VITE_API_URL || null
@@ -208,10 +198,10 @@
 
  //Estado
  const estadoMap: Record<string, { label: string; cls: string }> = {
-   ACTIVA:      { label: 'Activa',      cls: 'estado-activa' },
-   EN_PROCESO:  { label: 'En proceso',  cls: 'estado-proceso' },
-   COMPLETADA:  { label: 'Completada',  cls: 'estado-completada' },
-   CANCELADA:   { label: 'Cancelada',   cls: 'estado-cancelada' },
+   ACTIVA:     { label: 'Activa',      cls: 'estado-activa' },
+   EN_PROCESO: { label: 'En proceso',  cls: 'estado-proceso' },
+   COMPLETADA: { label: 'Completada',  cls: 'estado-completada' },
+   CANCELADA:  { label: 'Cancelada',   cls: 'estado-cancelada' },
  }
 
  const estadoLabel = computed(() => estadoMap[props.reservacion.estado]?.label ?? props.reservacion.estado)
@@ -220,7 +210,7 @@
  //Confirmar cancelacion
  async function confirmarCancelacion() {
    if (USE_MOCK) {
-     showDialog.value = false
+     showCancel.value = false
      emit('cancelar', props.reservacion)
      return
    }
@@ -488,27 +478,6 @@
    text-align: right;
  }
  .info-pending { color: var(--color-bone-mute); font-style: italic; }
-
- /* Cancelacion */
- .dialog-text { font-size: 13.5px; color: var(--color-bone-soft); line-height: 1.6; }
- .dialog-text strong { color: var(--color-bone); }
- .dialog-actions { display: flex; gap: 0.75rem; justify-content: flex-end; margin-top: 0.5rem; }
- .dialog-btn {
-   height: 36px; padding: 0 1.25rem; border-radius: 999px;
-   font-size: 13px; cursor: pointer; transition: all 0.2s;
-   font-family: var(--font-sans);
- }
- .dialog-btn-back {
-   border: 1px solid var(--color-border);
-   background: transparent; color: var(--color-bone-soft);
- }
- .dialog-btn-back:hover { background: rgba(255,255,255,0.05); color: var(--color-bone); }
- .dialog-btn-confirm {
-   border: none; background: var(--color-danger);
-   color: #fff; font-weight: 500;
- }
- .dialog-btn-confirm:hover    { opacity: 0.88; }
- .dialog-btn-confirm:disabled { opacity: 0.4; cursor: not-allowed; }
 
  /* Animaciones */
  .dialog-fade-enter-active, .dialog-fade-leave-active { transition: opacity 0.2s ease; }
