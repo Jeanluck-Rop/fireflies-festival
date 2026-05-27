@@ -1,5 +1,5 @@
 <template>
-  <div class="parks-container">
+  <div class="parks-container z-0">
     
     <!-- Mapa -->
     <div class="map-wrapper">
