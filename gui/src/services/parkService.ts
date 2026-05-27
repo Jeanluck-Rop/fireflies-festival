@@ -2,7 +2,7 @@ import { useParksStore } from '../stores/parks'
 import type { Parque } from '../stores/parks'
 
 const API = import.meta.env.VITE_API_URL || null
-const IS_DEV = import.meta.env.DEV
+const USE_MOCK = import.meta.env.VITE_USE_MOCK === 'true'
 
 //Datos Falsos
 const MOCK_PARQUES: Parque[] = [
@@ -51,30 +51,20 @@ export const parkService = {
   async getParks() {
     const store = useParksStore()
     store.loading = true
-    try {
-      /*
-      if (IS_DEV) {
-        await new Promise(r => setTimeout(r, 700))
-        store.setParks(MOCK_PARQUES)
-        store.loading = false
-        return
-      }
-      */
-      const res = await fetch(`${API}/api/parques/`)
-      if (!res.ok) {
-        const errorData = await res.json()
-        console.error(errorData)
-        throw new Error('Error al obtener información de los parques.')
-      }
-      const parques = await res.json().catch(() => ({}))
-      store.setParks(parques)
+
+    if (USE_MOCK) {
+      await new Promise(r => setTimeout(r, 700))
+      store.setParks(MOCK_PARQUES)
       store.loading = false
+      return
     }
-    catch (error) {
-      console.error('Error de red o de servidor:', error)
-      throw error
-    } finally {
-      store.loading = false
-    }
+
+    // TODO: conexion con back
+    // const res = await fetch(`${API}/api/parques/`)
+    // if (!res.ok)
+    //   throw new Error('Error cargando parques')
+    // const data = await res.json()
+    // store.setParks(data)
+    store.loading = false
   }
 }

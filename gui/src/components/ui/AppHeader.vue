@@ -52,7 +52,7 @@
               </button>
 	      
               <transition name="pop">
-                <div v-if="profileOpen" class="absolute right-0 mt-2 w-60 glass rounded-2xl p-2 shadow-2xl">
+                <div v-if="profileOpen" class="absolute right-0 mt-2 w-60 glass rounded-2xl p-2 shadow-2xl z-50">
                   <div class="px-3 py-3 border-b border-white/5 flex items-center gap-3">
                     <span class="w-9 h-9 rounded-full bg-linear-to-br from-[#7BD8B0] to-[#E8FF7A]
 				 inline-flex items-center justify-center

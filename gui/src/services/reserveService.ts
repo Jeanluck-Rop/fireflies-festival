@@ -1,8 +1,8 @@
 import { useReservationsStore } from '../stores/reservations'
 import type { Reservacion } from '../stores/reservations'
 
-const API    = import.meta.env.VITE_API_URL || null
-const IS_DEV = import.meta.env.DEV
+const API = import.meta.env.VITE_API_URL || null
+const USE_MOCK = import.meta.env.VITE_USE_MOCK === 'true'
 
 //Datos falsos
 const MOCK_RESERVACIONES: Reservacion[] = [
@@ -62,7 +62,7 @@ export const reserveService = {
     const store = useReservationsStore()
     store.loading = true
 
-    if (IS_DEV) {
+    if (USE_MOCK) {
       await new Promise(r => setTimeout(r, 500))
       store.setReservaciones(MOCK_RESERVACIONES)
       store.loading = false
