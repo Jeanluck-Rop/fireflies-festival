@@ -1,7 +1,7 @@
 import { useAuthStore } from '../stores/auth'
 
 const API = import.meta.env.VITE_API_URL || null
-const USE_MOCK = import.meta.env.VITE_USE_MOCKS
+const USE_MOCK = import.meta.env.VITE_USE_MOCK
 
 const DJANGO_ERROR_MAP: Record<string, string> = {
   'This password is entirely numeric.': 'La contraseña no puede contener solo números.',
