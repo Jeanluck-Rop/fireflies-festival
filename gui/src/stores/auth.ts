@@ -2,12 +2,17 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 
 // 1. Creamos una interfaz limpia para que TypeScript sepa qué campos tiene el usuario de Django
-interface Usuario {
+export interface Usuario {
   id: number
   nombre: string
   apellidos: string
   email: string
   rol: 'CLIENTE' | 'ADMIN'
+  metodo_pago?: string | null
+  created_at?: string | null
+  is_staff?: boolean
+  is_superuser?: boolean
+  nivel_admin?: number | null 
 }
 
 const USE_MOCK = import.meta.env.VITE_USE_MOCK === 'true'

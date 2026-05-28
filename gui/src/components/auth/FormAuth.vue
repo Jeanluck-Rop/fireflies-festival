@@ -1,5 +1,9 @@
 <template>
   <div class="auth-scene">
+    <RouterLink to="/admin/login" class="admin-access-link">
+      Acceso Admin
+    </RouterLink>
+    
     <div class="auth-card" :class="'mode-' + mode">
       
       <!-- Panel formulario Login -->
@@ -494,6 +498,26 @@ function validatePassword(password: string, email: string) {
    background-image: v-bind("'url(' + bg + ')'");
    opacity: 0.45;
    z-index: 0;
+ }
+
+ .admin-access-link {
+  position: absolute;
+  top: 1.5rem;
+  right: 1.5rem;
+  z-index: 10;
+  font-size: 11.5px;
+  font-family: var(--font-mono);
+  letter-spacing: 0.05em;
+  color: var(--color-bone-mute);
+  text-decoration: none;
+  padding: 0.35rem 0.85rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-full);
+  transition: color 0.2s, border-color 0.2s;
+}
+ .admin-access-link:hover {
+   color: var(--color-admin-accent);
+   border-color: rgba(123,167,212,0.3);
  }
  
  /* Contenedor del forms  */
