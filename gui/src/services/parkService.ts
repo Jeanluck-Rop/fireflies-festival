@@ -1,5 +1,11 @@
 import { useParksStore } from '../stores/parks'
 import type { Parque } from '../stores/parks'
+import cabinnight from '../assets/cabin-night.jpg'
+import campingnight from '../assets/camping-night.jpg'
+import fireflires1 from '../assets/fireflires_auth_background.jpg'
+import fireflires2 from '../assets/fireflires_auth_background2.jpg'
+import fireflires3 from '../assets/fireflires_auth_background3.jpg'
+import hero from '../assets/hero-forest.jpg'
 
 const API = import.meta.env.VITE_API_URL || null
 const USE_MOCK = import.meta.env.VITE_USE_MOCK === 'true'
@@ -42,8 +48,10 @@ const MOCK_PARQUES: Parque[] = [
     horario_apertura: '10:30',
     horario_cierre: '23:00',
     imagen_mapa: null,
-    activo: true,
-    imagenes: []
+    activo: false,
+    imagenes: [{id: 1, parque: 3, url: fireflires1}, {id: 2, parque: 3, url: fireflires2}, 
+      {id: 3, parque: 3, url: fireflires3}, {id: 4, parque: 3, url: hero}, 
+      {id: 5, parque: 3, url: cabinnight}, {id: 6, parque: 3, url: campingnight}]
   },
 ]
 
