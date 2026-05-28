@@ -210,6 +210,7 @@
  import FireflyLogo from '../ui/FireflyLogo.vue'
  import bgImage from '../../assets/fireflires_auth_background2.jpg'
  import { zxcvbn, Match } from '@zxcvbn-ts/core';
+ import { authService } from '../../services/authService'
 
  const USE_MOCK = import.meta.env.VITE_USE_MOCK === 'true'
  const router = useRouter()
@@ -419,18 +420,12 @@ function validatePassword(password: string, email: string) {
      await new Promise(r => setTimeout(r, 600))
      recoveryStep.value = 2
    } else {
-     // BACKEND: POST /auth/users/reset_password/
-     // try {
-     //   const res = await fetch(`${API}/auth/users/reset_password/`, {
-     //     method: 'POST',
-     //     headers: { 'Content-Type': 'application/json' },
-     //     body: JSON.stringify({ email: recovery.email })
-     //   })
-     //   // Djoser responde 204 siempre por seguridad
-     //   if (res.ok || res.status === 204) recoveryStep.value = 2
-     // } catch {
-     //   recoveryErrors.email = 'Error al enviar el correo'
-     // }
+     try {
+       await authService.requestPasswordReset(recovery.email)
+       recoveryStep.value = 2
+     } catch {
+       recoveryErrors.email = 'Error al enviar el correo'
+     }
    }
    
    recoveryLoading.value = false
@@ -443,7 +438,11 @@ function validatePassword(password: string, email: string) {
    if (USE_MOCK) {
      await new Promise(r => setTimeout(r, 400))
    } else {
-     // BACKEND: POST /auth/users/reset_password/ { email: recovery.email }
+     try {
+       await authService.requestPasswordReset(recovery.email)
+     } catch {
+       recoveryErrors.email = 'Error al enviar el correo'
+     }
    }
    
    recoveryLoading.value = false
