@@ -1,46 +1,63 @@
 <template>
   <div class="park-card">
-
     <!-- Carrusel de imagenes del parque -->
-    <div class="card-images">
+    <div class="card-images" @mouseenter="stop" @mouseleave="start">
       <transition name="fade-img" mode="out-in">
         <img
-          v-if="park.imagenes && park.imagenes.length"
+          v-if="park.imagenes?.length"
           :key="currentImageIndex"
           :src="park.imagenes[currentImageIndex].url"
           :alt="park.nombre"
-          class="card-img"/>
+          class="card-img"
+        />
         <div v-else class="card-img card-img-placeholder">
           <FireflyLogo :pulse="true" :drift="false" size="w-14 h-14" />
         </div>
       </transition>
 
       <!-- Indicadores del carrusel -->
-      <div v-if="park.imagenes && park.imagenes.length > 1" class="carousel-dots">
+      <button
+        v-if="park.imagenes?.length > 1"
+        class="carousel-btn left"
+        @click="prev"
+      >
+        ‹
+      </button>
+
+      <button
+        v-if="park.imagenes?.length > 1"
+        class="carousel-btn right"
+        @click="next"
+      >
+        ›
+      </button>
+
+      <div
+        v-if="park.imagenes?.length > 1"
+        class="carousel-dots"
+      >
         <span
           v-for="(_, i) in park.imagenes"
           :key="i"
           class="dot"
           :class="{ 'dot-active': i === currentImageIndex }"
+          @click="goTo(i)"
         />
       </div>
     </div>
 
     <!-- Contenedor de texto -->
     <div class="card-body">
-
       <!-- Nombre -->
       <h3 class="card-nombre">{{ park.nombre }}</h3>
 
       <!-- Descripcion con ellipsis -->
-      <p class="card-desc">{{ park.descripcion || 'Sin descripción' }}</p>
+      <p class="card-desc">{{ park.descripcion || "Sin descripción" }}</p>
 
       <!-- Horario y estado -->
       <div class="card-footer">
         <span class="card-horario">
-          <template v-if="is24hrs">
-            24 hrs
-          </template>
+          <template v-if="is24hrs"> 24 hrs </template>
           <template v-else>
             {{ park.horario_apertura }} – {{ park.horario_cierre }}
           </template>
@@ -50,80 +67,29 @@
           {{ statusText }}
         </span>
       </div>
-
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
- import { ref, computed, onMounted, onUnmounted } from 'vue'
- import FireflyLogo from '../ui/FireflyLogo.vue'
- import type { Parque } from '../../stores/parks'
+import { computed } from "vue";
+import FireflyLogo from "../ui/FireflyLogo.vue";
+import type { Parque } from "../../stores/parks";
+import { is24Hours, getParkStatusText, getParkStatusClass } from "../../utils/parkStatus";
+import { useCarousel } from "../../composables/useCarousel";
 
- const props = defineProps<{ park: Parque }>()
+const props = defineProps<{ park: Parque }>();
 
- //Carrusel de imagenes
- const currentImageIndex = ref(0)
- let carouselTimer: ReturnType<typeof setInterval> | null = null
+//Carrusel de imagenes
+const { currentIndex: currentImageIndex, next, prev, goTo, start, stop } = useCarousel(
+  props.park.imagenes?.length || 0
+);
 
- onMounted(() => {
-   if (props.park.imagenes && props.park.imagenes.length > 1) {
-     carouselTimer = setInterval(() => {
-       currentImageIndex.value =
-         (currentImageIndex.value + 1) % props.park.imagenes.length
-     }, 2500)
-   }
- })
+const is24hrs = computed(() => is24Hours(props.park));
 
- onUnmounted(() => {
-   if (carouselTimer) clearInterval(carouselTimer)
- })
-
- //Logica de horario
- const apertura = props.park.horario_apertura
- const cierre = props.park.horario_cierre
-
- const is24hrs = computed(() =>
-   apertura === cierre || (apertura === '00:00' && cierre === '00:00')
- )
-
- const isOpen = computed(() => {
-   if (!props.park.activo)
-     return false
-   if (is24hrs.value)
-     return true
-
-   // Hora aproximada en zona del parque por longitud
-   const offsetHours  = Math.round(props.park.longitud / 15)
-   const nowUtc = new Date()
-   const parkTime = new Date(nowUtc.getTime() + offsetHours * 60 * 60 * 1000)
-   const parkMinutes = parkTime.getUTCHours() * 60 + parkTime.getUTCMinutes()
-
-   const [aH, aM] = apertura.split(':').map(Number)
-   const [cH, cM] = cierre.split(':').map(Number)
-   const openMinutes  = aH * 60 + aM
-   const closeMinutes = cH * 60 + cM
-
-   //Turno nocturno
-   if (openMinutes > closeMinutes) {
-     return parkMinutes >= openMinutes || parkMinutes < closeMinutes
-   }
-
-   return parkMinutes >= openMinutes && parkMinutes < closeMinutes
- })
-
- //Texto y clase del estado
- const statusText = computed(() => {
-   if (!props.park.activo)
-     return 'No disponible'
-   return isOpen.value ? 'Abierto' : 'Cerrado'
- })
-
- const statusClass = computed(() => {
-   if (!props.park.activo)
-     return 'status-unavailable'
-   return isOpen.value ? 'status-open' : 'status-closed'
- })
+//Texto y clase del estado
+const statusText = computed(() => getParkStatusText(props.park));
+const statusClass = computed(() => getParkStatusClass(props.park));
 </script>
 
 <style scoped>
@@ -146,53 +112,98 @@
   background: #0d1a10;
 }
 
- .card-img {
-   width: 100%;
-   height: 200px;
-   object-fit: cover;
-   display: block;
- }
+.card-img {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+  display: block;
+}
 
- .card-img-placeholder {
-   display: flex;
-   align-items: center;
-   justify-content: center;
-   background: #0d1a10;
- }
+.card-img-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #0d1a10;
+}
 
- /* Dots del carrusel */
- .carousel-dots {
-   position: absolute;
-   bottom: 6px;
-   left: 50%;
-   transform: translateX(-50%);
-   display: flex;
-   gap: 4px;
- }
+/* Botones del carrusel */
+.carousel-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.45);
+  color: white;
+  font-size: 18px;
+  transition:
+    background 0.2s,
+    opacity 0.2s;
+  opacity: 0;
+}
 
- .dot {
-   width: 4px;
-   height: 4px;
-   border-radius: 50%;
-   background: rgba(255, 255, 255, 0.3);
-   transition: background 0.3s;
- }
+.card-images:hover .carousel-btn {
+  opacity: 1;
+}
 
- .dot-active {
-   background: var(--color-accent);
- }
+.carousel-btn:hover {
+  background: rgba(0, 0, 0, 0.7);
+}
 
- /* Transicion entre imagenes */
- .fade-img-enter-active,
- .fade-img-leave-active {
-   transition: opacity 0.5s ease;
- }
- .fade-img-enter-from,
- .fade-img-leave-to {
-   opacity: 0;
- }
+.carousel-btn.left {
+  left: 8px;
+}
 
- /* Texto */
+.carousel-btn.right {
+  right: 8px;
+}
+
+/* Dots del carrusel */
+.carousel-dots {
+  position: absolute;
+  bottom: 6px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 4px;
+}
+
+.dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  transition: 
+    background 0.3s
+    transform 0.25s;
+}
+
+.dot:hover {
+  transform: scale(1.2);
+}
+
+.dot-active {
+  background: var(--color-accent);
+}
+
+/* Transicion entre imagenes */
+.fade-img-enter-active,
+.fade-img-leave-active {
+  transition: opacity 0.5s ease;
+}
+.fade-img-enter-from,
+.fade-img-leave-to {
+  opacity: 0;
+}
+
+/* Texto */
 .card-body {
   padding: 0.9rem;
   display: flex;
@@ -210,47 +221,47 @@
   max-width: 100%;
 }
 
- .card-desc {
-   font-size: 13px;
-   color: var(--color-bone-soft);
-   white-space: nowrap;
-   overflow: hidden;
-   text-overflow: ellipsis;
-   max-width: 100%;
- }
+.card-desc {
+  font-size: 13px;
+  color: var(--color-bone-soft);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
 
- .card-footer {
-   display: flex;
-   align-items: center;
-   justify-content: space-between;
-   margin-top: 0.25rem;
- }
+.card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 0.25rem;
+}
 
 .card-horario {
   font-size: 12.5px;
   color: var(--color-bone-mute);
 }
 
- .card-status {
-   font-size: 12px;
-   font-weight: 600;
-   padding: 0.25rem 0.6rem;
-   border-radius: 999px;
-   letter-spacing: 0.04em;
- }
+.card-status {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 0.25rem 0.6rem;
+  border-radius: 999px;
+  letter-spacing: 0.04em;
+}
 
- .status-open {
-   background: rgba(123, 216, 176, 0.15);
-   color: var(--color-green);
- }
+.status-open {
+  background: rgba(123, 216, 176, 0.15);
+  color: var(--color-green);
+}
 
- .status-closed {
-   background: rgba(255, 138, 123, 0.12);
-   color: var(--color-danger);
- }
+.status-closed {
+  background: rgba(255, 138, 123, 0.12);
+  color: var(--color-danger);
+}
 
- .status-unavailable {
-   background: rgba(255, 255, 255, 0.06);
-   color: var(--color-bone-mute);
- }
+.status-unavailable {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--color-bone-mute);
+}
 </style>
