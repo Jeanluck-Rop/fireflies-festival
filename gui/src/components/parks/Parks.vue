@@ -20,7 +20,7 @@
           :key="park.id"
           :lat-lng="[park.latitud, park.longitud]"
           :icon="getIcon(park)"
-          @click="(e) => selectPark(park, e)"
+          @click="() => selectPark(park)"
         />
       </LMap>
 
@@ -34,11 +34,13 @@
     <!-- Popup ParkCard -->
     <transition name="card-pop">
       <div
-        v-if="selectedPark && popupPosition"
+        v-if="selectedPark"
+        ref="cardRef"
         class="card-floating"
         :style="{
           left: popupPosition.x + 'px',
           top: popupPosition.y + 'px',
+          visibility: positioned ? 'visible' : 'hidden',
         }"
       >
         <button class="card-close" @click="closeCard" aria-label="Cerrar">
@@ -58,7 +60,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from "vue";
+import { ref, computed, watch, nextTick } from "vue";
 import { LMap, LTileLayer, LMarker } from "@vue-leaflet/vue-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
@@ -73,56 +75,77 @@ const store = useParksStore();
 const parks = computed(() => store.parks);
 const loading = computed(() => store.loading);
 const selectedPark = computed(() => store.selectedPark);
-const popupPosition = ref<{ x: number; y: number } | null>(null);
+
+const popupPosition = ref({ x: 0, y: 0 });
+const positioned = ref(false);
 
 const mapRef = ref<InstanceType<typeof LMap> | null>(null);
+const cardRef = ref<HTMLElement | null>(null);
 const zoom = ref(6);
 const center = ref<[number, number]>([23.6345, -102.5528]);
 
 watch(parks, (newParks) => {
   if (newParks.length) {
-    const avgLat =
-      newParks.reduce((s, p) => s + p.latitud, 0) / newParks.length;
-    const avgLng =
-      newParks.reduce((s, p) => s + p.longitud, 0) / newParks.length;
+    const avgLat = newParks.reduce((s, p) => s + p.latitud, 0) / newParks.length;
+    const avgLng = newParks.reduce((s, p) => s + p.longitud, 0) / newParks.length;
     center.value = [avgLat, avgLng];
   }
 });
 
-function getIcon(park: Parque) {
-  return createPinIcon(isParkOpen(park));
-}
-
-function selectPark(park: Parque, event: L.LeafletMouseEvent) {
-  if (store.selectedPark && store.selectedPark.id !== park.id) {
-    store.selectPark(null);
-    setTimeout(() => {
-      store.selectPark(park);
-      setPopupPosition(event);
-    }, 220);
+watch(selectedPark, async (park) => {
+  if (!park) {
+    positioned.value = false;
     return;
   }
-  store.selectPark(park);
-  setPopupPosition(event);
+  positioned.value = false;
+  await nextTick();
+  positionCard(park);
+  positioned.value = true;
+});
+
+function getIcon(park: Parque) {
+  const isOpen = isParkOpen(park);
+  const isSelected = selectedPark.value?.id === park.id;
+
+  return createPinIcon(isOpen, isSelected);
 }
 
-function setPopupPosition(event: L.LeafletMouseEvent) {
-  const map = mapRef.value?.leafletObject;
+function selectPark(park: Parque) {
+  store.selectPark(park);
+}
+
+function positionCard(park: Parque) {
+  const map = mapRef.value?.leafletObject as L.Map | undefined;
   if (!map) return;
-  const point = map.latLngToContainerPoint(event.latlng);
-  popupPosition.value = {
-    x: point.x + 30,
-    y: point.y - 200,
-  };
+
+  const point = map.latLngToContainerPoint([park.latitud, park.longitud]);
+  const mapSize = map.getSize();
+  const cardW = cardRef.value?.offsetWidth ?? 300;
+  const cardH = cardRef.value?.offsetHeight ?? 380;
+  const M = 12;
+
+  let x = point.x + 20;
+  let y = point.y - cardH / 2;
+
+  if (x + cardW + M > mapSize.x) x = point.x - cardW - 20;
+
+  x = Math.max(M, Math.min(x, mapSize.x - cardW - M));
+  y = Math.max(M, Math.min(y, mapSize.y - cardH - M));
+
+  popupPosition.value = { x, y };
 }
 
 function closeCard() {
   store.selectPark(null);
-  popupPosition.value = null;
 }
 
 function onMapReady() {
   console.log('Mapa listo');
+  const map = mapRef.value?.leafletObject as L.Map | undefined;
+  if (!map) return;
+  map.on("move zoom", () => {
+    if (selectedPark.value) positionCard(selectedPark.value);
+  });
 }
 </script>
 
@@ -173,13 +196,14 @@ function onMapReady() {
 .card-floating {
   position: absolute;
   z-index: 1001;
+  width: 300px;
   pointer-events: all;
 }
 
 .card-close {
   position: absolute;
   top: -10px;
-  right: -10px;
+  right: -45px;
   width: 24px;
   height: 24px;
   border-radius: 50%;

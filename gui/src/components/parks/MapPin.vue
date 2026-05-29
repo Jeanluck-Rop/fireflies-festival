@@ -2,10 +2,11 @@
 import L from "leaflet";
 
 //Diseno del pin
-export function createPinIcon(open: boolean): L.DivIcon {
+export function createPinIcon(open: boolean, active = false): L.DivIcon {
   const accent = "#E8FF7A";
 
-  const glow = open
+  const glow = active ? `filter: drop-shadow(0 0 6px #7ad3a4) drop-shadow(0 0 16px rgba(122, 255, 197, 0.4));`
+  : open
     ? `filter: drop-shadow(0 0 6px rgba(232,255,122,0.9)) drop-shadow(0 0 16px rgba(232,255,122,0.4));`
     : `filter: grayscale(1) brightness(0.35);`;
 
