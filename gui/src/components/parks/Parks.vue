@@ -1,5 +1,5 @@
 <template>
-  <div class="parks-container z-0">
+  <div class="parks-container z-0 animate-fade-up">
     <!-- Mapa -->
     <div class="map-wrapper">
       <LMap
@@ -96,6 +96,10 @@ watch(selectedPark, async (park) => {
   if (!park) {
     positioned.value = false;
     return;
+  }
+  const map = mapRef.value?.leafletObject as L.Map | undefined
+  if (map) {
+    map.setView([park.latitud, park.longitud], Math.max(map.getZoom(), 12), { animate: true });
   }
   positioned.value = false;
   await nextTick();
