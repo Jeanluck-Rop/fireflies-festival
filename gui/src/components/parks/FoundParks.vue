@@ -1,5 +1,5 @@
 <template>
-  <div class="mx-auto max-w-380 mt-5 px-5 lg:px-8">
+  <div class="mx-auto max-w-380 mt-5 px-5 lg:px-8 animate-fade-up">
     <div class="flex items-end justify-between gap-4 mb-7">
       <div>
         <span class="inline-flex items-center gap-2 text-[11px] font-medium uppercase tracking-[0.25em] text-(--color-accent)/90">
