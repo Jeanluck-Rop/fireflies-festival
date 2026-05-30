@@ -163,3 +163,36 @@ body {
   color: var(--color-accent);
   text-shadow: 0 0 24px rgba(245, 213, 122, 0.45), 0 0 60px rgba(245, 213, 122, 0.18);
 }
+
+
+/* Admin theme */
+:root {
+  --color-admin-accent:       #7BA7D4;
+  --color-admin-accent-soft:  rgba(123, 167, 212, 0.12);
+  --color-admin-accent-dim:   rgba(123, 167, 212, 0.35);
+  --color-admin-accent-strong: #9DC0E8;
+  --color-admin-border:       rgba(123, 167, 212, 0.18);
+  --color-admin-surface:      rgba(123, 167, 212, 0.06);
+}
+
+.glass-admin {
+  background-color: var(--color-admin-surface);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--color-admin-border);
+  box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);
+}
+
+.btn-admin-primary {
+  background-color: var(--color-admin-accent);
+  color: #0A1525;
+  box-shadow: 0 0 15px var(--color-admin-accent-dim);
+  transition: all var(--transition-normal);
+  border-radius: var(--radius-full);
+  padding: 0.625rem 1.25rem;
+  font-size: var(--text-base);
+  font-weight: 500;
+}
+.btn-admin-primary:hover {
+  box-shadow: 0 0 25px rgba(123, 167, 212, 0.5);
+  transform: translateY(-1px);
+}

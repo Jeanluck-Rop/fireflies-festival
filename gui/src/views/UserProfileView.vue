@@ -174,11 +174,11 @@
         <div class="account-section">
           <h2 class="account-title">Datos de la cuenta</h2>
           <div class="account-row">
-            <span class="account-label">Tipo de cuenta</span>
-            <span class="account-badge" :class="user?.rol === 'ADMIN' ? 'badge-admin' : 'badge-cliente'">
-              {{ user?.rol === 'ADMIN' ? 'Administrador' : 'Cliente' }}
-            </span>
-          </div>
+	    <span class="account-label">Tipo de cuenta</span>
+	    <span class="account-badge" :class="accountBadgeClass">
+	      {{ accountBadgeLabel }}
+	    </span>
+	  </div>
           <div class="account-row">
             <span class="account-label">Miembro desde</span>
             <span class="account-value">{{ formatDate(user?.created_at) }}</span>
@@ -433,6 +433,18 @@
  })
 
  //Helpers
+ const accountBadgeLabel = computed(() => {
+   if (user.value?.rol !== 'ADMIN')
+     return 'Cliente'
+   return (user.value as any)?.is_superuser ? 'Administrador' : 'Staff'
+ })
+
+ const accountBadgeClass = computed(() => {
+   if (user.value?.rol !== 'ADMIN')
+     return 'badge-cliente'
+   return (user.value as any)?.is_superuser ? 'badge-admin' : 'badge-staff'
+ })
+ 
  const metodoPagoMap: Record<string, string> = {
    PAYPAL: 'PayPal',
    STRIPE: 'Stripe',
@@ -669,7 +681,10 @@
 
  .ver-reservaciones-btn { width: 100%; }
 
- /* Zona peligro */
+ .badge-cliente { background: rgba(123,216,176,0.12); color: var(--color-green); }
+ .badge-staff   { background: rgba(123,167,212,0.12); color: var(--color-admin-accent); }
+ .badge-admin   { background: rgba(232,255,122,0.1);  color: var(--color-accent); }
+
  .danger-title { color: var(--color-danger); }
  .danger-desc {
    font-size: 12.5px;
