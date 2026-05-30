@@ -222,8 +222,21 @@
           </AppButton>
         </div>
 
-        <div class="divider" />
-
+	<div class="divider" />
+	
+	<!-- Cambiar contrasena -->
+	<div class="account-section">
+	  <h2 class="account-title">Contraseña</h2>
+	  <p class="change-pass-desc">
+	    Te enviaremos un enlace a tu correo para que puedas establecer una nueva contraseña.
+	  </p>
+	  <button class="change-pass-btn" @click="showChangePasswordDialog = true">
+	    Cambiar contraseña
+	  </button>
+	</div>
+	
+	<div class="divider" />
+	
         <!-- Eliminar cuenta -->
         <div class="account-section">
 	  <button class="delete-btn" @click="showDeleteDialog = true">
@@ -237,6 +250,18 @@
 
     </div>
 
+    <AppConfirmDialog
+      v-model="showChangePasswordDialog"
+      title="Cambiar contraseña"
+      confirm-label="Enviar enlace"
+      loading-label="Enviando..."
+      variant="normal"
+      @confirm="handleChangePassword">
+      Te enviaremos un enlace a
+      <strong>{{ user?.email }}</strong>
+      para que puedas establecer una nueva contraseña.
+    </AppConfirmDialog>
+    
     <!-- Dialogo eliminar cuenta -->
     <AppConfirmDialog
       v-model="showDeleteDialog"
@@ -281,6 +306,8 @@
  function triggerFileInput() {
    fileInput.value?.click()
  }
+
+ const showChangePasswordDialog = ref(false)
  
  function handleFileChange(event: Event) {
    const file = (event.target as HTMLInputElement).files?.[0]
@@ -394,7 +421,35 @@
    }
    saving.value = false
  }
+  
+ //Cambio contrasena
+ async function handleChangePassword() {
+   showChangePasswordDialog.value = false
+   
+   if (USE_MOCK) {
+     await new Promise(r => setTimeout(r, 400))
+     show('normal', 'Revisa tu correo para cambiar tu contraseña')
+     return
+   }
 
+   // TODO backend: POST /auth/users/reset_password/
+   // Djoser envía el link al correo del usuario autenticado
+   // try {
+   //   const res = await fetch(`${API}/auth/users/reset_password/`, {
+   //     method: 'POST',
+   //     headers: { 'Content-Type': 'application/json' },
+   //     body: JSON.stringify({ email: user.value?.email })
+   //   })
+   //   if (res.ok || res.status === 204) {
+   //     show('normal', 'Revisa tu correo para cambiar tu contraseña')
+   //   } else {
+   //     show('error', 'Error al enviar el correo. Intenta de nuevo')
+   //   }
+   // } catch {
+   //   show('error', 'Error al enviar el correo. Intenta de nuevo')
+   // }
+ }
+ 
  //Eliminar cuenta
  async function handleDeleteAccount() {
    if (USE_MOCK) {
@@ -684,6 +739,30 @@
  .badge-cliente { background: rgba(123,216,176,0.12); color: var(--color-green); }
  .badge-staff   { background: rgba(123,167,212,0.12); color: var(--color-admin-accent); }
  .badge-admin   { background: rgba(232,255,122,0.1);  color: var(--color-accent); }
+
+ .change-pass-desc {
+   font-size: 12.5px;
+   color: var(--color-bone-mute);
+   line-height: 1.5;
+ }
+
+ .change-pass-btn {
+   height: 36px;
+   padding: 0 1.25rem;
+   border-radius: 999px;
+   border: 1px solid var(--color-border);
+   background: transparent;
+   color: var(--color-bone-soft);
+   font-size: 13px;
+   cursor: pointer;
+   transition: all 0.2s;
+   align-self: flex-start;
+ }
+ .change-pass-btn:hover {
+   background: rgba(255,255,255,0.05);
+   border-color: rgba(255,255,255,0.2);
+   color: var(--color-bone);
+ }
  
  .danger-title { color: var(--color-danger); }
  .danger-desc {
