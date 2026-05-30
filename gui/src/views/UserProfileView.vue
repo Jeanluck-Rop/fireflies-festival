@@ -14,12 +14,9 @@
               :alt="user.nombre"
               class="avatar-img"
             />
-            <img
-              v-else
-              src="../assets/profile_white.svg"
-              alt="Foto de perfil"
-              class="avatar-img avatar-default"
-            />
+            <div v-else class="avatar-initials-circle">
+	      <span class="avatar-initials-text">{{ userInitials }}</span>
+	    </div>
 	    <!-- Overlay al hacer hover -->
 	    <div class="avatar-overlay">
 	      <IconEdit size="18px" />
@@ -132,7 +129,7 @@
             </button>
           </div>
 
-          <div class="field-row">
+          <div v-if="!isAdmin" class="field-row">
             <div class="field-content">
               <span class="field-label">Método de pago preferido</span>
               <div v-if="!editing.metodo_pago" class="pm-preview">
@@ -183,16 +180,16 @@
             <span class="account-label">Miembro desde</span>
             <span class="account-value">{{ formatDate(user?.created_at) }}</span>
           </div>
-          <div class="account-row">
+          <div v-if="!isAdmin" class="account-row">
             <span class="account-label">Método de pago</span>
 	    <PaymentMethodBadge :method="user?.metodo_pago" />
           </div>
         </div>
 
-        <div class="divider" />
+        <div v-if="!isAdmin" class="divider" />
 
         <!-- Estadisticas de reservaciones -->
-        <div class="account-section">
+        <div v-if="!isAdmin" class="account-section">
           <h2 class="account-title">Reservaciones</h2>
 
           <div class="stats-grid">
@@ -222,6 +219,82 @@
           </AppButton>
         </div>
 
+	<!-- Seccion admin stats del panel -->
+	<div v-if="isAdmin" class="divider" />
+	
+	<div v-if="isAdmin" class="account-section">
+	  <h2 class="account-title">Panel de administración</h2>
+	  
+	  <!-- STAFF: parque asignado + hospedajes + usuarios -->
+	  <template v-if="isStaff">
+	    <div class="admin-stat-row">
+	      <span class="account-label">Parque asignado</span>
+	      <span class="account-value admin-park-name">
+		{{ parqueAsignado?.nombre ?? 'Sin asignar' }}
+	      </span>
+	    </div>
+	    <div class="admin-stats-grid">
+	      <div class="admin-stat-card">
+		<span class="admin-stat-num">{{ parqueAsignado?.hospedajes ?? 0 }}</span>
+		<span class="admin-stat-label">Hospedajes</span>
+	      </div>
+	      <div class="admin-stat-card">
+		<span class="admin-stat-num">{{ MOCK_TOTALES.usuarios }}</span>
+		<span class="admin-stat-label">Usuarios</span>
+	      </div>
+	    </div>
+	    <div class="admin-btns">
+	      <button class="btn-admin-nav" @click="router.push('/admin/parques')">
+		Hospedajes
+	      </button>
+	      <button class="btn-admin-nav" @click="router.push('/admin/usuarios')">
+		Usuarios
+	      </button>
+	    </div>
+	  </template>
+	  
+	  <!-- SUPERUSER selector de parque + totales + 3 botones -->
+	  <template v-if="isSuperuser">
+	    <div class="admin-stat-row">
+	      <span class="account-label">Hospedajes en</span>
+	      <select v-model="statsParqueId" class="stats-park-select">
+		<option v-for="p in MOCK_PARQUES_STATS" :key="p.id" :value="p.id">
+		  {{ p.nombre }}
+		</option>
+	      </select>
+	    </div>
+	    <div class="admin-stats-grid">
+	      <div class="admin-stat-card">
+		<span class="admin-stat-num">{{ MOCK_PARQUES_STATS.length }}</span>
+		<span class="admin-stat-label">Parques</span>
+	      </div>
+	      <div class="admin-stat-card">
+		<span class="admin-stat-num">{{ parqueStats?.hospedajes ?? 0 }}</span>
+		<span class="admin-stat-label">Hospedajes</span>
+	      </div>
+	      <div class="admin-stat-card">
+		<span class="admin-stat-num">{{ MOCK_TOTALES.usuarios }}</span>
+		<span class="admin-stat-label">Usuarios</span>
+	      </div>
+	      <div class="admin-stat-card">
+		<span class="admin-stat-num">{{ MOCK_TOTALES.staff }}</span>
+		<span class="admin-stat-label">Staff</span>
+	      </div>
+	    </div>
+	    <div class="admin-btns">
+	      <button class="btn-admin-nav" @click="router.push('/admin/parques')">
+		Parques
+	      </button>
+	      <button class="btn-admin-nav" @click="router.push('/admin/usuarios')">
+		Usuarios
+	      </button>
+	      <button class="btn-admin-nav" @click="router.push('/admin/staff')">
+		Staff
+	      </button>
+	    </div>
+	  </template>
+	</div>
+	
 	<div class="divider" />
 	
 	<!-- Cambiar contrasena -->
@@ -308,6 +381,13 @@
  }
 
  const showChangePasswordDialog = ref(false)
+
+ const isAdmin = computed(() => user.value?.rol === 'ADMIN')
+ 
+ const userInitials = computed(() => {
+   if (!user.value) return ''
+   return ((user.value.nombre[0] ?? '') + (user.value.apellidos[0] ?? '')).toUpperCase()
+ })
  
  function handleFileChange(event: Event) {
    const file = (event.target as HTMLInputElement).files?.[0]
@@ -421,7 +501,33 @@
    }
    saving.value = false
  }
-  
+
+ const isStaff = computed(() => !!(auth.user?.is_staff && !(auth.user as any)?.is_superuser))
+ const isSuperuser = computed(() => !!(auth.user as any)?.is_superuser)
+ 
+ //Mock stats admin
+ // TODO backend: GET /api/admin/stats/
+ const MOCK_PARQUES_STATS = [
+   { id: 1, nombre: 'Parque Sierra Chincua', hospedajes: 4 },
+   { id: 2, nombre: 'Parque Piedra Herrada', hospedajes: 2 },
+   { id: 3, nombre: 'Parque El Rosario',     hospedajes: 1 },
+ ]
+ const MOCK_TOTALES = { usuarios: 5, staff: 5 }
+ 
+ //Superuser puede cambiar que parque consulta
+ const statsParqueId = ref<number>(
+   MOCK_PARQUES_STATS[0]?.id ?? 1
+ )
+ const parqueStats = computed(() =>
+   MOCK_PARQUES_STATS.find(p => p.id === statsParqueId.value) ?? null
+ )
+ 
+ //Staff parque asignado fijo
+ const parqueAsignado = computed(() => {
+   const id = (auth.user as any)?.parque_asignado as number | null
+   return MOCK_PARQUES_STATS.find(p => p.id === id) ?? null
+ })
+ 
  //Cambio contrasena
  async function handleChangePassword() {
    showChangePasswordDialog.value = false
@@ -595,6 +701,21 @@
    background: rgba(123,216,176,0.08);
    padding: 20px;
    box-sizing: border-box;
+ }
+ .avatar-initials-circle {
+   width: 100%;
+   height: 100%;
+   display: flex;
+   align-items: center;
+   justify-content: center;
+   background: linear-gradient(135deg, #7BD8B0, #E8FF7A);
+ }
+ .avatar-initials-text {
+   font-size: 52px;
+   font-weight: 700;
+   color: #07090A;
+   letter-spacing: -0.02em;
+   user-select: none;
  }
  .avatar-overlay {
    position: absolute;
@@ -791,5 +912,86 @@
    min-height: 38px;
    display: flex;
    align-items: center;
+ }
+
+ /* Stats admin */
+ .admin-stat-row {
+   display: flex;
+   align-items: center;
+   justify-content: space-between;
+   gap: 0.75rem;
+ }
+ .admin-park-name {
+   font-size: 12.5px;
+   color: var(--color-admin-accent, #7BA7D4);
+   font-weight: 500;
+   text-align: right;
+ }
+ .stats-park-select {
+   height: 28px;
+   padding: 0 0.75rem;
+   border-radius: 8px;
+   border: 1px solid var(--color-border);
+   background: rgba(255,255,255,0.04);
+   color: var(--color-bone);
+   font-size: 12px;
+   font-family: var(--font-sans);
+   outline: none;
+   appearance: none;
+   cursor: pointer;
+   max-width: 180px;
+   transition: border-color 0.2s;
+ }
+ .stats-park-select:focus {
+   border-color: rgba(123,167,212,0.4);
+ }
+
+ .admin-stats-grid {
+   display: grid;
+   grid-template-columns: repeat(2, 1fr);
+   gap: 0.5rem;
+ }
+ .admin-stat-card {
+   display: flex;
+   flex-direction: column;
+   align-items: center;
+   gap: 0.2rem;
+   padding: 0.75rem 0.5rem;
+   border-radius: 10px;
+   border: 1px solid rgba(123,167,212,0.12);
+   background: rgba(123,167,212,0.03);
+ }
+ .admin-stat-num {
+   font-size: 22px;
+   font-weight: 700;
+   color: var(--color-admin-accent, #7BA7D4);
+ }
+ .admin-stat-label {
+   font-size: 10px;
+   color: var(--color-bone-mute);
+   text-align: center;
+ }
+
+ .admin-btns {
+   display: flex;
+   gap: 0.5rem;
+   flex-wrap: wrap;
+ }
+ .btn-admin-nav {
+   flex: 1;
+   height: 34px;
+   padding: 0 0.75rem;
+   border-radius: 999px;
+   border: 1px solid rgba(123,167,212,0.25);
+   background: transparent;
+   color: var(--color-admin-accent, #7BA7D4);
+   font-size: 12.5px;
+   cursor: pointer;
+   transition: all 0.15s;
+   white-space: nowrap;
+ }
+ .btn-admin-nav:hover {
+   background: rgba(123,167,212,0.08);
+   border-color: rgba(123,167,212,0.4);
  }
 </style>
