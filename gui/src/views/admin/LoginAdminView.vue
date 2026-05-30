@@ -126,15 +126,16 @@
          email: form.email,
          rol: 'ADMIN',
          is_staff: true,
-         is_superuser: true,
+         is_superuser: false,
          nivel_admin: 1,
+	 parque_asignado: 1,
        })
        router.push('/admin/reservaciones')
        return
      }
 
      // TODO backend: POST /auth/jwt/create/
-     // El mismo endpoint — la diferencia está en que el usuario retornado tiene rol='ADMIN'
+     // El mismo endpoint la diferencia está en que el usuario retornado tiene rol='ADMIN'
      // try {
      //   const res = await fetch(`${API}/auth/jwt/create/`, {
      //     method: 'POST',
