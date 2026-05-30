@@ -160,8 +160,8 @@
 </template>
 
 <script setup lang="ts">
- import { useRouter } from 'vue-router'
- import { ref, onMounted, onUnmounted, computed } from 'vue';
+ import { useRouter, useRoute } from 'vue-router'
+ import { ref, onMounted, onUnmounted, computed, watch } from 'vue';
  import { useAuthStore } from '../../stores/auth';
  import { authService } from '../../services/authService';
  import type { Usuario } from '../../stores/auth'
@@ -170,8 +170,9 @@
  import FireflyLogo from './FireflyLogo.vue';
  
  const router = useRouter()
+ const route = useRoute()
  const auth = useAuthStore();
- 
+  
  const showHeader = ref(true);
  let lastScrollY = 0;
 
@@ -183,7 +184,10 @@
 
  onMounted(() => window.addEventListener('scroll', handleScroll));
  onUnmounted(() => window.removeEventListener('scroll', handleScroll));
-
+ watch(() => route.path, () => {
+   profileOpen.value = false
+ })
+ 
  const props = defineProps<{
    user: Usuario | null;
  }>();
