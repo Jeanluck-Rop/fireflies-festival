@@ -106,12 +106,11 @@
      key:  'fechas',
      type: 'daterange',
    },
-   // TODO backend: descomentar cuando el modelo tenga precio
-   // {
-   //   key:         'precio',
-   //   type:        'number',
-   //   placeholder: 'Precio máx.',
-   // },
+   {
+     key:         'precio',
+     type:        'number',
+     placeholder: 'Precio máx.',
+   },
  ]
 
  const filters = ref<FilterValues>({
@@ -150,12 +149,13 @@
        r.fecha_fin <= filters.value.fechas_hasta
      )
    }
-
-   // TODO backend: filtro por precio cuando el modelo lo tenga
-   // if (filters.value.precio) {
-   //   const max = parseFloat(filters.value.precio)
-   //   result = result.filter(r => r.precio <= max)
-   // }
+   //Fltro por total
+   if (filters.value.precio) {
+     const max = parseFloat(filters.value.precio)
+     result = result.filter(r =>
+       r.monto == null || r.monto <= max
+     )
+   }
 
    return result
  })
