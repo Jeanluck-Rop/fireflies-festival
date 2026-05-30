@@ -125,10 +125,10 @@
          apellidos: 'Sistema',
          email: form.email,
          rol: 'ADMIN',
-         is_staff: true,
-         is_superuser: false,
+         is_staff: false,
+         is_superuser: true,
          nivel_admin: 1,
-	 parque_asignado: 1,
+	 parque_asignado: null,
        })
        router.push('/admin/reservaciones')
        return

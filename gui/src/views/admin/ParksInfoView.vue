@@ -1,54 +1,45 @@
 <template>
   <div class="admin-view">
     <div class="admin-view-inner">
-      <div class="admin-placeholder">
-        <div class="placeholder-icon">
-          <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
-            <rect x="1" y="1" width="30" height="30" rx="8" stroke="currentColor" stroke-width="1.5" stroke-dasharray="4 3"/>
-            <path d="M16 10v12M10 16h12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-          </svg>
-        </div>
-        <h1 class="placeholder-title">Reservaciones por Parque</h1>
-        <p class="placeholder-sub">Reservaciones de cada parque (próximamente)</p>
+      <div class="view-header">
+        <h1 class="view-title">{{ isSuperuser ? 'Parques' : 'Hospedajes' }}</h1>
+        <p class="view-sub">
+          {{ isSuperuser
+          ? 'Gestiona los parques, hospedajes y reservaciones'
+          : 'Gestiona los hospedajes y reservaciones de tu parque' }}
+        </p>
       </div>
+      <ParksInfo />
     </div>
   </div>
 </template>
+
+<script setup lang="ts">
+ import { computed } from 'vue'
+ import { useAuthStore } from '../../stores/auth'
+ import ParksInfo from '../../components/admin/ParksInfo.vue'
+
+ const auth = useAuthStore()
+ const isSuperuser = computed(() => !!(auth.user as any)?.is_superuser)
+</script>
+
 <style scoped>
  .admin-view {
    min-height: calc(100vh - 76px);
    margin-top: 76px;
    display: flex;
    justify-content: center;
-   align-items: center;
    padding: 2rem 1.5rem;
+   box-sizing: border-box;
  }
  .admin-view-inner {
    width: 100%;
-   max-width: 82.5rem;
- }
- .admin-placeholder {
+   max-width: 1100px;
    display: flex;
    flex-direction: column;
-   align-items: center;
-   justify-content: center;
-   gap: 1rem;
-   padding: 4rem 2rem;
-   border: 1px dashed rgba(123,167,212,0.2);
-   border-radius: 16px;
-   background: rgba(123,167,212,0.03);
-   text-align: center;
+   gap: 1.5rem;
  }
- .placeholder-icon { color: rgba(123,167,212,0.4); }
- .placeholder-title {
-   font-size: 22px;
-   font-weight: 600;
-   color: var(--color-bone);
-   letter-spacing: -0.02em;
- }
- .placeholder-sub {
-   font-size: 14px;
-   color: var(--color-bone-mute);
-   max-width: 320px;
- }
+ .view-header { display: flex; flex-direction: column; gap: 0.25rem; }
+ .view-title { font-size: 22px; font-weight: 600; color: var(--color-bone); letter-spacing: -0.02em; }
+ .view-sub { font-size: 13px; color: var(--color-bone-mute); }
 </style>
