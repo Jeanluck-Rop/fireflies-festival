@@ -87,7 +87,7 @@
       <!-- Parques pequeños -->
       <article v-for="p in sides" :key="p.id"
         class="group relative cursor-pointer overflow-hidden rounded-3xl ring-1 ring-white/10 transition-[box-shadow,transform] duration-500 hover:shadow-[0_24px_60px_-24px_rgba(0,0,0,0.7)] min-h-57.5 lg:min-h-0"
-        :class="{ 'ring-2 ring-(--color-accent)/60': selectedId === p.id }" @click="selectPark(p)" >
+        :class="{ 'ring-2 ring-(--color-accent)/60': selectedId === p.id }" @click="hero && viewOnMap(p)" >
         <template v-if="hasPhoto(p)">
           <img :src="firstImage(p)" :alt="p.nombre"
             class="absolute inset-0 h-full w-full scale-[1.001] object-cover transition-transform duration-1500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-110 motion-reduce:transition-none motion-reduce:group-hover:scale-100" />

@@ -1,61 +1,63 @@
 <template>
-  <div class="parks-container z-0 animate-fade-up">
-    <!-- Mapa -->
-    <div class="map-wrapper">
-      <LMap
-        ref="mapRef"
-        :zoom="zoom"
-        :center="center"
-        :use-global-leaflet="false"
-        class="park-map"
-        @ready="onMapReady"
-      >
-        <LTileLayer
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          attribution="© Festival Luciérnagas"
-        />
+  <div class="mx-auto max-w-380 mt-5 px-5 lg:px-8 animate-fade-up">
+    <div class="parks-container z-0 animate-fade-up">
+      <!-- Mapa -->
+      <div class="map-wrapper">
+        <LMap
+          ref="mapRef"
+          :zoom="zoom"
+          :center="center"
+          :use-global-leaflet="false"
+          class="park-map"
+          @ready="onMapReady"
+        >
+          <LTileLayer
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            attribution="© Festival Luciérnagas"
+          />
 
-        <LMarker
-          v-for="park in parks"
-          :key="park.id"
-          :lat-lng="[park.latitud, park.longitud]"
-          :icon="getIcon(park)"
-          @click="() => selectPark(park)"
-        />
-      </LMap>
+          <LMarker
+            v-for="park in parks"
+            :key="park.id"
+            :lat-lng="[park.latitud, park.longitud]"
+            :icon="getIcon(park)"
+            @click="() => selectPark(park)"
+          />
+        </LMap>
 
-      <!-- Loading overlay -->
-      <div v-if="loading" class="map-loading">
-        <FireflyLogo :pulse="true" :drift="false" size="w-12 h-12" />
-        <span>Cargando parques...</span>
+        <!-- Loading overlay -->
+        <div v-if="loading" class="map-loading">
+          <FireflyLogo :pulse="true" :drift="false" size="w-12 h-12" />
+          <span>Cargando parques...</span>
+        </div>
       </div>
+
+      <!-- Popup ParkCard -->
+      <transition name="card-pop">
+        <div
+          v-if="selectedPark"
+          ref="cardRef"
+          class="card-floating"
+          :style="{
+            left: popupPosition.x + 'px',
+            top: popupPosition.y + 'px',
+            visibility: positioned ? 'visible' : 'hidden',
+          }"
+        >
+          <button class="card-close" @click="closeCard" aria-label="Cerrar">
+            <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+              <path
+                d="M1 1l8 8M9 1l-8 8"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linecap="round"
+              />
+            </svg>
+          </button>
+          <ParkCard :park="selectedPark" />
+        </div>
+      </transition>
     </div>
-
-    <!-- Popup ParkCard -->
-    <transition name="card-pop">
-      <div
-        v-if="selectedPark"
-        ref="cardRef"
-        class="card-floating"
-        :style="{
-          left: popupPosition.x + 'px',
-          top: popupPosition.y + 'px',
-          visibility: positioned ? 'visible' : 'hidden',
-        }"
-      >
-        <button class="card-close" @click="closeCard" aria-label="Cerrar">
-          <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-            <path
-              d="M1 1l8 8M9 1l-8 8"
-              stroke="currentColor"
-              stroke-width="1.5"
-              stroke-linecap="round"
-            />
-          </svg>
-        </button>
-        <ParkCard :park="selectedPark" />
-      </div>
-    </transition>
   </div>
 </template>
 
@@ -157,7 +159,7 @@ function onMapReady() {
 .parks-container {
   position: relative;
   width: 100%;
-  height: 100%;
+  height: 70vh;
 }
 
 /* Mapa */
