@@ -44,12 +44,13 @@
       </div>
     </div>
 
-    <!-- Precio -->
+    <!-- Monto -->
     <div class="row-precio">
-      <!-- TODO backend: mostrar reservacion.precio cuando el modelo lo tenga -->
-      <!-- <span class="precio-value">${{ reservacion.precio.toLocaleString('es-MX') }}</span> -->
-      <!-- <span class="precio-label">MXN</span> -->
-      <span class="precio-pending">— —</span>
+      <template v-if="reservacion.monto != null">
+	<span class="precio-value">${{ reservacion.monto.toLocaleString('es-MX') }}</span>
+	<span class="precio-label">MXN</span>
+      </template>
+      <span v-else class="precio-pending">— —</span>
     </div>
 
     <!-- Estado -->
@@ -129,12 +130,15 @@
               <span class="info-label">Personas</span>
               <span class="info-value">{{ reservacion.num_personas }}</span>
             </div>
-            <div class="info-row">
-              <span class="info-label">Precio</span>
-              <!-- TODO backend: mostrar precio cuando el modelo lo tenga -->
-              <span class="info-value info-pending">Por confirmar</span>
-            </div>
-            <div class="info-row">
+	    <div class="info-row">
+	      <span class="info-label">Total</span>
+	      <span class="info-value" style="font-weight: 600;">
+		{{ reservacion.monto != null
+		? `$${reservacion.monto.toLocaleString('es-MX')} MXN`
+		: 'Por confirmar' }}
+	      </span>
+	    </div>
+	    <div class="info-row">
               <span class="info-label">Fecha de creación</span>
               <span class="info-value">{{ formatCreatedAt(reservacion.created_at) }}</span>
             </div>

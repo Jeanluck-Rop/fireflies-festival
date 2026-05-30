@@ -12,7 +12,8 @@ export interface Usuario {
   created_at?: string | null
   is_staff?: boolean
   is_superuser?: boolean
-  nivel_admin?: number | null 
+  nivel_admin?: number | null
+  parque_asignado?: number | null
 }
 
 const USE_MOCK = import.meta.env.VITE_USE_MOCK === 'true'
