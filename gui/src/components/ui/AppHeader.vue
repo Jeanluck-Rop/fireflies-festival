@@ -42,10 +42,14 @@
 	  </li>
         </ul>
 
-	 <!-- Nav: modo admin -->
+	<!-- Nav: modo admin -->
         <ul v-else class="flex items-center gap-1">
           <li><AppLink href="/admin/reservaciones" variant="nav-admin">Reservaciones</AppLink></li>
-          <li><AppLink href="/admin/parques" variant="nav-admin">Parques</AppLink></li>
+          <li>
+	    <AppLink href="/admin/parques" variant="nav-admin">
+	      {{ isSuperuser ? 'Parques' : 'Hospedajes' }}
+	    </AppLink>
+	  </li>
           <li><AppLink href="/admin/usuarios" variant="nav-admin">Usuarios</AppLink></li>
           <li v-if="isSuperuser">
             <AppLink href="/admin/staff" variant="nav-admin">Staff</AppLink>
