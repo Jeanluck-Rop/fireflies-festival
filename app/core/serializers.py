@@ -8,9 +8,10 @@ class UserSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'nombre', 'apellidos', 'email', 'genero', 
             'fecha_nacimiento', 'metodo_pago', 'avatar', 
-            'rol', 'is_staff', 'is_superuser', 'created_at'
+            'rol', 'is_staff', 'is_superuser', 'created_at',
+            'parque_asignado'
         ]
-        read_only_fields = ['id', 'avatar', 'rol', 'is_staff', 'is_superuser', 'created_at']
+        read_only_fields = ['id', 'avatar', 'rol', 'is_staff', 'is_superuser', 'created_at', 'parque_asignado']
 
     def to_internal_value(self, data):
         mutable_data = data.copy() if hasattr(data, 'copy') else data
