@@ -389,7 +389,7 @@
    return ((user.value.nombre[0] ?? '') + (user.value.apellidos[0] ?? '')).toUpperCase()
  })
  
- function handleFileChange(event: Event) {
+  async function handleFileChange(event: Event) {
    const file = (event.target as HTMLInputElement).files?.[0]
    if (!file)
      return
@@ -400,13 +400,13 @@
    reader.readAsDataURL(file)
    
    // TODO backend: subir imagen
-   // const formData = new FormData()
-   // formData.append('avatar', file)
-   // await fetch(`${API}/auth/users/me/avatar/`, {
-   //   method: 'PATCH',
-   //   headers: { Authorization: `Bearer ${auth.token}` },
-   //   body: formData
-   // })
+   const formData = new FormData()
+   formData.append('avatar', file)
+   await fetch(`${API}/auth/users/me/avatar/`, {
+     method: 'PATCH',
+     headers: { Authorization: `Bearer ${auth.token}` },
+     body: formData
+   })
  }
  
  //Formulario
@@ -473,31 +473,41 @@
      Object.keys(editing).forEach(k => (editing as any)[k] = false)
      show('exito', 'Perfil actualizado correctamente')
    } else {
-     // TODO backend: PATCH /auth/users/me/
-     // try {
-     //   const res = await fetch(`${API}/auth/users/me/`, {
-     //     method: 'PATCH',
-     //     headers: {
-     //       'Content-Type': 'application/json',
-     //       Authorization: `Bearer ${auth.token}`
-     //     },
-     //     body: JSON.stringify({
-     //       nombre:           form.nombre,
-     //       apellidos:        form.apellidos,
-     //       email:            form.email,
-     //       genero:           form.genero,
-     //       fecha_nacimiento: form.fecha_nacimiento,
-     //       metodo_pago:      form.metodo_pago,
-     //     })
-     //   })
-     //   if (!res.ok) throw new Error()
-     //   const updated = await res.json()
-     //   auth.setAuth(auth.token!, updated)
-     //   Object.keys(editing).forEach(k => (editing as any)[k] = false)
-     //   show('exito', 'Perfil actualizado correctamente')
-     // } catch {
-     //   show('error', 'Error al guardar los datos')
-     // }
+    // TODO backend: PATCH /auth/users/me/
+     try {
+       const res = await fetch(`${API}/auth/users/me/`, {
+         method: 'PATCH',
+         headers: {
+           'Content-Type': 'application/json',
+           Authorization: `Bearer ${auth.token}`
+         },
+         body: JSON.stringify({
+           nombre:           form.nombre,
+           apellidos:        form.apellidos,
+           email:            form.email,
+           genero:           form.genero,
+           fecha_nacimiento: form.fecha_nacimiento,
+           metodo_pago:      form.metodo_pago,
+         })
+       })
+       
+       if (!res.ok) {
+         const errorData = await res.json()
+         throw errorData
+       }
+       
+       const updated = await res.json()
+       auth.setAuth(auth.token!, updated)
+       Object.keys(editing).forEach(k => (editing as any)[k] = false)
+       show('exito', 'Perfil actualizado correctamente')
+       
+     } catch (error: any) {
+       if (error && error.email) {
+         show('error', error.email[0]) 
+       } else {
+         show('error', 'Error al guardar los datos')
+       }
+     }
    }
    saving.value = false
  }
@@ -539,21 +549,21 @@
    }
 
    // TODO backend: POST /auth/users/reset_password/
-   // Djoser envía el link al correo del usuario autenticado
-   // try {
-   //   const res = await fetch(`${API}/auth/users/reset_password/`, {
-   //     method: 'POST',
-   //     headers: { 'Content-Type': 'application/json' },
-   //     body: JSON.stringify({ email: user.value?.email })
-   //   })
-   //   if (res.ok || res.status === 204) {
-   //     show('normal', 'Revisa tu correo para cambiar tu contraseña')
-   //   } else {
-   //     show('error', 'Error al enviar el correo. Intenta de nuevo')
-   //   }
-   // } catch {
-   //   show('error', 'Error al enviar el correo. Intenta de nuevo')
-   // }
+   //Djoser envía el link al correo del usuario autenticado
+   try {
+     const res = await fetch(`${API}/auth/users/reset_password/`, {
+       method: 'POST',
+       headers: { 'Content-Type': 'application/json' },
+       body: JSON.stringify({ email: user.value?.email })
+     })
+     if (res.ok || res.status === 204) {
+       show('normal', 'Revisa tu correo para cambiar tu contraseña')
+     } else {
+       show('error', 'Error al enviar el correo. Intenta de nuevo')
+     }
+   } catch {
+     show('error', 'Error al enviar el correo. Intenta de nuevo')
+   }
  }
  
  //Eliminar cuenta
@@ -565,20 +575,20 @@
      show('normal', 'Cuenta eliminada')
      router.push('/')
    } else {
-     // TODO backend: DELETE /auth/users/me/
-     // try {
-     //   const res = await fetch(`${API}/auth/users/me/`, {
-     //     method: 'DELETE',
-     //     headers: { Authorization: `Bearer ${auth.token}` }
-     //   })
-     //   if (!res.ok) throw new Error()
-     //   showDeleteDialog.value = false
-     //   auth.clearAuth()
-     //   show('normal', 'Cuenta eliminada')
-     //   router.push('/')
-     // } catch {
-     //   show('error', 'Error al eliminar la cuenta')
-     // }
+     //TODO backend: DELETE /auth/users/me/
+     try {
+       const res = await fetch(`${API}/auth/users/me/`, {
+         method: 'DELETE',
+         headers: { Authorization: `Bearer ${auth.token}` }
+       })
+       if (!res.ok) throw new Error()
+       showDeleteDialog.value = false
+       auth.clearAuth()
+       show('normal', 'Cuenta eliminada')
+       router.push('/')
+     } catch {
+       show('error', 'Error al eliminar la cuenta')
+     }
    }
  }
 

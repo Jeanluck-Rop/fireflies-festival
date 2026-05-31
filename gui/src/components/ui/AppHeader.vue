@@ -65,14 +65,16 @@
               <button
                 class="flex items-center gap-2 pl-2 pr-1 py-1 rounded-full hover:bg-white/5 transition"
                 @click="profileOpen = !profileOpen">
-                <span class="w-9 h-9 rounded-full inline-flex items-center justify-center font-semibold text-[13px] border border-white/15 bg-linear-to-br from-[#7BA7D4] to-[#A8C8F0] text-[#0A1525]">
+                <img v-if="userAvatar" :src="userAvatar" class="w-9 h-9 rounded-full object-cover border border-white/15" alt="Avatar">
+                <span v-else class="w-9 h-9 rounded-full inline-flex items-center justify-center font-semibold text-[13px] border border-white/15 bg-linear-to-br from-[#7BA7D4] to-[#A8C8F0] text-[#0A1525]">
                   {{ userInitials }}
                 </span>
               </button>
               <transition name="pop">
                 <div v-if="profileOpen" class="absolute right-0 mt-2 w-64 rounded-2xl p-2 shadow-2xl z-50 popup-admin">
                   <div class="px-3 py-3 border-b border-white/5 flex items-center gap-3">
-                    <span class="w-9 h-9 rounded-full inline-flex items-center justify-center font-semibold text-[13px] bg-linear-to-br from-[#7BA7D4] to-[#A8C8F0] text-[#0A1525]">
+                    <img v-if="userAvatar" :src="userAvatar" class="w-9 h-9 rounded-full object-cover border border-white/15" alt="Avatar">
+                    <span v-else class="w-9 h-9 rounded-full inline-flex items-center justify-center font-semibold text-[13px] bg-linear-to-br from-[#7BA7D4] to-[#A8C8F0] text-[#0A1525]">
                       {{ userInitials }}
                     </span>
                     <div class="min-w-0">
@@ -116,10 +118,8 @@
 		
 		<button class="flex items-center gap-2 pl-2 pr-1 py-1 rounded-full hover:bg-white/5 transition" @click="profileOpen = !profileOpen">
                   <span class="hidden text-[13px]">{{ userShortName }}</span>
-                  <span class="w-9 h-9 rounded-full bg-linear-to-br from-[#7BD8B0] to-[#E8FF7A]
-			       inline-flex items-center justify-center
-			       text-[#07090A] font-semibold text-[13px]
-			       border border-white/15">
+                  <img v-if="userAvatar" :src="userAvatar" class="w-9 h-9 rounded-full object-cover border border-white/15" alt="Avatar">
+                  <span v-else class="w-9 h-9 rounded-full bg-linear-to-br from-[#7BD8B0] to-[#E8FF7A] inline-flex items-center justify-center text-[#07090A] font-semibold text-[13px] border border-white/15">
                     {{ userInitials }}
                   </span>
 		</button>
@@ -127,9 +127,8 @@
 		<transition name="pop">
                   <div v-if="profileOpen" class="absolute right-0 mt-2 w-60 glass rounded-2xl p-2 shadow-2xl z-50">
                     <div class="px-3 py-3 border-b border-white/5 flex items-center gap-3">
-                      <span class="w-9 h-9 rounded-full bg-linear-to-br from-[#7BD8B0] to-[#E8FF7A]
-				   inline-flex items-center justify-center
-				   text-[#07090A] font-semibold text-[13px]">
+                      <img v-if="userAvatar" :src="userAvatar" class="w-9 h-9 rounded-full object-cover border border-white/15" alt="Avatar">
+                      <span v-else class="w-9 h-9 rounded-full bg-linear-to-br from-[#7BD8B0] to-[#E8FF7A] inline-flex items-center justify-center text-[#07090A] font-semibold text-[13px]">
 			{{ userInitials }}
                       </span>
                       <div class="min-w-0">
@@ -215,6 +214,10 @@
    await authService.logout()
    router.push(isAdmin.value ? '/admin/login' : '/')
  }
+
+ const userAvatar = computed(() => {
+   return (props.user as any)?.avatar || null;
+ });
 
  const userInitials = computed(() => {
    if (!props.user)

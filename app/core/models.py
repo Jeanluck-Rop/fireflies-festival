@@ -33,6 +33,12 @@ class Usuario(AbstractUser):
         CLIENTE = "CLIENTE", "Cliente"
         ADMIN = "ADMIN", "Administrador"
 
+    class Genero(models.TextChoices):
+        MASCULINO = "M", "Masculino"
+        FEMENINO = "F", "Femenino"
+        NO_BINARIO = "NB", "No binario"
+        NO_ESPECIFICAR = "NE", "Prefiero no decir"
+
     username = None
     first_name = None
     last_name = None
@@ -43,6 +49,11 @@ class Usuario(AbstractUser):
     rol = models.CharField(max_length=10, choices=Rol.choices, default=Rol.CLIENTE)
     nivel_admin = models.IntegerField(null=True, blank=True)
     metodo_pago = models.CharField(max_length=30, null=True, blank=True)
+    
+    genero = models.CharField(max_length=2, choices=Genero.choices, null=True, blank=True)
+    fecha_nacimiento = models.DateField(null=True, blank=True)
+    avatar = models.ImageField(upload_to='avatars/', null=True, blank=True)
+    
     created_at = models.DateTimeField(auto_now_add=True)
 
     USERNAME_FIELD = "email"
