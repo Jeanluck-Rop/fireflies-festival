@@ -129,7 +129,7 @@ DJOSER = {
     'SERIALIZERS': {
         # Aquí le decimos a Djoser que devuelva tus campos personalizados (nombre, apellidos, rol)
         'user_create': 'djoser.serializers.UserCreateSerializer',
-        'current_user': 'djoser.serializers.UserSerializer',
+        'current_user': 'core.serializers.UserSerializer',
     },
 }
 

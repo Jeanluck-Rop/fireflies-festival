@@ -33,6 +33,12 @@ class Usuario(AbstractUser):
         CLIENTE = "CLIENTE", "Cliente"
         ADMIN = "ADMIN", "Administrador"
 
+    class Genero(models.TextChoices):
+        MASCULINO = "M", "Masculino"
+        FEMENINO = "F", "Femenino"
+        NO_BINARIO = "NB", "No binario"
+        NO_ESPECIFICAR = "NE", "Prefiero no decir"
+
     username = None
     first_name = None
     last_name = None
@@ -42,7 +48,22 @@ class Usuario(AbstractUser):
     email = models.EmailField(max_length=254, unique=True)
     rol = models.CharField(max_length=10, choices=Rol.choices, default=Rol.CLIENTE)
     nivel_admin = models.IntegerField(null=True, blank=True)
+    
+    parque_asignado = models.ForeignKey(
+        'Parque', 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        blank=True,
+        related_name="staff_asignado",
+        help_text="Parque administrado por este staff. Dejar en blanco para superusuarios."
+    )
+
     metodo_pago = models.CharField(max_length=30, null=True, blank=True)
+    
+    genero = models.CharField(max_length=2, choices=Genero.choices, null=True, blank=True)
+    fecha_nacimiento = models.DateField(null=True, blank=True)
+    avatar = models.ImageField(upload_to='avatars/', null=True, blank=True)
+    
     created_at = models.DateTimeField(auto_now_add=True)
 
     USERNAME_FIELD = "email"
@@ -110,6 +131,14 @@ class Hospedaje(models.Model):
     tipo = models.CharField(max_length=10, choices=Tipo.choices)
     categoria = models.CharField(max_length=12, choices=Categoria.choices)
     capacidad = models.PositiveIntegerField(validators=[MinValueValidator(1)])
+    
+    precio_por_noche = models.DecimalField(
+        max_digits=10, 
+        decimal_places=2,
+        validators=[MinValueValidator(0.01)],
+        help_text="Precio por noche de este hospedaje"
+    )
+    
     estado = models.CharField(
         max_length=15, choices=Estado.choices, default=Estado.DISPONIBLE
     )
@@ -160,6 +189,13 @@ class Reservacion(models.Model):
     fecha_inicio = models.DateField()
     fecha_fin = models.DateField()
     num_personas = models.PositiveIntegerField(validators=[MinValueValidator(1)])
+    
+    precio_total = models.DecimalField(
+        max_digits=10, 
+        decimal_places=2,
+        validators=[MinValueValidator(0.01)],
+        help_text="Precio total de la reservación (noches x precio por noche)"
+    )
     tipo_visita = models.CharField(max_length=10, choices=TipoVisita.choices)
     estado = models.CharField(
         max_length=12, choices=Estado.choices, default=Estado.ACTIVA
