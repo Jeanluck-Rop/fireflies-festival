@@ -12,6 +12,7 @@
       <SuccessModal />
     </div>
   </div>
+  <FooterSection />
 </template>
 
 <script setup lang="ts">
@@ -23,6 +24,25 @@ import GuestCounter from "../components/reservations/GuestCounter.vue";
 import AvailableUnits from "../components/reservations/AvailableUnits.vue";
 import ReservationSummary from "../components/reservations/ReservationSummary.vue";
 import SuccessModal from "../components/reservations/SuccessModal.vue";
+import { onMounted } from 'vue';
+import { useRoute } from 'vue-router';
+import FooterSection from "../components/landing/FooterSection.vue";
 
+const route = useRoute();
 const store = useReservationStore();
+
+onMounted(async () => {
+  await store.cargarParques();
+
+  const parkId = Number(route.query.park);
+
+  if (parkId) {
+    const parque = store.parques.find(p => p.id === parkId);
+
+    if (parque) {
+      store.seleccionarParque(parque);
+      store.tipoHospedaje = parque.hasCabin ? 'CABANA' : 'CAMPING';
+    }
+  }
+});
 </script>

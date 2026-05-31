@@ -1,15 +1,35 @@
 <template>
   <div class="park-card">
+    <div class="absolute top-3 left-3 flex items-center gap-2 z-600">
+      <span class="px-2.5 py-1 rounded-full text-[10.5px] font-mono uppercase tracking-[0.12em]"
+            :style="`background:${park.hasCabin ? 'rgba(245,213,122,0.16)' : 'rgba(122,211,164,0.16)'}; color:${park.hasCabin ? '#f5d57a' : '#7ad3a4'}; border:1px solid ${park.hasCabin ? 'rgba(245,213,122,0.4)' : 'rgba(122,211,164,0.4)'};`">
+        {{ park.hasCabin ? 'Cabaña + Camping' : 'Solo Camping' }}
+      </span>
+      <span v-if="park.campings_libres && park.campings_libres > 5" class="px-2.5 py-1 rounded-full text-[10.5px] font-mono uppercase tracking-[0.12em] bg-white/10 border border-white/15 text-(--color--bone-soft)">Disponible</span>
+      <span v-else class="px-2.5 py-1 rounded-full text-[10.5px] font-mono uppercase tracking-[0.12em] bg-[rgba(255,138,123,0.14)] border border-[rgba(255,138,123,0.4)] text-[#ff9b8a]">Pocas plazas</span>
+    </div>
     <!-- Carrusel de imagenes del parque -->
     <ImageCarousel :images="park.imagenes" :alt="park.nombre" />
 
     <!-- Contenedor de texto -->
     <div class="card-body">
       <!-- Nombre -->
-      <h3 class="card-nombre">{{ park.nombre }}</h3>
+      <h3 class="card-nombre font-display">{{ park.nombre }}</h3>
 
-      <!-- Descripcion con ellipsis -->
-      <p class="card-desc">{{ park.descripcion || "Sin descripción" }}</p>
+      <div class="text-[12px] text-bone-soft mt-1 flex items-center gap-1.5">
+        <MapPin :size="14" class="text-(--color-accent)" />
+        {{ park.direccion }}
+      </div>
+
+      <div v-if="park.servicios.length > 0">
+        <div class="text-[10px] uppercase tracking-wider text-(--color-bone-mute) mb-2">Servicios disponibles</div>
+        <div class="flex flex-wrap gap-1.5">
+          <span v-for="(item, index) in primerosTresElementos" :key="index"
+                class="inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-full bg-[#070b14]/60 border border-(--color-accent)/15 text-(--color-bone-soft)/80">
+            {{ item }}
+          </span>
+        </div>
+      </div>
 
       <!-- Horario y estado -->
       <div class="card-footer">
@@ -24,6 +44,18 @@
           {{ statusText }}
         </span>
       </div>
+
+      <div class="flex items-center gap-2 border-t border-white/5">
+        <AppLink :href="`/parquesInfo/${park.id}`" variant="outline" class="mt-3 w-35">
+          Ver detalles
+        </AppLink>
+        <AppLink v-if="statusClass === 'status-open'" :href="auth.isLoggedIn ? `/reservar?park=${park.id}` : '/auth'" variant="yellow" class="mt-3 w-50" :iconRight="ArrowRight">
+          Reservar
+        </AppLink>
+        <AppButton v-else :disabled=true variant="primary" class="mt-3 w-50">
+          Reservar
+        </AppButton>
+      </div>
     </div>
   </div>
 </template>
@@ -33,10 +65,18 @@ import { computed } from "vue";
 import type { Parque } from "../../stores/parks";
 import { is24Hours, getParkStatusText, getParkStatusClass } from "../../utils/parkStatus";
 import ImageCarousel from "../ui/ImageCarousel.vue";
+import { MapPin, ArrowRight } from "lucide-vue-next";
+import AppLink from "../ui/AppLink.vue";
+import AppButton from "../ui/AppButton.vue";
+import { useAuthStore } from '../../stores/auth';
+
+const auth = useAuthStore();
 
 const props = defineProps<{ park: Parque }>();
 
 const is24hrs = computed(() => is24Hours(props.park));
+
+const primerosTresElementos = computed(() => props.park.servicios.slice(0, 3).map(s => s.nombre));
 
 //Texto y clase del estado
 const statusText = computed(() => getParkStatusText(props.park));

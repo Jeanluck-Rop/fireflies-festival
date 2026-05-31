@@ -7,6 +7,12 @@ export interface ImagenParque {
   url: string
 }
 
+export interface ServicioParque {
+  id: number
+  nombre: string
+  icono: string | null
+}
+
 export interface Parque {
   id: number
   nombre: string
@@ -16,9 +22,29 @@ export interface Parque {
   longitud: number
   horario_apertura: string  //"HH:MM"
   horario_cierre: string  //"HH:MM"
-  imagen_mapa: string | null
   activo: boolean
   imagenes: ImagenParque[]
+  servicios: ServicioParque[]
+  hasCabin: boolean
+  precio_minimo: number
+  precio_maximo: number
+  capacidad_minima: number
+  capacidad_maxima: number
+  cabanas_libres?: number
+  campings_libres?: number
+}
+
+export interface HospedajeDetalle {
+  id: number
+  tipo: 'CABANA' | 'CAMPING'
+  categoria: string
+  capacidad: number
+  tarifa_noche: number
+  tiene_agua: boolean
+  tiene_luz: boolean
+  tiene_regadera: boolean
+  descripcion: string
+  imagenes: string[]
 }
 
 export const useParksStore = defineStore('parks', () => {
