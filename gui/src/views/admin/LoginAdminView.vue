@@ -81,6 +81,7 @@
  import { useAuthStore } from '../../stores/auth'
  import { useNotification } from '../../composables/useNotification'
  import FireflyLogo from '../../components/ui/FireflyLogo.vue'
+ import { authService } from '../../services/authService'
 
  const router = useRouter()
  const auth   = useAuthStore()
@@ -128,39 +129,26 @@
          is_staff: false,
          is_superuser: true,
          nivel_admin: 1,
-	 parque_asignado: null,
+	       parque_asignado: null,
        })
        router.push('/admin/reservaciones')
        return
      }
-
-     // TODO backend: POST /auth/jwt/create/
-     // El mismo endpoint la diferencia está en que el usuario retornado tiene rol='ADMIN'
-     // try {
-     //   const res = await fetch(`${API}/auth/jwt/create/`, {
-     //     method: 'POST',
-     //     headers: { 'Content-Type': 'application/json' },
-     //     body: JSON.stringify({ email: form.email, password: form.password })
-     //   })
-     //   if (!res.ok) throw new Error('credentials')
-     //   const tokens = await res.json()
-     //   const userRes = await fetch(`${API}/auth/users/me/`, {
-     //     headers: { Authorization: `Bearer ${tokens.access}` }
-     //   })
-     //   const userData = await userRes.json()
-     //   if (userData.rol !== 'ADMIN') {
-     //     show('error', 'Esta cuenta no tiene permisos de administrador')
-     //     return
-     //   }
-     //   auth.setAuth(tokens.access, userData)
-     //   router.push('/admin/reservaciones')
-     // } catch {
-     //   errors.email = 'Verifica la dirección de correo'
-     //   errors.password = 'Verifica la contraseña'
-     //   show('error', 'Correo o contraseña incorrectos')
-     // }
-
-   } finally {
+     await authService.login(form.email, form.password)
+     if (auth.user?.rol == 'ADMIN' || auth.user?.is_staff) {
+       router.push('/admin/reservaciones')
+     }
+     else {
+       show('error', 'Esta cuenta no tiene permisos de administrador')
+       await authService.logout()
+    }
+   }
+   catch (error: any) {
+     errors.email = ' '
+     errors.password = ' '
+     show('error', error.message || 'Correo o contraseña incorrectos')
+  }
+   finally {
      loading.value = false
    }
  }

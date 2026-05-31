@@ -26,17 +26,22 @@
 </template>
 
 <script setup lang="ts">
- import { ref, computed } from 'vue'
+ import { ref, computed, onMounted } from 'vue'
  import { useNotification } from '../../composables/useNotification'
  import SearchBar   from '../ui/SearchBar.vue'
  import AdminUserRow from './AdminUserRow.vue'
+ import { useAuthStore } from '../../stores/auth'
+ import { userService } from '../../services/userService'
  import type { UsuarioAdmin } from './AdminUserRow.vue'
  import type { Reservacion } from '../../stores/reservations'
  import type { FilterDef, FilterValues } from '../ui/SearchBar.vue'
 
  const { show } = useNotification()
+ const authStore = useAuthStore()
  const USE_MOCK = import.meta.env.VITE_USE_MOCK !== 'false'
-
+ const listaUsuarios = ref<UsuarioAdmin[]>([])
+ const cargando = ref(false)
+ const errorMsg = ref('')
  //Mock usuarios
  const mockUsers = ref<UsuarioAdmin[]>([
    { id:1,  nombre:'Fulanito',  apellidos:'Pérez',     email:'fulanito@example.com', rol:'CLIENTE', metodo_pago:'CREDITO',  created_at:'2026-01-15T10:00:00Z'},
@@ -90,6 +95,28 @@
    },
  ])
 
+ const clientes = async () => {
+   if (USE_MOCK) {
+     listaUsuarios.value = mockUsers.value
+     return
+   }
+   cargando.value = true
+   errorMsg.value = ''
+   try {
+     const data = await userService.obtenerClientes(authStore.token)
+     listaUsuarios.value = data
+   } catch (error) {
+     errorMsg.value = 'Error al cargar usuarios'
+     console.error(error)
+   } finally {
+     cargando.value = false
+   }
+ }
+
+  onMounted(() => {
+    clientes()
+  })
+
  function reservacionesDe(email: string): Reservacion[] {
    return mockReservaciones.value
 			   .filter(r => r.usuario_email === email)
@@ -107,7 +134,7 @@
  const filters = ref<FilterValues>({ nombre: '', rol: '', estado: '' })
 
  const filteredUsers = computed(() => {
-   let r = mockUsers.value
+   let r = listaUsuarios.value
    if (filters.value.nombre) {
      const q = filters.value.nombre.toLowerCase()
      r = r.filter(u =>

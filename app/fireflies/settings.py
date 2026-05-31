@@ -128,8 +128,9 @@ DJOSER = {
     'PASSWORD_RESET_CONFIRM_URL': 'password/reset/confirm/{uid}/{token}', # URL de tu frontend en Vue
     'SERIALIZERS': {
         # Aquí le decimos a Djoser que devuelva tus campos personalizados (nombre, apellidos, rol)
-        'user_create': 'djoser.serializers.UserCreateSerializer',
-        'current_user': 'djoser.serializers.UserSerializer',
+        'user_create': 'core.serializers.UsuarioCreateSerializer',
+        'current_user': 'core.serializers.UsuarioSerializer',
+        'user': 'core.serializers.UsuarioSerializer'
     },
 }
 
