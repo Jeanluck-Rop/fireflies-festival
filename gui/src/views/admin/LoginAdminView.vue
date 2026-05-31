@@ -86,7 +86,7 @@
  const auth   = useAuthStore()
  const { show } = useNotification()
 
- const USE_MOCK = import.meta.env.VITE_USE_MOCK !== 'false'
+ const USE_MOCK = import.meta.env.VITE_USE_MOCK === 'true'
  const API = import.meta.env.VITE_API_URL || null
 
  const loading = ref(false)

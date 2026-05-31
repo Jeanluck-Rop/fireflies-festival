@@ -47,24 +47,28 @@
         <div class="form-field">
           <label class="form-label">Fecha de entrada</label>
           <input
-            v-model="form.fecha_inicio"
-            type="date"
-            :min="today"
-            class="form-input"
-            style="color-scheme: dark"
-            @change="selectedHospedaje = null"
-          />
+	    v-model="form.fecha_inicio"
+	    type="date"
+	    :min="FECHA_MIN"
+	    :max="FECHA_MAX"
+	    class="form-input"
+	    style="color-scheme: dark"
+	    @change="onFechaInicioChange"
+	  />
+	  <span v-if="dateErrorInicio" class="date-error">{{ dateErrorInicio }}</span>
         </div>
         <div class="form-field">
           <label class="form-label">Fecha de salida</label>
           <input
-            v-model="form.fecha_fin"
-            type="date"
-            :min="form.fecha_inicio || today"
-            class="form-input"
-            style="color-scheme: dark"
-            @change="selectedHospedaje = null"
-          />
+	    v-model="form.fecha_fin"
+	    type="date"
+	    :min="form.fecha_inicio || FECHA_MIN"
+	    :max="FECHA_MAX"
+	    class="form-input"
+	    style="color-scheme: dark"
+	    @change="onFechaFinChange"
+	  />
+	  <span v-if="dateErrorFin" class="date-error">{{ dateErrorFin }}</span>
         </div>
         <div class="form-field">
           <label class="form-label">Número de personas</label>
@@ -103,7 +107,7 @@
 
           <div class="hosp-top">
             <span class="hosp-badge">
-              {{ h.tipo === 'CABANA' ? 'Cabaña' : 'Camping' }} · {{ categoriaLabel[h.categoria] }}
+              {{ h.tipo === 'CABANA' ? 'Cabaña' : 'Camping' }} #{{ h.id }} · {{ categoriaLabel[h.categoria] }}
             </span>
             <div class="hosp-precio">
               ${{ h.precio.toLocaleString('es-MX') }}<span class="precio-unit">/noche</span>
@@ -152,6 +156,7 @@
               {{ buscandoCliente ? 'Buscando...' : 'Buscar' }}
             </button>
           </div>
+	  <span v-if="clienteError" class="cliente-error">{{ clienteError }}</span>
         </div>
       </div>
 
@@ -272,6 +277,8 @@
  import IconShower from '../svg/IconShower.vue'
  import IconWater from '../svg/IconWater.vue'
  import IconLight from '../svg/IconLight.vue'
+ 
+ import { useFestivalDates } from '../../composables/useFestivalDates'
 
  const auth = useAuthStore()
  const { show } = useNotification()
@@ -283,6 +290,21 @@
  const isStaff = computed(() => !!(auth.user?.is_staff && !(auth.user as any)?.is_superuser))
  const parqueAsignado = computed<number | null>(() => (auth.user as any)?.parque_asignado ?? null)
 
+ const { FECHA_MIN, FECHA_MAX, dateErrorInicio, dateErrorFin, checkInicio, checkFin } = useFestivalDates()
+ 
+ function onFechaInicioChange() {
+   if (!checkInicio(form.fecha_inicio))
+     form.fecha_inicio = ''
+   // Re-valida fin si ya tenía valor
+   if (form.fecha_fin && !checkFin(form.fecha_fin)) form.fecha_fin = ''
+   selectedHospedaje.value = null
+ }
+ 
+ function onFechaFinChange() {
+   if (!checkFin(form.fecha_fin)) form.fecha_fin = ''
+   selectedHospedaje.value = null
+ }
+ 
  //Tipos
  interface Parque { id: number; nombre: string; activo: boolean }
  interface Hospedaje {
@@ -305,7 +327,8 @@
    id: number;
    nombre: string;
    apellidos: string;
-   email: string
+   email: string;
+   rol: 'CLIENTE' | 'ADMIN'
  }
  //Mock data
  const MOCK_PARQUES: Parque[] = [
@@ -332,13 +355,10 @@
    { hospedaje_id:2, fecha_inicio:'2026-07-01', fecha_fin:'2026-07-07', estado:'EN_PROCESO'},
  ]
  const MOCK_USUARIOS: ClienteMock[] = [
-   { id:1, nombre:'Fulanito',  apellidos:'Pérez',   email:'fulanito@example.com' },
-   { id:2, nombre:'Ana',       apellidos:'García',  email:'ana@example.com'      },
-   { id:3, nombre:'Carlos',    apellidos:'López',   email:'carlos@example.com'   },
+   { id:1, nombre:'Fulanito',  apellidos:'Pérez',   email:'fulanito@example.com', rol:'ADMIN' },
+   { id:2, nombre:'Ana',       apellidos:'García',  email:'ana@example.com', rol:'CLIENTE' },
+   { id:3, nombre:'Carlos',    apellidos:'López',   email:'carlos@example.com', rol:'CLIENTE' },
  ]
-
- //Estado del formulario
- const today = new Date().toISOString().split('T')[0]
 
  const form = reactive({
    parque_id:  isStaff.value && parqueAsignado.value ? parqueAsignado.value : ('' as number | ''),
@@ -442,24 +462,37 @@
    selectedHospedaje.value = h
    resetCliente()
  }
-
+ 
  function resetCliente() {
    clienteEncontrado.value = null
    clienteBuscado.value = false
+   clienteError.value = ''
    clienteForm.email = ''
    clienteForm.nombre = ''
    clienteForm.apellidos = ''
  }
 
+ const clienteError = ref('')
+ 
  async function buscarCliente() {
    if (!clienteForm.email) return
    buscandoCliente.value = true
+   clienteError.value = ''
 
    if (USE_MOCK) {
      await new Promise(r => setTimeout(r, 450))
      const found = MOCK_USUARIOS.find(
        u => u.email.toLowerCase() === clienteForm.email.toLowerCase()
      )
+
+     if (found && found.rol === 'ADMIN') {
+       clienteError.value = 'No se puede hacer una reservación a una cuenta de administrador.'
+       clienteEncontrado.value = null
+       clienteBuscado.value    = false
+       buscandoCliente.value   = false
+       return
+     }
+     
      clienteEncontrado.value = found ?? null
      clienteBuscado.value = true
      buscandoCliente.value = false
@@ -807,5 +840,17 @@
  .btn-confirmar:disabled {
    opacity: 0.5; cursor: not-allowed;
    box-shadow: none; transform: none;
+ }
+
+ .cliente-error {
+   font-size: 12px;
+   color: var(--color-danger);
+   display: block;
+   margin-top: 0.25rem;
+ }
+ .date-error {
+   font-size: 11px;
+   color: var(--color-danger);
+   line-height: 1.4;
  }
 </style>
