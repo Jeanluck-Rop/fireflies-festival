@@ -9,7 +9,7 @@ router = DefaultRouter()
 
 
 router.register(r'parques', ParqueViewSet, basename='parque')
-router.register(r'clientes', ClienteViewSet, basename='usuario')
+router.register(r'clientes', ClienteViewSet, basename='cliente')
 
 
 urlpatterns = [

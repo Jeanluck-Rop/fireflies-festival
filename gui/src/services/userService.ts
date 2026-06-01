@@ -22,10 +22,9 @@ export const userService = {
    * Elimina/Desactiva un usuario por su ID
    */
   async eliminarUsuario(id: number, token: string): Promise<void> {
-    const res = await fetch(`${API}/api/usuarios/${id}/desactivar/`, {
-      method: 'PATCH', // O DELETE, según como lo hayan mapeado en Django
+    const res = await fetch(`${API}/api/clientes/${id}/`, {
+      method: 'DELETE',
       headers: {
-        'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`
       }
     })

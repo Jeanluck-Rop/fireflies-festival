@@ -103,6 +103,10 @@
    cargando.value = true
    errorMsg.value = ''
    try {
+     if (!authStore.token) {
+       show('error', 'No tienes una sesión activa')
+       return
+     }
      const data = await userService.obtenerClientes(authStore.token)
      listaUsuarios.value = data
    } catch (error) {
@@ -158,6 +162,18 @@
      return
    }
    // TODO backend: PATCH /api/usuarios/{id}/desactivar/
+   try {
+     if (!authStore.token) {
+       show('error', 'No tienes una sesión activa')
+       return
+     }
+     await userService.eliminarUsuario(id, authStore.token)
+     listaUsuarios.value = listaUsuarios.value.filter(u => u.id !== id)
+     show('exito', 'Usuario eliminado')
+   } catch (error) {
+     show('error', 'Error al eliminar usuario')
+     console.error(error)
+   }
  }
 
  async function handleActivate(id: number) {
