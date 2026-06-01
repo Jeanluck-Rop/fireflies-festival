@@ -26,6 +26,13 @@
             icon-name="lock"
             :error="errors.confirmPassword"
             @input="errors.confirmPassword = ''"/>
+
+          <div class="flex items-center gap-3">
+            <div class="strength flex-1">
+              <span :style="`width:${strength.pct}%; background:${strength.color}`"></span>
+            </div>
+            <span class="text-[11px] font-mono uppercase tracking-[0.14em]" :style="`color:${strength.color}`">{{ strength.label }}</span>
+          </div>
         </div>
 
         <AppButton variant="primary" :loading="loading" class="submit-btn" @click="handleSubmit">
@@ -61,11 +68,12 @@
 </template>
 
 <script setup lang="ts">
- import { ref, reactive, onMounted } from 'vue'
+ import { ref, reactive, computed } from 'vue'
  import { useRoute, useRouter } from 'vue-router'
  import AppInput  from '../components/ui/AppInput.vue'
  import AppButton from '../components/ui/AppButton.vue'
  import { useNotification } from '../composables/useNotification'
+ import { getPasswordStrength, validatePassword } from '../utils/password.ts'
 
  const route  = useRoute()
  const router = useRouter()
@@ -85,14 +93,19 @@
  const confirmPassword = ref('')
  const errors = reactive({ newPassword: '', confirmPassword: '' })
 
+ const strength = computed(() => 
+  getPasswordStrength(newPassword.value, '')
+);
+
  async function handleSubmit() {
    errors.newPassword     = ''
    errors.confirmPassword = ''
 
-   if (!newPassword.value)
-   { errors.newPassword = 'La contraseña es requerida'; return }
-   if (newPassword.value.length < 8)
-   { errors.newPassword = 'Mínimo 8 caracteres'; return }
+   const passwordError = validatePassword( newPassword.value, '');
+   if (passwordError) {
+     errors.newPassword = passwordError;
+     return;
+   }
    if (!confirmPassword.value)
    { errors.confirmPassword = 'Confirma tu contraseña'; return }
    if (newPassword.value !== confirmPassword.value)

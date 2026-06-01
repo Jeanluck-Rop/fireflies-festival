@@ -18,6 +18,8 @@ export interface Parque {
   horario_cierre: string  //"HH:MM"
   imagen_mapa: string | null
   activo: boolean
+  cabanas_libres: number
+  campings_libres: number
   imagenes: ImagenParque[]
 }
 
