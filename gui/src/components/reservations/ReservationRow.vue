@@ -1,86 +1,103 @@
 <template>
-  <div class="reservation-row">
+  <div class="reservation-row" :class="{ 'row-cancelada': reservacion.estado === 'CANCELADA' }">
 
-    <!-- Imagen del parque -->
-    <div class="row-image" :class="estadoClass">
-      <IconCompletada v-if="reservacion.estado === 'COMPLETADA'" size="22px" />
-      <IconCancelada v-else-if="reservacion.estado === 'CANCELADA'"  size="22px" />
-      <IconEnProceso v-else-if="reservacion.estado === 'EN_PROCESO'" size="22px" />
-      <IconActiva v-else size="22px" />
+    <!-- 1. Imagenes del hospedaje -->
+    <div class="row-media">
+      <template v-if="images.length > 0">
+        <img
+          :src="images[imgIdx]"
+          :alt="`${tipoLabel} #${reservacion.hospedaje.id}`"
+          class="media-img"
+        />
+        <!-- Controles carousel -->
+        <template v-if="images.length > 1">
+          <button class="carousel-btn carousel-prev" @click.stop="prevImg">
+            <svg width="7" height="12" viewBox="0 0 7 12" fill="none">
+              <path d="M6 1L1 6l5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+          <button class="carousel-btn carousel-next" @click.stop="nextImg">
+            <svg width="7" height="12" viewBox="0 0 7 12" fill="none">
+              <path d="M1 1l5 5-5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+          <div class="carousel-dots">
+            <span
+              v-for="(_, i) in images" :key="i"
+              :class="['carousel-dot', i === imgIdx && 'active']"
+              @click.stop="imgIdx = i" />
+          </div>
+        </template>
+      </template>
+      <!-- Placeholder sin imagenes -->
+      <div v-else class="media-placeholder">
+        <FireflyLogo :pulse="true" :drift="false" size="w-10 h-10" />
+      </div>
     </div>
 
-    <!-- Info principal -->
-    <div class="row-main">
-      <div class="row-top">
-        <span class="row-id">#{{ reservacion.id }}</span>
-        <h3 class="row-parque">{{ reservacion.parque.nombre }}</h3>
+    <!-- 2. Informacion de la reservacion-->
+    <div class="row-info">
+      <!-- Cabecera: tipo+id | id reservacion -->
+      <div class="info-head">
+        <span class="info-reserv-id">#{{ reservacion.id }}</span>
+        <h3 class="info-title">
+          {{ tipoLabel }}
+          <span class="info-hospedaje-num">#{{ reservacion.hospedaje.id }}</span>
+        </h3>
+        <span class="info-parque">{{ reservacion.parque.nombre }}</span>
       </div>
-      <div class="row-meta">
+      <!-- Detalles: fechas + personas -->
+      <div class="info-meta">
         <span class="meta-item">
-          <!-- Icono calendario -->
-          <IconCalendar />
+          <IconCalendar size="13px" />
           {{ formatDate(reservacion.fecha_inicio) }}
-          <!-- Flecha SVG entre fechas -->
-          <IconArrow />
+          <IconArrow size="10px" />
           {{ formatDate(reservacion.fecha_fin) }}
         </span>
-	<IconDot class="meta-sep" />
+        <span class="meta-sep">·</span>
         <span class="meta-item">
-          <!-- Icono personas -->
-          <IconPeople />
-          {{ reservacion.num_personas }} {{ reservacion.num_personas === 1 ? 'persona' : 'personas' }}
-        </span>
-	<IconDot class="meta-sep" />
-        <span class="meta-item">
-          <!-- Icono tipo visita -->
-          <IconHome v-if="reservacion.tipo_visita === 'CABANA'" />
-	  <IconEnProceso v-else size="12px" />
-          {{ tipoLabel }}
-        </span>
-	<IconDot class="meta-sep" />
-        <span class="meta-item meta-hospedaje">
-          {{ reservacion.hospedaje.nombre }}
+          <IconPeople size="13px" />
+          {{ reservacion.num_personas }}
+          {{ reservacion.num_personas === 1 ? 'persona' : 'personas' }}
         </span>
       </div>
     </div>
 
-    <!-- Monto -->
-    <div class="row-precio">
-      <template v-if="reservacion.monto != null">
-	<span class="precio-value">${{ reservacion.monto.toLocaleString('es-MX') }}</span>
-	<span class="precio-label">MXN</span>
-      </template>
-      <span v-else class="precio-pending">— —</span>
+    <!-- 3. Estado, precio, acciones -->
+    <div class="row-side">
+      <!-- Icono de estado grande -->
+      <div class="side-icon" :class="estadoClass">
+        <IconCompletada v-if="reservacion.estado === 'COMPLETADA'" size="30px" />
+        <IconCancelada  v-else-if="reservacion.estado === 'CANCELADA'"  size="30px" />
+        <IconEnProceso  v-else-if="reservacion.estado === 'EN_PROCESO'" size="30px" />
+        <IconActiva     v-else size="30px" />
+      </div>
+      <!-- Badge estado -->
+      <span class="estado-badge" :class="estadoClass">{{ estadoLabel }}</span>
+      <!-- Precio total -->
+      <div class="side-precio">
+        <template v-if="reservacion.monto != null">
+          <span class="precio-num">${{ reservacion.monto.toLocaleString('es-MX') }}</span>
+          <span class="precio-cur">MXN</span>
+        </template>
+        <span v-else class="precio-pending">— —</span>
+      </div>
+      <!-- Botones -->
+      <div class="side-btns">
+        <button class="btn-detalles" @click="showInfo = true">
+          <IconInfo size="12px" /> Detalles
+        </button>
+        <button
+          v-if="reservacion.estado === 'ACTIVA' || reservacion.estado === 'EN_PROCESO'"
+          class="btn-cancelar"
+          :disabled="cancelando"
+          @click="showCancel = true">
+          Cancelar
+        </button>
+      </div>
     </div>
 
-    <!-- Estado -->
-    <div class="row-estado">
-      <span class="estado-badge" :class="estadoClass">
-	<IconCompletada v-if="reservacion.estado === 'COMPLETADA'" size="13px" />
-	<IconCancelada v-else-if="reservacion.estado === 'CANCELADA'" size="13px" />
-	<IconEnProceso v-else-if="reservacion.estado === 'EN_PROCESO'" size="13px" />
-	<IconActiva v-else-if="reservacion.estado === 'ACTIVA'" size="13px" />
-	{{ estadoLabel }}
-      </span>
-      <span class="row-date">{{ formatCreatedAt(reservacion.created_at) }}</span>
-    </div>
-
-    <!-- Acciones -->
-    <div class="row-actions">
-      <!-- Ver detalles -->
-      <button class="action-btn" title="Ver detalles" @click="showInfo = true">
-        <IconInfo />
-      </button>
-      <button
-        v-if="reservacion.estado === 'ACTIVA' || reservacion.estado === 'EN_PROCESO'"
-        class="action-btn action-cancel-btn"
-        :disabled="cancelando"
-        @click="showCancel= true">
-        Cancelar
-      </button>
-    </div>
-
-    <!-- Dialogo: Informacion -->
+    <!-- Dialogo: Detalles -->
     <transition name="dialog-fade">
       <div v-if="showInfo" class="dialog-backdrop" @click.self="showInfo = false">
         <div class="dialog-box dialog-info-box">
@@ -168,6 +185,7 @@
 <script setup lang="ts">
  import { ref, computed } from 'vue'
  import type { Reservacion } from '../../stores/reservations'
+ import FireflyLogo    from '../ui/FireflyLogo.vue'
  import IconDot from '../svg/IconDot.vue'
  import IconInfo from '../svg/IconInfo.vue'
  import IconHome from '../svg/IconHome.vue'
@@ -188,10 +206,14 @@
    cancelando?: boolean
  }>()
 
- const emit = defineEmits<{
-   cancelar: [reservacion: Reservacion]
- }>()
+ const emit = defineEmits<{ cancelar: [reservacion: Reservacion] }>()
 
+ //Caroussel
+ const images = computed(() => props.reservacion.hospedaje.imagenes ?? [])
+ const imgIdx = ref(0)
+ function prevImg() { imgIdx.value = (imgIdx.value - 1 + images.value.length) % images.value.length }
+ function nextImg() { imgIdx.value = (imgIdx.value + 1) % images.value.length }
+ 
  const showInfo = ref(false)
  const showCancel = ref(false)
  
@@ -202,10 +224,10 @@
 
  //Estado
  const estadoMap: Record<string, { label: string; cls: string }> = {
-   ACTIVA:     { label: 'Activa',      cls: 'estado-activa' },
-   EN_PROCESO: { label: 'En proceso',  cls: 'estado-proceso' },
-   COMPLETADA: { label: 'Completada',  cls: 'estado-completada' },
-   CANCELADA:  { label: 'Cancelada',   cls: 'estado-cancelada' },
+   ACTIVA: { label: 'Activa', cls: 'estado-activa' },
+   EN_PROCESO: { label: 'En proceso', cls: 'estado-proceso' },
+   COMPLETADA: { label: 'Completada', cls: 'estado-completada' },
+   CANCELADA: { label: 'Cancelada', cls: 'estado-cancelada' },
  }
 
  const estadoLabel = computed(() => estadoMap[props.reservacion.estado]?.label ?? props.reservacion.estado)
@@ -218,19 +240,7 @@
      emit('cancelar', props.reservacion)
      return
    }
-
    // TODO backend: PATCH /api/reservaciones/:id/cancelar/
-   // try {
-   //   const res = await fetch(`${API}/api/reservaciones/${props.reservacion.id}/cancelar/`, {
-   //     method: 'PATCH',
-   //     headers: { Authorization: `Bearer ${useAuthStore().token}` }
-   //   })
-   //   if (!res.ok) throw new Error('No se pudo cancelar')
-   //   showDialog.value = false
-   //   emit('cancelar', props.reservacion)
-   // } catch (e) {
-   //   console.error(e)
-   // }
  }
  
  //Fechas
@@ -247,190 +257,242 @@
 </script>
 
 <style scoped>
+ /* Row */
  .reservation-row {
    display: flex;
-   align-items: center;
-   gap: 1rem;
-   padding: 0.9rem 1rem;
-   border-radius: 12px;
+   align-items: stretch;
+   border-radius: 14px;
    border: 1px solid var(--color-border);
    background: rgba(255,255,255,0.02);
-   transition: background 0.15s, border-color 0.15s;
+   overflow: hidden;
+   min-height: 160px;
+   transition: border-color 0.2s, background 0.2s;
  }
  .reservation-row:hover {
-   background: rgba(255,255,255,0.04);
-   border-color: rgba(255,255,255,0.12);
+   background: rgba(255,255,255,0.035);
+   border-color: rgba(255,255,255,0.13);
+ }
+ .row-cancelada { opacity: 0.65; }
+
+ /* 1. Media / Carousel */
+ .row-media {
+   flex-shrink: 0;
+   width: 190px;
+   position: relative;
+   overflow: hidden;
+   background: rgba(255,255,255,0.015);
+ }
+ .media-img {
+   width: 100%;
+   height: 100%;
+   object-fit: cover;
+   display: block;
  }
 
- /* Imagen */
- .row-image {
-   flex-shrink: 0;
-   width: 52px;
-   height: 52px;
-   border-radius: 8px;
-   border: 1px solid var(--color-border);
+ /* Placeholder sin imágenes */
+ .media-placeholder {
+   width: 100%;
+   height: 100%;
    display: flex;
    align-items: center;
    justify-content: center;
+   background:
+     radial-gradient(ellipse at 50% 80%, rgba(123,216,176,0.06) 0%, transparent 70%),
+     rgba(255,255,255,0.01);
  }
- /* Color del icono según estado */
- .row-image.estado-activa    { background: rgba(123,216,176,0.08); color: var(--color-green) }
- .row-image.estado-proceso   { background: rgba(232,255,122,0.08); color: var(--color-accent) }
- .row-image.estado-completada{ background: rgba(255,255,255,0.04); color: var(--color-bone-soft) }
- .row-image.estado-cancelada { background: rgba(255,138,123,0.08); color: var(--color-danger) }
 
- /* Info principal */
- .row-main {
+ /* Controles carousel */
+ .carousel-btn {
+   position: absolute;
+   top: 50%;
+   transform: translateY(-50%);
+   width: 28px; height: 28px; border-radius: 50%;
+   background: rgba(0,0,0,0.55);
+   border: 1px solid rgba(255,255,255,0.12);
+   color: rgba(255,255,255,0.85);
+   cursor: pointer;
+   display: flex; align-items: center; justify-content: center;
+   transition: background 0.15s;
+   z-index: 2;
+ }
+ .carousel-btn:hover { background: rgba(0,0,0,0.75); }
+ .carousel-prev { left: 6px; }
+ .carousel-next { right: 6px; }
+
+ .carousel-dots {
+   position: absolute;
+   bottom: 8px;
+   left: 50%;
+   transform: translateX(-50%);
+   display: flex;
+   gap: 4px;
+   z-index: 2;
+ }
+ .carousel-dot {
+   width: 5px; height: 5px; border-radius: 50%;
+   background: rgba(255,255,255,0.35);
+   cursor: pointer; transition: background 0.2s;
+ }
+ .carousel-dot.active { background: rgba(255,255,255,0.9); }
+
+ /* 2. Info */
+ .row-info {
    flex: 1;
    min-width: 0;
+   padding: 1.25rem 1.5rem;
    display: flex;
    flex-direction: column;
-   gap: 0.3rem;
+   justify-content: space-between;
+   gap: 0.75rem;
  }
- .row-top {
+
+ .info-head {
    display: flex;
-   align-items: center;
-   gap: 0.5rem;
+   flex-direction: column;
+   gap: 0.25rem;
  }
- .row-id {
-   font-size: 11px;
-   color: var(--color-bone-mute);
+ .info-reserv-id {
+   font-size: 10.5px;
    font-family: var(--font-mono);
-   flex-shrink: 0;
+   color: var(--color-bone-mute);
+   letter-spacing: 0.06em;
  }
- .row-parque {
-   font-size: 14px;
-   font-weight: 600;
+ .info-title {
+   font-family: var(--font-serif);
+   font-size: 28px;
+   font-weight: 400;
    color: var(--color-bone);
-   white-space: nowrap;
-   overflow: hidden;
-   text-overflow: ellipsis;
+   line-height: 1.1;
+   letter-spacing: -0.01em;
  }
- .row-meta {
+ .info-hospedaje-num {
+   font-family: var(--font-mono);
+   font-size: 22px;
+   color: var(--color-bone-mute);
+   font-weight: 400;
+ }
+ .info-parque {
+   font-size: 16px;
+   font-family: var(--font-mono);
+   text-transform: uppercase;
+   letter-spacing: 0.12em;
+   color: var(--color-accent);
+   opacity: 0.8;
+ }
+
+ .info-meta {
    display: flex;
    align-items: center;
    flex-wrap: wrap;
-   gap: 0.35rem;
+   gap: 0.4rem;
  }
  .meta-item {
    display: inline-flex;
    align-items: center;
    gap: 0.3rem;
-   font-size: 11.5px;
+   font-size: 14px;
    color: var(--color-bone-soft);
  }
- .meta-hospedaje {
-   color: var(--color-bone-mute);
- }
  .meta-sep {
-   font-size: 11px;
    color: var(--color-bone-mute);
+   font-size: 11px;
  }
 
- /* Precio */
- .row-precio {
+ /* 3. Side: estado + precio + acciones */
+ .row-side {
    flex-shrink: 0;
-   text-align: right;
-   min-width: 70px;
+   width: 165px;
+   padding: 1.25rem 1rem;
+   border-left: 1px solid var(--color-border);
+   display: flex;
+   flex-direction: column;
+   align-items: center;
+   justify-content: space-between;
+   gap: 0.5rem;
  }
- .precio-value {
-   font-size: 15px;
+
+ /* Icono de estado grande */
+ .side-icon { display: flex; align-items: center; justify-content: center; }
+ .side-icon.estado-activa     { color: var(--color-green); }
+ .side-icon.estado-proceso    { color: var(--color-accent); }
+ .side-icon.estado-completada { color: var(--color-bone-soft); }
+ .side-icon.estado-cancelada  { color: var(--color-danger); }
+
+ /* Badge estado */
+ .estado-badge {
+   display: inline-flex;
+   align-items: center;
+   gap: 0.3rem;
+   padding: 0.2rem 0.65rem;
+   border-radius: 999px;
+   font-size: 10.5px;
    font-weight: 600;
-   color: var(--color-bone);
-   display: block;
+   letter-spacing: 0.03em;
  }
- .precio-label {
-   font-size: 10px;
-   color: var(--color-bone-mute);
+ .estado-activa     { background: rgba(123,216,176,0.12); color: var(--color-green); }
+ .estado-proceso    { background: rgba(232,255,122,0.10); color: var(--color-accent); }
+ .estado-completada { background: rgba(255,255,255,0.06); color: var(--color-bone-soft); }
+ .estado-cancelada  { background: rgba(255,138,123,0.10); color: var(--color-danger); }
+
+ /* Precio */
+ .side-precio {
+   display: flex;
+   flex-direction: column;
+   align-items: center;
+   line-height: 1;
+ }
+ .precio-num {
+   font-size: 24px;
+   font-weight: 700;
+   color: var(--color-bone);
+   letter-spacing: -0.03em;
+ }
+ .precio-cur {
+   font-size: 9px;
    font-family: var(--font-mono);
+   text-transform: uppercase;
+   letter-spacing: 0.12em;
+   color: var(--color-bone-mute);
+   margin-top: 2px;
  }
  .precio-pending {
-   font-size: 13px;
+   font-size: 14px;
    color: var(--color-bone-mute);
    letter-spacing: 0.05em;
  }
 
- /* Estado */
- .row-estado {
-   flex-shrink: 0;
-   display: flex;
-   flex-direction: column;
-   align-items: flex-end;
-   gap: 0.3rem;
-   min-width: 100px;
- }
- .estado-badge {
-   display: inline-flex;
-   align-items: center;
-   gap: 0.35rem;
-   padding: 0.2rem 0.6rem;
-   border-radius: 999px;
-   font-size: 11px;
-   font-weight: 600;
-   letter-spacing: 0.03em;
- }
- .estado-activa {
-   background: rgba(123,216,176,0.12);
-   color: var(--color-green);
- }
- .estado-proceso {
-   background: rgba(232,255,122,0.1);
-   color: var(--color-accent);
- }
- .estado-completada {
-   background: rgba(255,255,255,0.06);
-   color: var(--color-bone-soft);
- }
- .estado-cancelada {
-   background: rgba(255,138,123,0.1);
-   color: var(--color-danger);
- }
- .row-date {
-   font-size: 10.5px;
-   color: var(--color-bone-mute);
-   white-space: nowrap;
- }
+ /* Botones */
+ .side-btns { display: flex; flex-direction: column; gap: 0.35rem; width: 100%; }
 
- /* Acciones */
- .row-actions { flex-shrink: 0; display: flex; align-items: center; gap: 0.4rem; }
-
- .action-btn {
-   width: 30px; height: 30px; border-radius: 8px;
+ .btn-detalles {
+   width: 100%; height: 32px; border-radius: 999px;
    border: 1px solid var(--color-border);
    background: transparent; color: var(--color-bone-soft);
-   cursor: pointer; display: flex; align-items: center; justify-content: center;
-   transition: background 0.15s, color 0.15s, border-color 0.15s;
+   font-size: 11.5px; font-family: var(--font-sans);
+   cursor: pointer; transition: all 0.15s;
+   display: flex; align-items: center; justify-content: center; gap: 0.35rem;
  }
- .action-btn:hover {
+ .btn-detalles:hover {
    background: rgba(255,255,255,0.06);
    color: var(--color-bone);
    border-color: rgba(255,255,255,0.15);
  }
 
- .action-cancel-btn {
-   height: 30px;
-   width: 80px;
-   padding: 0 0.75rem;
-   border-radius: 8px;
+ .btn-cancelar {
+   width: 100%; height: 32px; border-radius: 999px;
    border: 1px solid rgba(255,138,123,0.3);
-   background: transparent;
-   color: var(--color-danger);
-   font-size: 12px; cursor: pointer;
-   transition: background 0.15s, border-color 0.15s;
-   white-space: nowrap;
+   background: transparent; color: var(--color-danger);
+   font-size: 11.5px; font-family: var(--font-sans);
+   cursor: pointer; transition: all 0.15s;
  }
- .action-cancel-btn:hover {
-   background: rgba(255,138,123,0.08);
-   border-color: rgba(255,138,123,0.5);
- }
- .action-cancel-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+ .btn-cancelar:hover { background: rgba(255,138,123,0.08); }
+ .btn-cancelar:disabled { opacity: 0.35; cursor: not-allowed; }
 
- /* Dialogo */
+ /* Dialogos */
  .dialog-backdrop {
    position: fixed; inset: 0; z-index: 9999;
    background: rgba(0,0,0,0.6); backdrop-filter: blur(4px);
-   display: flex; align-items: center; justify-content: center;
-   padding: 1rem;
+   display: flex; align-items: center; justify-content: center; padding: 1rem;
  }
  .dialog-box {
    background: #0d1a10;
@@ -440,31 +502,21 @@
    box-shadow: 0 24px 48px rgba(0,0,0,0.5);
    display: flex; flex-direction: column; gap: 1rem;
  }
- .dialog-title {
-   font-size: 18px; font-weight: 600;
-   color: var(--color-bone); letter-spacing: -0.01em;
- }
-
- /* Dialogo info mas ancho */
  .dialog-info-box { max-width: 480px; }
 
- .dialog-info-header {
-   display: flex; align-items: center;
-   justify-content: space-between;
- }
- .dialog-close {
+ .dialog-header { display: flex; align-items: center; justify-content: space-between; }
+ .dialog-title  { font-size: 18px; font-weight: 600; color: var(--color-bone); }
+ .dialog-close  {
    width: 28px; height: 28px; border-radius: 8px;
-   border: 1px solid var(--color-border);
-   background: transparent; color: var(--color-bone-soft);
-   cursor: pointer; display: flex; align-items: center;
-   justify-content: center; transition: color 0.2s, background 0.2s;
+   border: 1px solid var(--color-border); background: transparent;
+   color: var(--color-bone-soft); cursor: pointer;
+   display: flex; align-items: center; justify-content: center; transition: all 0.2s;
  }
  .dialog-close:hover { background: rgba(255,255,255,0.06); color: var(--color-bone); }
 
  .info-estado { align-self: flex-start; }
 
- /* Grid de datos */
- .info-grid { display: flex; flex-direction: column; gap: 0.5rem; }
+ .info-grid { display: flex; flex-direction: column; }
  .info-row {
    display: flex; justify-content: space-between;
    align-items: baseline; gap: 1rem;
@@ -473,17 +525,13 @@
  }
  .info-row:last-child { border-bottom: none; }
  .info-label {
-   font-size: 11.5px; color: var(--color-bone-mute);
+   font-size: 11px; color: var(--color-bone-mute);
    font-family: var(--font-mono); text-transform: uppercase;
    letter-spacing: 0.06em; flex-shrink: 0;
  }
- .info-value {
-   font-size: 13px; color: var(--color-bone);
-   text-align: right;
- }
- .info-pending { color: var(--color-bone-mute); font-style: italic; }
+ .info-value { font-size: 13px; color: var(--color-bone); text-align: right; }
 
- /* Animaciones */
+ /* Animaciones dialogo */
  .dialog-fade-enter-active, .dialog-fade-leave-active { transition: opacity 0.2s ease; }
  .dialog-fade-enter-active .dialog-box,
  .dialog-fade-leave-active .dialog-box { transition: transform 0.2s ease, opacity 0.2s ease; }

@@ -16,7 +16,7 @@
               <span class="h-px w-6 bg-(--color-accent)/60"></span>
             </span>
             <h1 class="font-serif font-normal leading-[0.95] tracking-tight text-[clamp(2.6rem,6vw,5rem)] mt-5">
-              Reserva tu noche<br>en el <em class="italic text-glow text-glow">bosque.</em>
+              Reserva tu noche<br>en el <em class="italic text-glow text-glow">bosque</em>
             </h1>
           </div>
           <p class="animate-fade-up text-[15.5px] mb-7 leading-relaxed">

@@ -4,7 +4,7 @@ import { ref } from 'vue'
 export interface Reservacion {
   id: number
   parque: { id: number; nombre: string; imagen_mapa: string | null }
-  hospedaje: { id: number; nombre: string }
+  hospedaje: { id: number; imagenes?: string[] }
   fecha_inicio: string   //"YYYY-MM-DD"
   fecha_fin: string      //"YYYY-MM-DD"
   num_personas: number

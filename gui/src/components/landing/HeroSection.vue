@@ -29,7 +29,7 @@
             <path d="M2 8 Q 50 1 100 6 T 198 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
           </svg>
         </span>
-        <em class="font-serif italic font-normal"> en el bosque.</em>
+        <em class="font-serif italic font-normal"> en el bosque</em>
       </h1>
       <p class="animate-fade-up delay-200 mt-7 max-w-2xl text-pretty text-[15px] leading-relaxed text-(--color-bone)/70 sm:text-base">
         Cada noche de verano, millones de luciérnagas encienden los bosques protegidos del país.
