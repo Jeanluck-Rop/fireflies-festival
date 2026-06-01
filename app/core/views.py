@@ -1,6 +1,7 @@
 # views.py
 from rest_framework.decorators import action
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
+from django.db.models import Count, Q
 from decimal import Decimal
 from django.core.mail import send_mail, EmailMessage
 from django.conf import settings
@@ -51,26 +52,6 @@ class UserAvatarView(APIView):
             serializer.save()
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
-class UserResetPasswordView(APIView):
-    """ Dispara el correo con el link de restablecer contraseña """
-    permission_classes = [AllowAny]
-
-    def post(self, request):
-        email = request.data.get('email')
-        if not email:
-            return Response({"email": ["Este campo es obligatorio."]}, status=status.HTTP_400_BAD_REQUEST)
-        
-        if Usuario.objects.filter(email=email).exists():
-            form = PasswordResetForm({'email': email})
-            if form.is_valid():
-                form.save(
-                    request=request,
-                    use_https=request.is_secure(),
-                )
-        return Response(status=status.HTTP_204_NO_CONTENT)
-
 
 class HospedajeViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Hospedaje.objects.all()
@@ -185,8 +166,14 @@ class ParqueViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = [AllowAny]
 
 class ParqueViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+    Este ViewSet genera automáticamente los endpoints para:
+    - Listar todos los parques (GET /api/parques/)
+    - Ver un parque específico (GET /api/parques/<id>/)
+    """
     serializer_class = ParqueSerializer
     permission_classes = [AllowAny]
+
     def get_queryset(self):
         hoy = date.today()
 
@@ -210,8 +197,7 @@ class ParqueViewSet(viewsets.ReadOnlyModelViewSet):
         ) & ~Q(hospedajes__id__in=ocupados_hoy)
 
         # Add count of available rooms today to the queryset
-        return Parque.objects.annotate(
+        return Parque.objects.filter(activo=True).annotate(
             cabanas_libres=Count('hospedajes', filter=filtro_cabanas),
             campings_libres=Count('hospedajes', filter=filtro_campings)
         )
-    

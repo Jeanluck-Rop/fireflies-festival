@@ -4,6 +4,7 @@ Django settings for fireflies project.
 
 from pathlib import Path
 from decouple import config, Csv
+from datetime import timedelta
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -134,6 +135,11 @@ DJOSER = {
         'user_create': 'djoser.serializers.UserCreateSerializer',
         'current_user': 'core.serializers.UserSerializer',
     },
+}
+
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=15), # Tokens válidos por 1 minuto
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=1), # Tokens de refresco válidos por 1 día
 }
 
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
