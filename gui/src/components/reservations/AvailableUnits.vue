@@ -76,7 +76,7 @@
       <p class="text-[14px] text-bone-mute max-w-[42ch]">
         No hay unidades que coincidan con estos filtros para las fechas seleccionadas o exceden la capacidad permitida.
       </p>
-      <AppButton variant="outline" @click="store.currentStep = 1">Modificar búsqueda</AppButton>
+      <AppButton variant="outline" @click="store.resetearReserva()">Modificar búsqueda</AppButton>
     </div>
   </div>
 </template>

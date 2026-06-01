@@ -30,26 +30,73 @@
           @mouseleave="hoverPark(null)"
           @click="selectAndScroll(p)"
         >
+          <div class="absolute top-3 left-3 flex items-center gap-2 z-600">
+            <span class="px-2.5 py-1 rounded-full text-[10.5px] font-mono uppercase tracking-[0.12em]"
+                  :style="`background:${p.hasCabin ? 'rgba(245,213,122,0.16)' : 'rgba(122,211,164,0.16)'}; color:${p.hasCabin ? '#f5d57a' : '#7ad3a4'}; border:1px solid ${p.hasCabin ? 'rgba(245,213,122,0.4)' : 'rgba(122,211,164,0.4)'};`">
+              {{ p.hasCabin ? 'Cabaña + Camping' : 'Solo Camping' }}
+            </span>
+            <span v-if="p.campings_libres && p.campings_libres > 5" class="px-2.5 py-1 rounded-full text-[10.5px] font-mono uppercase tracking-[0.12em] bg-white/10 border border-white/15 text-(--color--bone-soft)">Disponible</span>
+            <span v-else class="px-2.5 py-1 rounded-full text-[10.5px] font-mono uppercase tracking-[0.12em] bg-[rgba(255,138,123,0.14)] border border-[rgba(255,138,123,0.4)] text-[#ff9b8a]">Pocas plazas</span>
+          </div>
           <ImageCarousel :images="p.imagenes" :alt="p.nombre" />
           <div class="p-5 flex flex-col gap-3 flex-1">
             <div>
               <div class="flex items-baseline justify-between gap-2">
                 <div class="font-serif text-[23px] leading-tight">{{ p.nombre }}</div>
-                <span class="font-mono text-[10px] tracking-[0.14em] text-bone-soft shrink-0">#{{ String(p.id).padStart(2,'0') }}</span>
+                <span class="font-mono text-[10px] tracking-[0.14em] text-(--color-bone-soft) shrink-0">#{{ String(p.id).padStart(2,'0') }}</span>
               </div>
-              <div class="text-[12px] text-bone-soft mt-1 flex items-center gap-1.5">
+              <div class="text-[12px] text-(--color-bone-soft) mt-1 flex items-center gap-1.5">
                 <MapPin :size="14" class="text-(--color-accent)" />
                 {{ p.direccion }}
               </div>
             </div>
             <p class="text-[13px] text-bone-mute leading-normal line-clamp-2">{{ p.descripcion || 'Sin descripción' }}</p>
-            <div class="mt-auto pt-3 border-t border-white/5 flex items-center justify-between">
-              <span class="text-[11px] font-mono uppercase tracking-[0.14em] text-bone-soft">
+            <div class="mt-auto pt-3 border-t border-b pb-3 border-white/5 flex items-center justify-between">
+              <span class="text-[11px] font-mono uppercase tracking-[0.14em] text-(--color-bone-soft)">
                 <template v-if="is24Hours(p)"> 24 hrs </template>
                 <template v-else>{{ p.horario_apertura }} – {{ p.horario_cierre }}</template>
               </span>
               <span class="card-status" :class="getParkStatusClass(p)">
                 {{ getParkStatusText(p) }}
+              </span>
+            </div>
+            <template v-if="p.hasCabin">
+              <div class="grid grid-cols-2 gap-3">
+                <div class="rounded-lg border border-white/15 glass-strong p-3 text-center">
+                  <p class="font-mono text-[10px] uppercase tracking-widest text-(--color-bone-soft)/80">
+                    Cabañas disponibles:
+                  </p>
+                  <p class="mt-1 font-serif text-2xl text-(--color-accent)">
+                    {{ p.cabanas_libres ?? 'N/A' }}
+                  </p>
+                </div>
+                <div class="rounded-lg border border-white/15 glass-strong p-3 text-center">
+                  <p class="font-mono text-[10px] uppercase tracking-widest text-(--color-bone-soft)/80">
+                    Camping disponibles:
+                  </p>
+                  <p class="mt-1 font-serif text-2xl" style="color:#7ad3a4;">
+                    {{ p.campings_libres ?? 'N/A' }}
+                  </p>
+                </div>
+              </div>
+            </template>
+            <template v-else>
+              <div class="rounded-lg border border-white/15 glass-strong p-3 text-center">
+                <p class="font-mono text-[10px] uppercase tracking-widest text-(--color-bone-soft)/80">
+                  Camping disponibles:
+                </p>
+                <p class="mt-1 font-serif text-2xl" style="color:#7ad3a4;">
+                  {{ p.campings_libres ?? 'N/A' }}
+                </p>
+              </div>
+            </template>
+            <div class="mt-auto pt-3 border-t border-white/5 flex items-center justify-between">
+              <span class="text-[11px] font-mono uppercase tracking-[0.14em] text-(--color-accent)">
+                Desde ${{ p.precio_minimo}}<span class="text-(--color-bone-soft)/80">/noche</span>
+              </span>
+              <span class="text-[11px] font-mono text-glow inline-flex items-center gap-1.5" style="color:#7ad3a4;">
+                Ver en mapa
+                <ArrowRight :size="14" />
               </span>
             </div>
           </div>
@@ -71,7 +118,7 @@ import { computed, ref, watch, nextTick } from "vue";
 import { useParksStore } from "../../stores/parks";
 import AppLink from "../ui/AppLink.vue";
 import AppButton from "../ui/AppButton.vue";
-import { Shrub, MapPin } from "lucide-vue-next";
+import { Shrub, MapPin, ArrowRight } from "lucide-vue-next";
 import { is24Hours, getParkStatusText, getParkStatusClass } from "../../utils/parkStatus";
 import ImageCarousel from "../ui/ImageCarousel.vue";
 import FireflyLogo from "../ui/FireflyLogo.vue";
@@ -81,7 +128,7 @@ defineEmits<{ (e: 'reset-filters'): void }>();
 
 const store = useParksStore();
 
-const filteredParks = computed(() => store.parks);
+const filteredParks = computed(() => store.filteredParks);
 
 const selectedId = computed(() => store.selectedPark?.id ?? null);
 

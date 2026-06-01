@@ -1,5 +1,6 @@
 <template>
   <div class="parks-view">
+    <ParkSearch class="p-4" />
     <Parks class="p-4" />
     <FoundParks class="p-4" />
     <RecomendationsParks class="p-4" />
@@ -10,13 +11,16 @@
 <script setup lang="ts">
 import { onMounted } from "vue";
 import Parks from "../components/parks/Parks.vue";
-import { parkService } from "../services/parkService";
+import { useParksStore } from "../stores/parks";
 import FoundParks from "../components/parks/FoundParks.vue";
 import RecomendationsParks from "../components/parks/RecomendationsParks.vue";
 import FooterSection from "../components/landing/FooterSection.vue";
+import ParkSearch from "../components/parks/ParkSearch.vue";
 
-onMounted(async () => {
-  await parkService.getParks();
+const parksStore = useParksStore();
+
+onMounted(() => {
+  parksStore.loadParks();
 });
 </script>
 

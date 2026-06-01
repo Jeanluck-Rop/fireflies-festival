@@ -21,9 +21,17 @@ const MOCK_PARQUES: Parque[] = [
     longitud: -100.2800,
     horario_apertura: '01:00',
     horario_cierre: '23:00',
-    imagen_mapa: null,
     activo: true,
-    imagenes: []
+    imagenes: [],
+    servicios: [{ id: 1, nombre: 'Senderismo', icono: 'hiking' },
+      { id: 2, nombre: 'Recorridos guiados', icono: 'map' },],
+    hasCabin: true,
+    precio_minimo: 800,
+    precio_maximo: 2500,
+    capacidad_minima: 2,
+    capacidad_maxima: 8,
+    cabanas_libres: 4,
+    campings_libres: 12
   },
   {
     id: 2,
@@ -34,9 +42,17 @@ const MOCK_PARQUES: Parque[] = [
     longitud: -100.1300,
     horario_apertura: '09:00',
     horario_cierre: '23:30',
-    imagen_mapa: null,
     activo: true,
-    imagenes: []
+    imagenes: [],
+    servicios: [{ id: 3, nombre: 'Camping', icono: 'camping' },
+      { id: 4, nombre: 'Observación de luciérnagas', icono: 'bug' },],
+    hasCabin: false,
+    precio_minimo: 500,
+    precio_maximo: 1500,
+    capacidad_minima: 2,
+    capacidad_maxima: 10,
+    cabanas_libres: 0,
+    campings_libres: 20
   },
   {
     id: 3,
@@ -47,11 +63,21 @@ const MOCK_PARQUES: Parque[] = [
     longitud: -100.2710,
     horario_apertura: '10:30',
     horario_cierre: '23:00',
-    imagen_mapa: null,
-    activo: false,
+    activo: true,
     imagenes: [{id: 1, parque: 3, url: fireflires1}, {id: 2, parque: 3, url: fireflires2}, 
       {id: 3, parque: 3, url: fireflires3}, {id: 4, parque: 3, url: hero}, 
-      {id: 5, parque: 3, url: cabinnight}, {id: 6, parque: 3, url: campingnight}]
+      {id: 5, parque: 3, url: cabinnight}, {id: 6, parque: 3, url: campingnight}],
+    servicios: [{ id: 5, nombre: 'Senderismo', icono: 'hiking' },
+      { id: 6, nombre: 'Camping', icono: 'camping' },
+      { id: 7, nombre: 'Recorridos nocturnos', icono: 'moon' },
+      { id: 8, nombre: 'Observación de mariposas', icono: 'butterfly' },],
+    hasCabin: true,
+    precio_minimo: 1000,
+    precio_maximo: 3000,
+    capacidad_minima: 2,
+    capacidad_maxima: 12,
+    cabanas_libres: 6,
+    campings_libres: 15
   },
   {
   id: 4,
@@ -62,9 +88,17 @@ const MOCK_PARQUES: Parque[] = [
   longitud: -100.2745,
   horario_apertura: '08:00',
   horario_cierre: '22:00',
-  imagen_mapa: null,
-  activo: true,
-  imagenes: []
+  activo: false,
+  imagenes: [],
+  servicios: [{ id: 8, nombre: 'Senderismo', icono: 'hiking' },
+    { id: 9, nombre: 'Observación de mariposas', icono: 'butterfly' },],
+  hasCabin: true,
+  precio_minimo: 1200,
+  precio_maximo: 3500,
+  capacidad_minima: 2,
+  capacidad_maxima: 10,
+  cabanas_libres: 0,
+  campings_libres: 0
 },
 {
   id: 5,
@@ -75,9 +109,17 @@ const MOCK_PARQUES: Parque[] = [
   longitud: -98.7654,
   horario_apertura: '10:00',
   horario_cierre: '23:00',
-  imagen_mapa: null,
   activo: true,
-  imagenes: []
+  imagenes: [],
+  servicios: [{ id: 10, nombre: 'Senderismo', icono: 'hiking' },
+    { id: 11, nombre: 'Observación de luciérnagas', icono: 'bug' },],
+  hasCabin: false,
+  precio_minimo: 400,
+  precio_maximo: 1200,
+  capacidad_minima: 2,
+  capacidad_maxima: 8,
+  cabanas_libres: 0,
+  campings_libres: 10
 },
 {
   id: 6,
@@ -88,9 +130,17 @@ const MOCK_PARQUES: Parque[] = [
   longitud: -98.5340,
   horario_apertura: '18:00',
   horario_cierre: '23:59',
-  imagen_mapa: null,
   activo: true,
-  imagenes: []
+  imagenes: [],
+  servicios: [{ id: 12, nombre: 'Senderismo nocturno', icono: 'hiking' },
+    { id: 13, nombre: 'Observación de luciérnagas', icono: 'bug' },],
+  hasCabin: false,
+  precio_minimo: 300,
+  precio_maximo: 1000,
+  capacidad_minima: 2,
+  capacidad_maxima: 6,
+  cabanas_libres: 0,
+  campings_libres: 8
 },
 {
   id: 7,
@@ -101,9 +151,17 @@ const MOCK_PARQUES: Parque[] = [
   longitud: -97.9230,
   horario_apertura: '09:00',
   horario_cierre: '22:30',
-  imagen_mapa: null,
   activo: true,
-  imagenes: []
+  imagenes: [],
+  servicios: [{ id: 14, nombre: 'Camping', icono: 'camping' },
+    { id: 15, nombre: 'Recorridos nocturnos', icono: 'moon' },],
+  hasCabin: false,
+  precio_minimo: 350,
+  precio_maximo: 900,
+  capacidad_minima: 2,
+  capacidad_maxima: 10,
+  cabanas_libres: 0,
+  campings_libres: 5
 },
 {
   id: 8,
@@ -114,9 +172,17 @@ const MOCK_PARQUES: Parque[] = [
   longitud: -100.1720,
   horario_apertura: '08:30',
   horario_cierre: '21:30',
-  imagen_mapa: null,
   activo: true,
-  imagenes: []
+  imagenes: [],
+  servicios: [{ id: 16, nombre: 'Senderismo', icono: 'hiking' },
+    { id: 17, nombre: 'Observación de fauna', icono: 'paw' },],
+  hasCabin: true,
+  precio_minimo: 600,
+  precio_maximo: 2000,
+  capacidad_minima: 2,
+  capacidad_maxima: 8,
+  cabanas_libres: 3,
+  campings_libres: 10
 },
 {
   id: 9,
@@ -127,9 +193,16 @@ const MOCK_PARQUES: Parque[] = [
   longitud: -97.9610,
   horario_apertura: '07:00',
   horario_cierre: '23:00',
-  imagen_mapa: null,
   activo: true,
-  imagenes: []
+  imagenes: [],
+  servicios: [{ id: 19, nombre: 'Senderismo', icono: 'hiking' },],
+  hasCabin: false,
+  precio_minimo: 250,
+  precio_maximo: 800,
+  capacidad_minima: 2,
+  capacidad_maxima: 6,
+  cabanas_libres: 0,
+  campings_libres: 12
 },
 {
   id: 10,
@@ -140,9 +213,17 @@ const MOCK_PARQUES: Parque[] = [
   longitud: -98.7310,
   horario_apertura: '09:00',
   horario_cierre: '22:00',
-  imagen_mapa: null,
   activo: true,
-  imagenes: []
+  imagenes: [],
+  servicios: [{ id: 18, nombre: 'Senderismo', icono: 'hiking' },
+    { id: 20, nombre: 'Observación de flora', icono: 'leaf' },],
+  hasCabin: true,
+  precio_minimo: 700,
+  precio_maximo: 2200,
+  capacidad_minima: 2,
+  capacidad_maxima: 10,
+  cabanas_libres: 5,
+  campings_libres: 8
 },
 {
   id: 11,
@@ -153,9 +234,17 @@ const MOCK_PARQUES: Parque[] = [
   longitud: -100.0950,
   horario_apertura: '10:00',
   horario_cierre: '23:45',
-  imagen_mapa: null,
   activo: true,
-  imagenes: []
+  imagenes: [],
+  servicios: [{ id: 21, nombre: 'Senderismo', icono: 'hiking' },
+    { id: 22, nombre: 'Recorridos nocturnos', icono: 'moon' },],
+  hasCabin: true,
+  precio_minimo: 900,
+  precio_maximo: 2800,
+  capacidad_minima: 2,
+  capacidad_maxima: 12,
+  cabanas_libres: 4,
+  campings_libres: 10
 },
 {
   id: 12,
@@ -166,9 +255,16 @@ const MOCK_PARQUES: Parque[] = [
   longitud: -98.7280,
   horario_apertura: '17:00',
   horario_cierre: '23:00',
-  imagen_mapa: null,
   activo: true,
-  imagenes: []
+  imagenes: [],
+  servicios: [],
+  hasCabin: false,
+  precio_minimo: 200,
+  precio_maximo: 700,
+  capacidad_minima: 2,
+  capacidad_maxima: 6,
+  cabanas_libres: 0,
+  campings_libres: 15
 },
 {
   id: 13,
@@ -179,22 +275,27 @@ const MOCK_PARQUES: Parque[] = [
   longitud: -98.5760,
   horario_apertura: '08:00',
   horario_cierre: '21:00',
-  imagen_mapa: null,
   activo: true,
-  imagenes: []
+  imagenes: [],
+  servicios: [{ id: 23, nombre: 'Senderismo', icono: 'hiking' },
+    { id: 24, nombre: 'Observación de aves', icono: 'bird' },],
+  hasCabin: true,
+  precio_minimo: 500,
+  precio_maximo: 1500,
+  capacidad_minima: 2,
+  capacidad_maxima: 8,
+  cabanas_libres: 2,
+  campings_libres: 10
 }
 ]
 
-export const parkService = {
-  async getParks() {
+export async function fetchParks(): Promise<Parque[]> {
     const store = useParksStore()
     store.loading = true
 
     if (USE_MOCK) {
       await new Promise(r => setTimeout(r, 700))
-      store.setParks(MOCK_PARQUES)
-      store.loading = false
-      return
+      return MOCK_PARQUES
     }
 
     // TODO: conexion con back
@@ -204,5 +305,5 @@ export const parkService = {
     // const data = await res.json()
     // store.setParks(data)
     store.loading = false
-  }
+    return []
 }
