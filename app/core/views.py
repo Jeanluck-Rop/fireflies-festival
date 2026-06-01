@@ -1,9 +1,10 @@
 # views.py
-from rest_framework import viewsets, status
-from .models import Parque, Usuario
+from rest_framework import viewsets, status, generics
+from rest_framework.decorators import action
+from .models import Parque, Usuario, Reservacion
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
-from .serializers import ParqueSerializer
+from .serializers import ParqueSerializer, ReservacionSerializer
 from djoser.views import UserViewSet
 
 class ParqueViewSet(viewsets.ReadOnlyModelViewSet):
@@ -37,3 +38,25 @@ class ClienteViewSet(UserViewSet):
                 {"detail": "Unauthorized deletion."},
                 status=status.HTTP_403_FORBIDDEN
             )
+    
+class ReservacionViewSet(viewsets.ModelViewSet):
+    serializer_class = ReservacionSerializer
+
+    def get_queryset(self):
+        queryset = Reservacion.objects.select_related('parque', 'hospedaje').all()
+        usuario_id = self.request.query_params.get('usuario_id', None)
+        if usuario_id is not None:
+            queryset = queryset.filter(usuario_id=usuario_id)
+            
+        return queryset
+    
+    @action(detail=True, methods=['patch'])
+    def cancelar(self, request, pk=None):
+        reservacion = self.get_object()
+        reservacion.estado = Reservacion.Estado.CANCELADA
+        reservacion.save()
+        
+        return Response(
+            {"detail": "Reservación cancelada correctamente"}, 
+            status=status.HTTP_200_OK
+        )

@@ -119,17 +119,26 @@
 
  const props = defineProps<{
    usuario: UsuarioAdmin
-   reservaciones: Reservacion[]   // ya filtradas por este usuario
+   reservaciones: Reservacion[]
+   cargando: boolean
  }>()
 
- defineEmits<{ delete: [id: number] }>()
+ const emit = defineEmits<{ 
+  delete: [id: number], 
+  expand: [id: number]
+ }>()
 
  //Expand
  const isExpanded         = ref(false)
  const showDeactivateDialog = ref(false)
  const filterEstado       = ref('')
 
- function toggle() { isExpanded.value = !isExpanded.value }
+ function toggle() {
+  isExpanded.value = !isExpanded.value
+  if (isExpanded.value) {
+     emit('expand', props.usuario.id)
+   }
+}
 
  const filteredReserv = computed(() => {
    if (!filterEstado.value) return props.reservaciones
