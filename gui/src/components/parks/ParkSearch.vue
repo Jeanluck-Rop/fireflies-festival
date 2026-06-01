@@ -18,7 +18,7 @@
               <span class="h-px w-6 bg-(--color-accent)/60"></span>
             </span>
             <h1 class="font-serif font-normal leading-[0.95] tracking-tight text-[clamp(2.6rem,6vw,5rem)] mt-5">
-              Encuentra tu lugar<br>para ver <em class="italic text-glow text-glow">la luz.</em>
+              Encuentra tu lugar<br>para ver <em class="italic text-glow text-glow">la luz</em>
             </h1>
           </div>
           <div class="animate-fade-up text-[15.5px] leading-relaxed">

@@ -1,4 +1,6 @@
 import { useReservationStore, type Hospedaje, type Parque } from "../stores/reservationStore";
+import { useReservationsStore } from "../stores/reservations";
+import { useAuthStore } from "../stores/auth";
 
 const USE_MOCK = import.meta.env.VITE_USE_MOCK === "true";
 const API = import.meta.env.VITE_API_URL || null;
@@ -62,8 +64,12 @@ export const reservationService = {
     if (USE_MOCK) {
       await new Promise((r) => setTimeout(r, 400));
       return MOCK_PARQUES;
+    } else {
+      const res = await fetch(`${API}/api/parques/`);
+      if (!res.ok) throw new Error("Error al obtener parques");
+      const data = await res.json();
+      return data;
     }
-    return [];
   },
 
   async buscarUnidadesDisponibles() {
@@ -89,7 +95,7 @@ export const reservationService = {
             if (res.hospedaje_id !== unit.id) return false;
             const resInicio = new Date(res.inicio).getTime();
             const resFin = new Date(res.fin).getTime();
-            return (llegada < resFin && salida > resInicio); // Empalme
+            return (llegada < resFin && salida > resInicio);
           });
           return !tieneEmpalme;
         });
@@ -100,6 +106,85 @@ export const reservationService = {
       }
       store.buscandoDisponibilidad = false;
       return;
+    } else {
+      try {
+        const qs = new URLSearchParams({
+          parque_id: store.parqueSeleccionado?.id.toString() || '',
+          tipo: store.tipoHospedaje || '',
+          personas: store.personas.toString(),
+          llegada: store.llegada || '',
+          salida: store.salida || ''
+        });
+
+        const res = await fetch(`${API}/api/hospedajes/disponibles/?${qs}`);
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.fecha_inicio || err.error || "No hay disponibilidad para esta selección.");
+        }
+        const disponibles = await res.json();
+        
+        store.unidadesDisponibles = disponibles;
+        if (!disponibles.length) {
+          store.errorDisponibilidad = "Lo sentimos, todo está lleno para esas fechas.";
+        }
+      } catch (e: any) {
+        store.errorDisponibilidad = e.message;
+      } finally {
+        store.buscandoDisponibilidad = false;
+      }
     }
   },
+
+  async crearReservacion(reservaData: any) {
+    const auth = useAuthStore();
+
+    const payload = {
+      parque: reservaData.parque.id,
+      hospedaje: reservaData.unidad.id,
+      fecha_inicio: reservaData.llegada,
+      fecha_fin: reservaData.salida,
+      num_personas: reservaData.personas,
+      tipo_visita: reservaData.tipo
+    };
+
+    const res = await fetch(`${API}/api/reservaciones/`, {
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${auth.token}`
+      },
+      body: JSON.stringify(payload)
+    });
+
+    if (!res.ok) {
+      const err = await res.json();
+      console.error("Error devuelto por Django:", err);
+      throw err;
+    }
+    return await res.json();
+  },
+
+  async getReservaciones() {
+    const store = useReservationsStore()
+    store.loading = true
+
+    const res = await fetch(`${API}/api/reservaciones/`, {
+      headers: { Authorization: `Bearer ${useAuthStore().token}` }
+    })
+    if (!res.ok) throw new Error('Error cargando reservaciones')
+    const data = await res.json()
+    store.setReservaciones(data)
+    store.loading = false
+  },
+
+  async cancelarReservacion(id: number) {
+    const auth = useAuthStore()
+    const res = await fetch(`${API}/api/reservaciones/${id}/cancelar/`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${auth.token}` }
+    })
+    if (!res.ok) throw new Error("Error al cancelar la reservación")
+    
+    await this.getReservaciones() 
+  }
 };

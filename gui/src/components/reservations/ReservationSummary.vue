@@ -71,7 +71,7 @@
           <template v-else>
             <AppButton
               variant="primary"
-              :loading="false"
+              :loading="loadingReserva"
               class="w-full h-12"
               @click="handleReservation">
               Confirmar reservación
@@ -113,13 +113,14 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import { Info, CircleQuestionMark, Mail } from 'lucide-vue-next';
 import { useReservationStore } from '../../stores/reservationStore.ts';
 import { reservationService } from '../../services/reservationService.ts';
 import AppButton from '../ui/AppButton.vue';
 
 const store = useReservationStore();
+const loadingReserva = ref(false);
 
 const formatDate = (isoString: string | null) => {
   if (!isoString) return '—';
@@ -157,8 +158,25 @@ const handleAvailability = async () => {
 
 const handleReservation = async () => {
   if (!isFormComplete.value) return;
+  
   store.calcularResumen();
-  store.reservaConfirmada = true;
+  
+  if (!store.reservaResumen) return;
+
+  loadingReserva.value = true;
+  
+  try {
+    await reservationService.crearReservacion(store.reservaResumen);
+    
+    store.reservaConfirmada = true;
+    
+  } catch (error: any) {
+    console.error("Fallo en el backend:", error);
+    const msjError = error.error || error.detail || error.fecha_inicio || "Hubo un problema al crear la reservación.";
+    alert("Error: " + msjError);
+  } finally {
+    loadingReserva.value = false;
+  }
 };
 </script>
 

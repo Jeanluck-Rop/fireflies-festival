@@ -6,32 +6,26 @@
         class="dialog-backdrop"
         @click.self="$emit('update:modelValue', false)">
         <div class="dialog-box" :class="variantClass">
-
+	    
           <!-- Header -->
-          <div class="dialog-header">
+          <div class="dialog-body">
             <h3 class="dialog-title">{{ title }}</h3>
-            <button class="dialog-close" @click="$emit('update:modelValue', false)">
-              <svg width="11" height="11" viewBox="0 0 10 10" fill="none">
-                <path d="M1 1l8 8M9 1l-8 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-              </svg>
-            </button>
-          </div>
-
-          <!-- Mensaje -->
-          <p class="dialog-text">
-            <slot>{{ message }}</slot>
-          </p>
-
+            <p class="dialog-text">
+              <slot>{{ message }}</slot>
+            </p>
+	  </div>
+	  
           <!-- Acciones -->
-          <div class="dialog-actions">
+          <div class="dialog-footer" :class="variantClass">
             <button
-              class="dialog-btn dialog-btn-back"
+              class="dialog-btn dialog-btn-cancel"
+	      :class="variantClass" 
               @click="$emit('update:modelValue', false)">
               {{ cancelLabel }}
             </button>
             <button
               class="dialog-btn dialog-btn-confirm"
-              :class="'confirm-' + variant"
+              :class="['dialog-btn-confirm', 'confirm-' + variant, variantClass]"
               :disabled="loading"
               @click="$emit('confirm')">
               {{ loading ? loadingLabel : confirmLabel }}
@@ -75,10 +69,8 @@
 <style scoped>
  /* Backdrop */
  .dialog-backdrop {
-   position: fixed;
-   inset: 0;
-   z-index: 9999;
-   background: rgba(0, 0, 0, 0.6);
+   position: fixed; inset: 0; z-index: 9999;
+   background: rgba(0, 0, 0, 0.7);
    backdrop-filter: blur(4px);
    display: flex;
    align-items: center;
@@ -86,109 +78,116 @@
    padding: 1rem;
  }
 
- /* Box */
+ /* Caja principal */
  .dialog-box {
-   background: #0d1a10;
-   border-radius: 16px;
-   padding: 1.75rem;
    width: 100%;
-   max-width: 420px;
-   box-shadow: 0 24px 48px rgba(0, 0, 0, 0.5);
+   max-width: 400px;
+   border-radius: 16px;
+   overflow: hidden;
+   box-shadow: 0 32px 64px rgba(0,0,0,0.55);
    display: flex;
    flex-direction: column;
-   gap: 1rem;
+   background: #0f1410;
  }
 
- /* Variantes de borde */
- .box-danger  { border: 1px solid rgba(255, 138, 123, 0.2); }
- .box-warning { border: 1px solid rgba(232, 255, 122, 0.15); }
- .box-normal  { border: 1px solid rgba(123, 216, 176, 0.15); }
+ /* Borde del box segun variante */
+ .dialog-box.v-danger  {
+   background: #0f1410;
+   border: 1px solid rgba(255,138,123,0.22);
+ }
+ .dialog-box.v-warning {
+   background: #0f1410;
+   border: 1px solid rgba(232,255,122,0.18);
+ }
+ .dialog-box.v-normal  {
+   background: #0f1410;
+   border: 1px solid rgba(123,216,176,0.18);
+ }
 
- /* Header */
- .dialog-header {
+ /* Cuerpo: titulo + texto centrados */
+ .dialog-body {
+   padding: 1.75rem 1.75rem 1.5rem;
    display: flex;
+   flex-direction: column;
    align-items: center;
-   justify-content: space-between;
-   gap: 1rem;
+   gap: 0.65rem;
+   text-align: center;
  }
 
  .dialog-title {
-   font-size: 18px;
-   font-weight: 600;
+   font-size: 17px;
+   font-weight: 700;
    letter-spacing: -0.01em;
- }
-
- /* Color del titulo segun variante */
- .box-danger  .dialog-title { color: var(--color-danger); }
- .box-warning .dialog-title { color: var(--color-accent); }
- .box-normal  .dialog-title { color: var(--color-bone); }
-
- .dialog-close {
-   flex-shrink: 0;
-   width: 28px;
-   height: 28px;
-   border-radius: 8px;
-   border: 1px solid var(--color-border);
-   background: transparent;
-   color: var(--color-bone-mute);
-   cursor: pointer;
-   display: flex;
-   align-items: center;
-   justify-content: center;
-   transition: color 0.2s, background 0.2s;
- }
- .dialog-close:hover {
-   background: rgba(255, 255, 255, 0.06);
    color: var(--color-bone);
  }
 
- /* Texto*/
  .dialog-text {
    font-size: 13.5px;
    color: var(--color-bone-soft);
    line-height: 1.6;
+   max-width: 32ch;
  }
- .dialog-text :deep(strong) { color: var(--color-bone); }
+ .dialog-text :deep(strong) { color: var(--color-bone); font-weight: 600; }
 
- /* Acciones */
- .dialog-actions {
+ /* Footer con botones pegados al borde */
+ .dialog-footer {
    display: flex;
-   gap: 0.75rem;
-   justify-content: flex-end;
-   margin-top: 0.5rem;
+   border-top-width: 1px;
+   border-top-style: solid;
  }
 
+ /* Color del borde superior del footer según variante */
+ .dialog-footer.v-danger  { border-top-color: rgba(255,138,123,0.18); }
+ .dialog-footer.v-warning { border-top-color: rgba(232,255,122,0.14); }
+ .dialog-footer.v-normal  { border-top-color: rgba(123,216,176,0.14); }
+
+ /* Botones */
  .dialog-btn {
-   height: 36px;
-   padding: 0 1.25rem;
-   border-radius: 999px;
-   font-size: 13px;
+   flex: 1;
+   height: 46px;
+   border: none;
+   background: transparent;
+   font-size: 13.5px;
+   font-weight: 500;
    font-family: var(--font-sans);
    cursor: pointer;
-   transition: all 0.2s;
+   transition: background 0.18s, color 0.18s;
+   border-radius: 0;
  }
 
- .dialog-btn-back {
-   border: 1px solid var(--color-border);
-   background: transparent;
+ /* Cancelar: texto muted, separador derecho */
+ .dialog-btn-cancel {
    color: var(--color-bone-soft);
+   border-right-width: 1px;
+   border-right-style: solid;
  }
- .dialog-btn-back:hover {
-   background: rgba(255, 255, 255, 0.05);
+ .dialog-btn-cancel.v-danger  { border-right-color: rgba(255,138,123,0.18); }
+ .dialog-btn-cancel.v-warning { border-right-color: rgba(232,255,122,0.14); }
+ .dialog-btn-cancel.v-normal  { border-right-color: rgba(123,216,176,0.14); }
+
+ .dialog-btn-cancel:hover {
+   background: rgba(255,255,255,0.04);
    color: var(--color-bone);
  }
 
- .dialog-btn-confirm {
-   border: none;
-   color: #fff;
-   font-weight: 500;
- }
- .confirm-danger  { background: var(--color-danger); }
- .confirm-warning { background: rgba(232, 255, 122, 0.85); color: #161D1A; }
- .confirm-normal  { background: var(--color-green); color: #07090A; }
+ /* Confirmar: texto en color de variante, bold */
+ .dialog-btn-confirm { font-weight: 600; }
 
- .dialog-btn-confirm:hover    { opacity: 0.88; }
- .dialog-btn-confirm:disabled { opacity: 0.4; cursor: not-allowed; }
+ .confirm-danger  { color: var(--color-danger); }
+ .confirm-warning { color: var(--color-accent); }
+ .confirm-normal  { color: var(--color-green);  }
+
+ .dialog-btn-confirm:hover { background: rgba(255,255,255,0.04); }
+
+ /* Hover específico por variante para el confirm */
+ .dialog-btn-confirm.confirm-danger:hover  { background: rgba(255,138,123,0.08); }
+ .dialog-btn-confirm.confirm-warning:hover { background: rgba(232,255,122,0.06); }
+ .dialog-btn-confirm.confirm-normal:hover  { background: rgba(123,216,176,0.07); }
+
+ .dialog-btn-confirm:disabled {
+   opacity: 0.35;
+   cursor: not-allowed;
+ }
 
  /* Animacion */
  .dialog-fade-enter-active,

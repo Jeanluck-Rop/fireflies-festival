@@ -1,6 +1,6 @@
 # serializers.py
 from rest_framework import serializers
-from .models import Parque, ImagenParque, Usuario
+from .models import Parque, ImagenParque, Usuario, Hospedaje, Reservacion
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -41,6 +41,34 @@ class UserSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Este correo ya se encuentra registrado por otro usuario.")
         return value
 
+class HospedajeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Hospedaje
+        fields = '__all__'
+
+class ReservacionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Reservacion
+        fields = [
+            'id', 'parque', 'hospedaje', 'fecha_inicio', 'fecha_fin', 
+            'num_personas', 'tipo_visita', 'estado', 'created_at', 'precio_total'
+        ]
+        read_only_fields = ['id', 'estado', 'created_at', 'precio_total']
+
+    def to_representation(self, instance):
+        rep = super().to_representation(instance)
+        rep['parque'] = {
+            'id': instance.parque.id,
+            'nombre': instance.parque.nombre,
+            'imagen_mapa': instance.parque.imagen_mapa
+        }
+        rep['hospedaje'] = {
+            'id': instance.hospedaje.id,
+            'nombre': f"{instance.hospedaje.get_tipo_display()} {instance.hospedaje.get_categoria_display()}"
+        }
+        rep['monto'] = rep['precio_total']
+        return rep
+
 class AvatarSerializer(serializers.ModelSerializer):
     class Meta:
         model = Usuario
@@ -55,7 +83,10 @@ class ImagenParqueSerializer(serializers.ModelSerializer):
 class ParqueSerializer(serializers.ModelSerializer):
     cabanas_libres = serializers.IntegerField(read_only=True)
     campings_libres = serializers.IntegerField(read_only=True)
+    # Traemos la galería de imágenes
     imagenes = ImagenParqueSerializer(many=True, read_only=True)
+    
+    hasCabin = serializers.SerializerMethodField()
 
     class Meta:
         model = Parque
@@ -63,5 +94,9 @@ class ParqueSerializer(serializers.ModelSerializer):
             'id', 'nombre', 'direccion', 'descripcion', 
             'latitud', 'longitud', 'imagen_mapa', 'imagenes',
             'cabanas_libres', 'campings_libres',
-            'horario_apertura', 'horario_cierre'
+            'horario_apertura', 'horario_cierre',
+            'hasCabin'
         ]
+
+    def get_hasCabin(self, obj):
+        return obj.hospedajes.filter(tipo='CABANA').exists()
