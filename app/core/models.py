@@ -133,6 +133,7 @@ class Hospedaje(models.Model):
     capacidad = models.PositiveIntegerField(validators=[MinValueValidator(1)])
     
     precio_por_noche = models.DecimalField(
+        default=0.00,
         max_digits=10, 
         decimal_places=2,
         validators=[MinValueValidator(0.01)],
@@ -191,6 +192,7 @@ class Reservacion(models.Model):
     num_personas = models.PositiveIntegerField(validators=[MinValueValidator(1)])
     
     precio_total = models.DecimalField(
+        default=0.00,
         max_digits=10, 
         decimal_places=2,
         validators=[MinValueValidator(0.01)],

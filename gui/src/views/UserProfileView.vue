@@ -399,14 +399,37 @@
    reader.onload = (e) => { avatarPreview.value = e.target?.result as string }
    reader.readAsDataURL(file)
    
-   // TODO backend: subir imagen
+   // Subir imagen al backend y procesar respuesta
    const formData = new FormData()
    formData.append('avatar', file)
-   await fetch(`${API}/auth/users/me/avatar/`, {
-     method: 'PATCH',
-     headers: { Authorization: `Bearer ${auth.token}` },
-     body: formData
-   })
+   try {
+     const res = await fetch(`${API}/auth/users/me/avatar/`, {
+       method: 'PATCH',
+       headers: { Authorization: `Bearer ${auth.token}` },
+       body: formData
+     })
+
+     if (res.status === 401) {
+       show('error', 'Sesión expirada. Inicia sesión de nuevo.')
+       auth.clearAuth()
+       router.push('/auth')
+       return
+     }
+
+     if (!res.ok) {
+       show('error', 'Error al subir la imagen')
+       return
+     }
+
+     const data = await res.json()
+     // Actualizar el usuario en el store para reflejar la nueva URL del avatar
+     if (auth.user) {
+       ;(auth.user as any).avatar = data.avatar
+     }
+     show('exito', 'Foto de perfil actualizada')
+   } catch (err) {
+     show('error', 'Error al subir la imagen')
+   }
  }
  
  //Formulario
