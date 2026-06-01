@@ -140,8 +140,8 @@
  import AppButton      from '../components/ui/AppButton.vue'
  import SearchBar      from '../components/ui/SearchBar.vue'
  import ReservationRow from '../components/reservations/ReservationRow.vue'
- import IconPlus       from '../components/svg/IconPlus.vue'
- import { reserveService }      from '../services/reserveService'
+ import IconPlus from '../components/svg/IconPlus.vue'
+ import { reservationService } from '../services/reservationService'
  import { useReservationsStore } from '../stores/reservations'
  import type { Reservacion }    from '../stores/reservations'
  import type { FilterDef, FilterValues } from '../components/ui/SearchBar.vue'
@@ -204,13 +204,24 @@
 
  //Carga inicial
  onMounted(async () => {
-   await reserveService.getReservaciones()
+   await reservationService.getReservaciones()
  })
 
  //Handlers
- function handleCancelar(reservacion: Reservacion) {
-   // TODO backend: POST /api/reservaciones/:id/cancelar/
-   store.eliminarReservacion(reservacion.id)
+ function handleVer(reservacion: Reservacion) {
+   // TODO: abrir modal de detalle o navegar a /reservaciones/:id
+   console.log('Ver reservación', reservacion.id)
+ }
+
+ async function handleCancelar(reservacion: Reservacion) {
+   if(confirm("¿Estás seguro de que deseas cancelar esta reservación?")) {
+     try {
+       await reservationService.cancelarReservacion(reservacion.id);
+       alert("Reservación cancelada exitosamente.");
+     } catch (e) {
+       alert("Hubo un error al intentar cancelar.");
+     }
+   }
  }
 </script>
 
