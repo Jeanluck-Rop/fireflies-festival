@@ -1,4 +1,5 @@
 # views.py
+import secrets
 from rest_framework import viewsets, status, generics
 from rest_framework.decorators import action
 from rest_framework.views import APIView
@@ -134,7 +135,7 @@ class ReservacionViewSet(viewsets.ModelViewSet):
                 elif 'nuevo_usuario' in data:
                     nuevo_user_data = data['nuevo_usuario']
                     # Django crea una contraseña aleatoria segura
-                    password_temporal = Usuario.objects.make_random_password()
+                    password_temporal = secrets.token_hex(6)
                     
                     usuario = Usuario.objects.create(
                         email=nuevo_user_data['email'],
@@ -260,3 +261,58 @@ class HospedajeViewSet(viewsets.ReadOnlyModelViewSet):
         serializer = self.get_serializer(disponibles, many=True)
         return Response(serializer.data)
     
+class StaffViewSet(viewsets.ModelViewSet):
+    permission_classes = [IsAuthenticated]
+    serializer_class = UserSerializer # Reutiliza tu UserSerializer existente
+
+    def get_queryset(self):
+        return Usuario.objects.filter(
+            rol=Usuario.Rol.ADMIN, 
+            is_staff=True, 
+            is_superuser=False
+        ).order_by('-created_at')
+
+    def create(self, request, *args, **kwargs):
+        data = request.data
+        email = data.get('email', '').strip()
+
+        if Usuario.objects.filter(email__iexact=email).exists():
+            return Response(
+                {"detail": "Ya existe un usuario registrado con este correo electrónico."}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        try:
+            with transaction.atomic():
+                # Generamos una contraseña aleatoria y segura
+                password_temporal = secrets.token_hex(6)
+                nuevo_staff = Usuario.objects.create(
+                    email=email,
+                    nombre=data.get('nombre'),
+                    apellidos=data.get('apellidos'),
+                    rol=Usuario.Rol.ADMIN,
+                    is_staff=True,
+                    password=make_password(password_temporal),
+                    parque_asignado_id=data.get('parque_asignado') # Puede ser None
+                )
+                return Response({
+                    "id": nuevo_staff.id,
+                    "nombre": nuevo_staff.nombre,
+                    "apellidos": nuevo_staff.apellidos,
+                    "email": nuevo_staff.email,
+                    "parque_asignado": nuevo_staff.parque_asignado_id,
+                    "detail": "Staff creado exitosamente."
+                }, status=status.HTTP_201_CREATED)
+
+        except Exception as e:
+            return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        if request.user == instance:
+            return Response(
+                {"detail": "No puedes eliminar tu propia cuenta de staff."}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        instance.delete()
+        return Response({"detail": "Cuenta de staff eliminada correctamente."}, status=status.HTTP_200_OK)

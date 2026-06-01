@@ -19,6 +19,7 @@
         v-for="s in filteredStaff"
         :key="s.id"
         :staff="s"
+        :lista-parques="PARQUES"
         @delete="handleDelete"
         @update-parque="handleUpdateParque" />
 
@@ -88,40 +89,80 @@
 </template>
 
 <script setup lang="ts">
- import { ref, reactive, computed } from 'vue'
+ import { ref, reactive, computed, onMounted } from 'vue'
  import { useNotification } from '../../composables/useNotification'
+ import { useAuthStore } from '../../stores/auth'
  import SearchBar from '../ui/SearchBar.vue'
  import AdminStaffRow from './AdminStaffRow.vue'
  import IconPlus from '../svg/IconPlus.vue'
  import type { StaffData } from './AdminStaffRow.vue'
  import type { FilterDef, FilterValues } from '../ui/SearchBar.vue'
-
+ 
  const { show } = useNotification()
  const USE_MOCK = import.meta.env.VITE_USE_MOCK !== 'false'
+ const API = import.meta.env.VITE_API_URL || null
+ const auth = useAuthStore()
 
- const PARQUES = [
-   { id: 1, nombre: 'Parque Sierra Chincua' },
-   { id: 2, nombre: 'Parque Piedra Herrada' },
-   { id: 3, nombre: 'Parque El Rosario'     },
- ]
+
+ const PARQUES = ref<{ id: number; nombre: string }[]>([])
 
  //Mock data
- const mockStaff = ref<StaffData[]>([
-   { id:10, nombre:'Lucía',   apellidos:'Ramírez',   email:'lucia@admin.com',   parque_asignado:1 },
-   { id:11, nombre:'Miguel',  apellidos:'Herrera',   email:'miguel@admin.com',  parque_asignado:2 },
-   { id:12, nombre:'Sofía',   apellidos:'Mendoza',   email:'sofia@admin.com',   parque_asignado:3 },
-   { id:13, nombre:'Diego',   apellidos:'Castro',    email:'diego@admin.com',   parque_asignado:1 },
-   { id:14, nombre:'Valeria', apellidos:'Flores',    email:'valeria@admin.com', parque_asignado:null },
- ])
+ const mockStaff = ref<StaffData[]>([])
+
+ onMounted(async () => {
+   if (USE_MOCK) {
+     mockStaff.value = [
+       { id:10, nombre:'Lucía',   apellidos:'Ramírez',   email:'lucia@admin.com',   parque_asignado:1 },
+       { id:11, nombre:'Miguel',  apellidos:'Herrera',   email:'miguel@admin.com',  parque_asignado:2 },
+       { id:12, nombre:'Sofía',   apellidos:'Mendoza',   email:'sofia@admin.com',   parque_asignado:3 },
+       { id:13, nombre:'Diego',   apellidos:'Castro',    email:'diego@admin.com',   parque_asignado:1 },
+       { id:14, nombre:'Valeria', apellidos:'Flores',    email:'valeria@admin.com', parque_asignado:null },
+     ]
+     PARQUES.value = [
+       { id: 1, nombre: 'Parque Sierra Chincua' },
+       { id: 2, nombre: 'Parque Piedra Herrada' },
+       { id: 3, nombre: 'Parque El Rosario'     },
+     ]
+     return
+   }
+   try {
+     const res = await fetch(`${API}/api/staff/`, {
+       headers: { Authorization: `Bearer ${auth.token}` }
+     })
+     if (res.ok) {
+       const data = await res.json()
+       mockStaff.value = Array.isArray(data) ? data : data.results || []
+     }
+   } catch (error) {
+     console.error("Error listando el staff:", error)
+     show('error', 'No se pudo cargar la lista de staff.')
+   }
+
+   try {
+     const resParques = await fetch(`${API}/api/parques/`, {
+       headers: { Authorization: `Bearer ${auth.token}` }
+     })
+     if (resParques.ok) {
+       const data = await resParques.json()
+       PARQUES.value = Array.isArray(data) ? data : data.results || []
+     }
+   } catch (error) {
+     console.error("Error cargando catálogo de parques para staff:", error)
+   }
+ })
+
+
+ 
+ const filters = ref<FilterValues>({ nombre: '', parque: '' })
 
  //Filtros
- const filterDefs: FilterDef[] = [
+ const filterDefs = computed<FilterDef[]>(() => [
    { key: 'nombre', type: 'text', placeholder: 'Buscar por nombre o correo...' },
    { key: 'parque', type: 'select', placeholder: 'Parque',
-     options: PARQUES.map(p => ({ label: p.nombre, value: String(p.id) }))
+     // Usamos de forma segura el .value aquí adentro
+     options: PARQUES.value.map(p => ({ label: p.nombre, value: String(p.id) }))
    },
- ]
- const filters = ref<FilterValues>({ nombre: '', parque: '' })
+ ])
 
  const filteredStaff = computed(() => {
    let r = mockStaff.value
@@ -188,14 +229,34 @@
      show('exito', `Staff ${newStaff.nombre} creado. Se envió correo de bienvenida con contraseña.`)
      closeAddDialog()
    } else {
-     // TODO backend: POST /api/staff/
-     // {nombre, apellidos, email, parque_asignado}
-     // El backend:
-     //   - Verifica que el correo no exista
-     //   - Crea el usuario con rol ADMIN, is_staff=true
-     //   - Genera contraseña aleatoria
-     //   - Envía correo de bienvenida con contraseña
-     // Si el correo ya existe → 400 con mensaje de error
+     try {
+       const res = await fetch(`${API}/api/staff/`, {
+         method: 'POST',
+         headers: { 
+           'Content-Type': 'application/json',
+           'Authorization': `Bearer ${auth.token}`
+         },
+         body: JSON.stringify({
+           nombre: newStaff.nombre,
+           apellidos: newStaff.apellidos,
+           email: newStaff.email,
+           parque_asignado: newStaff.parque_asignado
+         })
+       })
+       const data = await res.json()
+       if (!res.ok) {
+         addError.value = data.detail || 'Error al crear el miembro de staff'
+         creating.value = false
+         return
+       }
+
+       mockStaff.value.unshift(data)
+       show('exito', `Staff ${newStaff.nombre} creado exitosamente y notificado por correo.`)
+       closeAddDialog()
+     } catch (error) {
+       console.error(error)
+       addError.value = 'Ocurrió un error de red. Intenta de nuevo.'
+     }
    }
 
    creating.value = false
@@ -208,13 +269,50 @@
      show('normal', 'Cuenta de staff eliminada')
      return
    }
-   // TODO backend: DELETE /api/staff/{id}/
+   try {
+     const res = await fetch(`${API}/api/staff/${id}/`, {
+       method: 'DELETE',
+       headers: { Authorization: `Bearer ${auth.token}` }
+     })
+
+     if (res.ok) {
+       mockStaff.value = mockStaff.value.filter(s => s.id !== id)
+       show('normal', 'Cuenta de staff eliminada correctamente')
+     } else {
+       const data = await res.json()
+       show('error', data.detail || 'No se pudo eliminar al staff.')
+     }
+   } catch (error) {
+     console.error(error)
+   }
  }
 
- function handleUpdateParque(id: number, parqueId: number | null) {
+ async function handleUpdateParque(id: number, parqueId: number | null) {
    const idx = mockStaff.value.findIndex(s => s.id === id)
+   const originalParqueId = idx >= 0 ? mockStaff.value[idx].parque_asignado : null
    if (idx >= 0) mockStaff.value[idx].parque_asignado = parqueId
-   // El correo de reasignación lo envía el backend en PATCH /api/staff/{id}/
+   if (USE_MOCK) return
+
+   try {
+     const res = await fetch(`${API}/api/staff/${id}/`, {
+       method: 'PATCH',
+       headers: { 
+         'Content-Type': 'application/json',
+         'Authorization': `Bearer ${auth.token}`
+       },
+       body: JSON.stringify({ parque_asignado: parqueId })
+     })
+
+     if (!res.ok) {
+       if (idx >= 0) mockStaff.value[idx].parque_asignado = originalParqueId
+       show('error', 'No se pudo actualizar el parque asignado en el servidor.')
+     } else {
+       show('exito', 'Parque asignado actualizado correctamente.')
+     }
+   } catch (error) {
+     if (idx >= 0) mockStaff.value[idx].parque_asignado = originalParqueId
+     console.error(error)
+   }
  }
 </script>
 

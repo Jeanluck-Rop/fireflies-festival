@@ -12,7 +12,7 @@ class UserSerializer(serializers.ModelSerializer):
             'rol', 'is_staff', 'is_superuser', 'created_at',
             'parque_asignado'
         ]
-        read_only_fields = ['id', 'avatar', 'rol', 'is_staff', 'is_superuser', 'created_at', 'parque_asignado']
+        read_only_fields = ['id', 'avatar', 'rol', 'is_staff', 'is_superuser', 'created_at']
 
     def to_internal_value(self, data):
         mutable_data = data.copy() if hasattr(data, 'copy') else data
