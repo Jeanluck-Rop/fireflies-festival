@@ -24,8 +24,6 @@ export interface Parque {
   horario_apertura: string  //"HH:MM"
   horario_cierre: string  //"HH:MM"
   activo: boolean
-  cabanas_libres: number
-  campings_libres: number
   imagenes: ImagenParque[]
   servicios: ServicioParque[]
   hasCabin: boolean
@@ -109,6 +107,7 @@ export const useParksStore = defineStore('parks', () => {
       const searchStr = searchQuery.value.trim().toLowerCase()
       if ( searchStr && !p.nombre.toLowerCase().includes(searchStr) && !p.direccion.toLowerCase().includes(searchStr)) return false
       if (filterType.value === 'cabin' && !p.hasCabin) return false
+      if (filterType.value === 'camping' && p.hasCabin) return false
       if ( visitors.value !== '' && Number(visitors.value) > 0 && 
       (Number(visitors.value) < p.capacidad_minima || Number(visitors.value) > p.capacidad_maxima)) return false
       if (priceMin.value !== '' && p.precio_maximo < Number(priceMin.value)) return false

@@ -22,7 +22,7 @@
           <p class="animate-fade-up text-[15.5px] mb-7 leading-relaxed">
             Seis secillos pasos. Selecciona el parque y tipo de hospedaje, ajusta tus fechas, indica el número de personas, busca disponibilidad, 
             selecciona tu opción y confirma. Recibirás la confirmación en tu correo y la podrás consultar en
-            <a href="/reservaciones" class="text-(--color-accent) underline decoration-glow/40 underline-offset-4">Mis reservaciones</a>.
+            <RouterLink to="/reservaciones" class="text-(--color-accent) underline decoration-glow/40 underline-offset-4">Mis reservaciones</RouterLink>.
           </p>
         </div>
       </div>
