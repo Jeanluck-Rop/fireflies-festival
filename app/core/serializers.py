@@ -64,7 +64,7 @@ class ParqueSerializer(serializers.ModelSerializer):
             'id', 'nombre', 'direccion', 'descripcion', 
             'latitud', 'longitud', 'imagen_mapa', 'imagenes',
             'cabanas_libres', 'campings_libres',
-            'horario_apertura', 'horario_cierre'
+            'horario_apertura', 'horario_cierre', 'activo'
         ]
 
 class UsuarioCreateSerializer(UserCreateSerializer):
@@ -85,7 +85,8 @@ class UsuarioSerializer(UserSerializer):
             'is_staff', 
             'is_superuser',
             'nivel_admin',
-            'created_at' 
+            'created_at',
+            'parque_asignado'
         )
 
 # For reservations
@@ -121,3 +122,29 @@ class ReservacionSerializer(serializers.ModelSerializer):
         if obj.tipo_visita == Reservacion.TipoVisita.CABANA:
             return 2500.00
         return 500.00
+    
+class HospedajeSerializer(serializers.ModelSerializer):
+    precio = serializers.DecimalField(
+        source='precio_por_noche', 
+        max_digits=10, 
+        decimal_places=2, 
+        read_only=True
+    )
+
+    class Meta:
+        model = Hospedaje
+        fields = [
+            'id', 
+            'parque_id',
+            'tipo', 
+            'categoria', 
+            'capacidad', 
+            'estado', 
+            'num_camas', 
+            'num_banos', 
+            'tiene_agua', 
+            'tiene_luz', 
+            'tiene_regadera', 
+            'descripcion', 
+            'precio'
+        ]

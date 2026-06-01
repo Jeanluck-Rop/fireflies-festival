@@ -269,7 +269,7 @@
   </div>
 </template>
 <script setup lang="ts">
- import { ref, reactive, computed } from 'vue'
+ import { ref, reactive, computed, watch, onMounted } from 'vue'
  import { useAuthStore } from '../../stores/auth'
  import { useNotification } from '../../composables/useNotification'
  import IconPeople from '../svg/IconPeople.vue'
@@ -330,12 +330,34 @@
    email: string;
    rol: 'CLIENTE' | 'ADMIN'
  }
- //Mock data
- const MOCK_PARQUES: Parque[] = [
-   { id: 1, nombre: 'Parque Sierra Chincua', activo: true },
-   { id: 2, nombre: 'Parque Piedra Herrada', activo: true },
-   { id: 3, nombre: 'Parque El Rosario', activo: true },
- ]
+
+ const parquesAPI = ref<Parque[]>([])
+
+ onMounted(async () => {
+  if (USE_MOCK) {
+    parquesAPI.value = [
+      { id: 1, nombre: 'Parque Sierra Chincua', activo: true },
+      { id: 2, nombre: 'Parque Piedra Herrada', activo: true },
+      { id: 3, nombre: 'Parque El Rosario', activo: true },
+    ]
+    return
+  }
+
+  try {
+    const res = await fetch(`${API}/api/parques/mis_parques`, {
+      headers: { Authorization: `Bearer ${auth.token}` }
+    })
+    if (res.ok) {
+      const data = await res.json()
+      parquesAPI.value = data.results || data
+    }
+  } catch (error) {
+    console.error("Error cargando el catálogo de parques", error)
+    show('error', 'No se pudieron cargar los parques. Intenta recargar la página.')
+  }
+ })
+
+
  const MOCK_HOSPEDAJES: Hospedaje[] = [
    { id:1,  parque_id:1, tipo:'CABANA',  categoria:'FAMILIAR',   capacidad:8, estado:'DISPONIBLE', num_camas:4, num_banos:2, tiene_agua:true,  tiene_luz:true,  tiene_regadera:true,  descripcion:'Cabaña familiar con vista al bosque y chimenea interior', precio:1800 },
    { id:2,  parque_id:1, tipo:'CABANA',  categoria:'PAREJA',     capacidad:2, estado:'DISPONIBLE', num_camas:1, num_banos:1, tiene_agua:true,  tiene_luz:true,  tiene_regadera:true,  descripcion:'Cabaña íntima con terraza privada',                        precio:900  },
@@ -390,44 +412,65 @@
 
  //Computed
  const parquesDisponibles = computed<Parque[]>(() => {
-   if (isStaff.value && parqueAsignado.value)
-     return MOCK_PARQUES.filter(p => p.id === parqueAsignado.value)
-   return MOCK_PARQUES.filter(p => p.activo)
+  if (isStaff.value && parqueAsignado.value)
+    return parquesAPI.value.filter(p => p.id === parqueAsignado.value)
+  return parquesAPI.value.filter(p => p.activo)
  })
 
  const parqueSeleccionado = computed<Parque | null>(() =>
-   MOCK_PARQUES.find(p => p.id === Number(form.parque_id)) ?? null
+  parquesAPI.value.find(p => p.id === Number(form.parque_id)) ?? null
  )
 
  const canShowHospedajes = computed<boolean>(() =>
    !!form.parque_id && !!form.fecha_inicio && !!form.fecha_fin && form.fecha_inicio < form.fecha_fin && form.num_personas >= 1
  )
 
- const hospedajesFiltrados = computed<Hospedaje[]>(() => {
-   if (!canShowHospedajes.value) return []
+const hospedajesFiltrados = ref<Hospedaje[]>([])
+const cargandoHospedajes = ref(false)
 
-   return MOCK_HOSPEDAJES.filter(h => {
-     if (h.parque_id !== Number(form.parque_id))
-       return false
-     if (h.tipo !== form.tipo)
-       return false
-     if (h.capacidad < form.num_personas)
-       return false
-     if (h.estado === 'MANTENIMIENTO')
-       return false
+watch(
+  () => [form.parque_id, form.tipo, form.fecha_inicio, form.fecha_fin, form.num_personas],
+  async ([parque, tipo, inicio, fin, personas]) => {
+    // Si falta algún dato importante o las fechas están al revés, vaciamos la lista y abortamos
+    if (!parque || !inicio || !fin || inicio >= fin || (personas as number) < 1) {
+      hospedajesFiltrados.value = []
+      selectedHospedaje.value = null
+      return
+    }
 
-     // Chequeo de solapamiento de fechas
-     const ocupado = MOCK_RESERVACIONES.some(r => {
-       if (r.hospedaje_id !== h.id)
-	 return false
-       if (r.estado === 'CANCELADA')
-	 return false
-       // Overlap: rInicio < formFin && rFin > formInicio
-       return r.fecha_inicio < form.fecha_fin && r.fecha_fin > form.fecha_inicio
-     })
-     return !ocupado
-   })
- })
+    // Si todo está lleno, le pegamos al backend real
+    cargandoHospedajes.value = true
+    selectedHospedaje.value = null
+
+    if (USE_MOCK) {
+      await new Promise(r => setTimeout(r, 500))
+      cargandoHospedajes.value = []
+    } else {
+      try {
+        const query = new URLSearchParams({
+          parque_id: String(parque),
+          tipo: String(tipo),
+          fecha_inicio: String(inicio),
+          fecha_fin: String(fin),
+          num_personas: String(personas)
+        })
+
+        const res = await fetch(`${API}/api/hospedajes/disponibles/?${query}`, {
+          headers: { Authorization: `Bearer ${auth.token}` }
+        })
+        
+        if (res.ok) {
+          hospedajesFiltrados.value = await res.json()
+        }
+      } catch (error) {
+        console.error("Error buscando hospedajes:", error)
+        hospedajesFiltrados.value = []
+      }
+    }
+    
+    cargandoHospedajes.value = false
+  }
+)
 
  const totalNights = computed<number>(() => {
    if (!form.fecha_inicio || !form.fecha_fin) return 0
@@ -499,17 +542,17 @@
      return
    }
 
-   // TODO backend: GET /api/usuarios/?email={email}
-   // try {
-   //   const res = await fetch(
-   //     `${API}/api/usuarios/?email=${encodeURIComponent(clienteForm.email)}`,
-   //     { headers: { Authorization: `Bearer ${auth.token}` } }
-   //   )
-   //   if (res.ok) {
-   //     const data = await res.json()
-   //     clienteEncontrado.value = data.results?.[0] ?? null
-   //   }
-   // } catch {}
+   try {
+     const res = await fetch(
+       `${API}/api/clientes/?email=${encodeURIComponent(clienteForm.email)}`,
+       { headers: { Authorization: `Bearer ${auth.token}` } }
+     )
+     if (res.ok) {
+       const data = await res.json()
+       const cliente = Array.isArray(data) ? data[0] : data.results?.[0]
+       clienteEncontrado.value = cliente ?? null
+     }
+   } catch {}
    clienteBuscado.value  = true
    buscandoCliente.value = false
  }
@@ -531,39 +574,39 @@
      return
    }
 
-   // TODO backend: POST /api/reservaciones/admin/
-   // Payload incluye:
-   //   parque_id, hospedaje_id, fecha_inicio, fecha_fin,
-   //   tipo_visita, num_personas, metodo_pago
-   //   + usuario_id (cliente existente) O nuevo_usuario { email, nombre, apellidos }
-   // El backend envía:
-   //   - Correo de bienvenida + contraseña generada si es usuario nuevo
-   //   - Correo de confirmación de reservación
-   // try {
-   //   const body = {
-   //     parque_id:    Number(form.parque_id),
-   //     hospedaje_id: selectedHospedaje.value.id,
-   //     fecha_inicio: form.fecha_inicio,
-   //     fecha_fin:    form.fecha_fin,
-   //     tipo_visita:  form.tipo,
-   //     num_personas: form.num_personas,
-   //     metodo_pago:  form.metodo_pago,
-   //     ...(clienteEncontrado.value
-   //       ? { usuario_id: clienteEncontrado.value.id }
-   //       : { nuevo_usuario: { email: clienteForm.email, nombre: clienteForm.nombre, apellidos: clienteForm.apellidos } }
-   //     )
-   //   }
-   //   const res = await fetch(`${API}/api/reservaciones/admin/`, {
-   //     method: 'POST',
-   //     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${auth.token}` },
-   //     body: JSON.stringify(body)
-   //   })
-   //   if (!res.ok) throw new Error()
-   //   show('exito', 'Reservación creada exitosamente')
-   //   resetForm()
-   // } catch {
-   //   show('error', 'Error al crear la reservación. Intenta de nuevo')
-   // }
+  //  TODO backend: POST /api/reservaciones/admin/
+  //  Payload incluye:
+  //    parque_id, hospedaje_id, fecha_inicio, fecha_fin,
+  //    tipo_visita, num_personas, metodo_pago
+  //    + usuario_id (cliente existente) O nuevo_usuario { email, nombre, apellidos }
+  //  El backend envía:
+  //    - Correo de bienvenida + contraseña generada si es usuario nuevo
+  //    - Correo de confirmación de reservación
+   try {
+     const body = {
+       parque_id:    Number(form.parque_id),
+       hospedaje_id: selectedHospedaje.value.id,
+       fecha_inicio: form.fecha_inicio,
+       fecha_fin:    form.fecha_fin,
+       tipo_visita:  form.tipo,
+       num_personas: form.num_personas,
+       metodo_pago:  form.metodo_pago,
+       ...(clienteEncontrado.value
+         ? { usuario_id: clienteEncontrado.value.id }
+         : { nuevo_usuario: { email: clienteForm.email, nombre: clienteForm.nombre, apellidos: clienteForm.apellidos } }
+       )
+     }
+     const res = await fetch(`${API}/api/reservaciones/admin/`, {
+       method: 'POST',
+       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${auth.token}` },
+       body: JSON.stringify(body)
+     })
+     if (!res.ok) throw new Error()
+     show('exito', 'Reservación creada exitosamente')
+     resetForm()
+   } catch {
+     show('error', 'Error al crear la reservación. Intenta de nuevo')
+   }
 
    confirmando.value = false
  }
