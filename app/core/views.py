@@ -1,10 +1,50 @@
 # views.py
-from rest_framework import viewsets
-from .models import *
-from rest_framework.permissions import AllowAny
-from .serializers import ParqueSerializer
-from datetime import date
-from django.db.models import Count, Q
+from rest_framework import viewsets, status
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.parsers import MultiPartParser, FormParser
+
+from .models import Parque
+from .serializers import ParqueSerializer, UserSerializer, AvatarSerializer
+
+class UserMeView(APIView):
+    """ Gestiona los datos del usuario logueado """
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        serializer = UserSerializer(request.user, context={'request': request})
+        return Response(serializer.data)
+
+    def patch(self, request):
+        serializer = UserSerializer(
+            request.user, 
+            data=request.data, 
+            partial=True, 
+            context={'request': request}
+        )
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request):
+        user = request.user
+        user.delete()
+        return Response({"detail": "Cuenta eliminada correctamente."}, status=status.HTTP_204_NO_CONTENT)
+
+
+class UserAvatarView(APIView):
+    """ Gestiona únicamente la carga de la imagen de perfil (avatar) """
+    permission_classes = [IsAuthenticated]
+    parser_classes = [MultiPartParser, FormParser]
+
+    def patch(self, request):
+        serializer = AvatarSerializer(request.user, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class ParqueViewSet(viewsets.ReadOnlyModelViewSet):
     """

@@ -15,7 +15,7 @@
  const auth = useAuthStore()
  const route = useRoute()
 
- const ROUTES_WITHOUT_HEADER = ['/auth', '/password/reset/confirm']
+ const ROUTES_WITHOUT_HEADER = ['/auth', '/password/reset/confirm', '/admin/login']
 
  const hideHeader = computed(() =>
    ROUTES_WITHOUT_HEADER.some(r => route.path.startsWith(r))

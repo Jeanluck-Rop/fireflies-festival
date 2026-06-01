@@ -16,7 +16,7 @@ const MOCK_RESERVACIONES: Reservacion[] = [
     tipo_visita:  'CABANA',
     estado:       'ACTIVA',
     created_at:   '2026-05-01T10:00:00Z',
-    // precio: 2400  // TODO backend
+    monto: 2400
   },
   {
     id: 2,
@@ -28,7 +28,7 @@ const MOCK_RESERVACIONES: Reservacion[] = [
     tipo_visita:  'CAMPING',
     estado:       'EN_PROCESO',
     created_at:   '2026-05-10T14:30:00Z',
-    // precio: 800  // TODO backend
+    monto: 800
   },
   {
     id: 3,
@@ -40,7 +40,7 @@ const MOCK_RESERVACIONES: Reservacion[] = [
     tipo_visita:  'CABANA',
     estado:       'COMPLETADA',
     created_at:   '2026-03-01T09:00:00Z',
-    // precio: 3600  // TODO backend
+    monto: 3600
   },
   {
     id: 4,
@@ -52,7 +52,7 @@ const MOCK_RESERVACIONES: Reservacion[] = [
     tipo_visita:  'CAMPING',
     estado:       'CANCELADA',
     created_at:   '2026-03-01T11:00:00Z',
-    // precio: 400  // TODO backend
+    monto: 400
   },
 ]
 
@@ -69,15 +69,15 @@ export const reserveService = {
       return
     }
 
-    // TODO backend: GET /api/reservaciones/
-    // El backend filtra automáticamente por el usuario del token
-    // const res = await fetch(`${API}/api/reservaciones/`, {
-    //   headers: { Authorization: `Bearer ${useAuthStore().token}` }
-    // })
-    // if (!res.ok) throw new Error('Error cargando reservaciones')
-    // const data = await res.json()
-    // store.setReservaciones(data)
-
+    //Backend:
+    const res = await fetch(`${API}/api/reservaciones/`, {
+      headers: { Authorization: `Bearer ${useAuthStore().token}` }
+     })
+    if (!res.ok)
+      throw new Error('Error cargando reservaciones')
+    const data = await res.json()
+    store.setReservaciones(data)
+    
     store.loading = false
   }
 }

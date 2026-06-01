@@ -11,8 +11,7 @@ export interface Reservacion {
   tipo_visita: 'CABANA' | 'CAMPING'
   estado: 'ACTIVA' | 'EN_PROCESO' | 'CANCELADA' | 'COMPLETADA'
   created_at: string
-  // TODO backend: agregar precio cuando el modelo lo tenga
-  // precio?: number
+  monto?: number
 }
 
 export const useReservationsStore = defineStore('reservations', () => {
