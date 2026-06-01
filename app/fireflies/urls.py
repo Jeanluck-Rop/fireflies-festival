@@ -20,7 +20,7 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.http import JsonResponse
 
-from core.views import UserAvatarView, UserMeView, UserResetPasswordView
+from core.views import UserAvatarView, UserMeView
 
 def test(request):
     return JsonResponse({"message": "Backend working"})
@@ -33,7 +33,6 @@ urlpatterns = [
 
     path('auth/users/me/avatar/', UserAvatarView.as_view(), name='user-avatar'),
     path('auth/users/me/', UserMeView.as_view(), name='user-me'),
-    path('auth/users/reset_password/', UserResetPasswordView.as_view(), name='user-reset-password'),
 
     # Rutas de Djoser para gestion de usuarios
     path('auth/', include('djoser.urls')),

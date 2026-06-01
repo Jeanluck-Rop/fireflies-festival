@@ -4,9 +4,8 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.parsers import MultiPartParser, FormParser
-from django.contrib.auth.forms import PasswordResetForm
 
-from .models import Parque, Usuario
+from .models import Parque
 from .serializers import ParqueSerializer, UserSerializer, AvatarSerializer
 
 class UserMeView(APIView):
@@ -46,25 +45,6 @@ class UserAvatarView(APIView):
             serializer.save()
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
-class UserResetPasswordView(APIView):
-    """ Dispara el correo con el link de restablecer contraseña """
-    permission_classes = [AllowAny]
-
-    def post(self, request):
-        email = request.data.get('email')
-        if not email:
-            return Response({"email": ["Este campo es obligatorio."]}, status=status.HTTP_400_BAD_REQUEST)
-        
-        if Usuario.objects.filter(email=email).exists():
-            form = PasswordResetForm({'email': email})
-            if form.is_valid():
-                form.save(
-                    request=request,
-                    use_https=request.is_secure(),
-                )
-        return Response(status=status.HTTP_204_NO_CONTENT)
 
 class ParqueViewSet(viewsets.ReadOnlyModelViewSet):
     """
