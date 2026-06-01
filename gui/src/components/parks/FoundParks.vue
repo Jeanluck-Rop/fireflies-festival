@@ -128,7 +128,7 @@ defineEmits<{ (e: 'reset-filters'): void }>();
 
 const store = useParksStore();
 
-const filteredParks = computed(() => store.parks);
+const filteredParks = computed(() => store.filteredParks);
 
 const selectedId = computed(() => store.selectedPark?.id ?? null);
 

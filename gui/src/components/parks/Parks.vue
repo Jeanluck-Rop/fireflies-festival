@@ -1,5 +1,5 @@
 <template>
-  <div class="mx-auto max-w-380 mt-5 px-5 lg:px-8 animate-fade-up">
+  <div class="mx-auto max-w-380 px-5 lg:px-8 animate-fade-up">
     <div class="parks-container z-0 animate-fade-up">
       <!-- Mapa -->
       <div class="map-wrapper">
@@ -74,7 +74,7 @@ import { useParksStore } from "../../stores/parks";
 import type { Parque } from "../../stores/parks";
 
 const store = useParksStore();
-const parks = computed(() => store.parks);
+const parks = computed(() => store.filteredParks);
 const loading = computed(() => store.loading);
 const selectedPark = computed(() => store.selectedPark);
 
