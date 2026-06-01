@@ -259,7 +259,6 @@ class ServicioParque(models.Model):
     )
     nombre = models.CharField(max_length=100)
     descripcion = models.TextField(null=True, blank=True)
-    icono = models.CharField(max_length=100, null=True, blank=True)
 
     class Meta:
         db_table = "servicio_parque"
