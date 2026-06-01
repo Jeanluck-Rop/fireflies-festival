@@ -91,6 +91,23 @@ export const authService = {
     }
     await this.login(email, password)
    },
+
+  async requestPasswordReset(email: string) {
+    if (USE_MOCK) {
+      await new Promise(r => setTimeout(r, 600))
+      return
+    }
+    
+    const res = await fetch(`${API}/auth/users/reset_password/`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email })
+    })
+    
+    if (!res.ok && res.status !== 204) {
+      throw new Error('Error al enviar el enlace de recuperación')
+    }
+  },
   
   async logout() {
     const auth = useAuthStore()
