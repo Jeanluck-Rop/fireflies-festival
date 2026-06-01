@@ -231,6 +231,8 @@
    // } catch (e) {
    //   console.error(e)
    // }
+   showCancel.value = false
+   emit('cancelar', props.reservacion);
  }
  
  //Fechas
