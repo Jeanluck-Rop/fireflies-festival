@@ -312,9 +312,15 @@ class ParqueViewSet(viewsets.ModelViewSet):
     
 
 class HospedajeViewSet(viewsets.ModelViewSet):
-    queryset = Hospedaje.objects.all()
     serializer_class = HospedajeSerializer
     permission_classes = [AllowAny]
+
+    def get_queryset(self):
+        queryset = Hospedaje.objects.all()
+        parque_id = self.request.query_params.get('parque_id')
+        if parque_id is not None:
+            queryset = queryset.filter(parque_id=parque_id)
+        return queryset
 
     @action(detail=False, methods=['get'])
     def disponibles(self, request):

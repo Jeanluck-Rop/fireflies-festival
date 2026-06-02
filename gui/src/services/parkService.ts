@@ -326,7 +326,7 @@ export async function fetchHospedajesByPark(parkId: number): Promise<HospedajeDe
     if (!API) return []
 
     try {
-      const response = await fetch(`${API}/parques/${parkId}/hospedajes/`)
+      const response = await fetch(`${API}/api/hospedajes/?parque_id=${parkId}`)
       if (!response.ok) throw new Error('Error fetching hospedajes')
       return await response.json()
     } catch (error) {
