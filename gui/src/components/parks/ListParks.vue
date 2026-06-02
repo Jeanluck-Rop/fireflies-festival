@@ -9,7 +9,7 @@
       <AppButton variant="outline" class="mt-2" @click="parksStore.resetFilters()">Limpiar filtros</AppButton>
     </div>
     <div class="flex flex-col gap-8 lg:gap-10">
-      <article v-for="(p,idx) in filteredParks" :key="p.id"
+      <article v-for="(p,idx) in filteredParks" :key="p.id" :id="`park-${p.id}`"
                 class="transition-[border-color,transform] duration-300 ease-out hover:border-[rgba(245,213,122,0.22)] glass-strong rounded-[28px] grid grid-cols-1 lg:grid-cols-[1.1fr_1fr]"
                 :class="{'lg:[direction:rtl]': idx%2===1}">
         <div class="relative [direction:ltr] p-3 w-full shrink-0">
@@ -143,10 +143,11 @@
               <article v-for="h in filteredHospedajes" :key="h.id"
                   class="snap-start park-card glass rounded-3xl overflow-hidden flex flex-col cursor-pointer relative" >
                   <div class="absolute top-3 left-3 flex items-center gap-2 z-50">
-                    <span class="px-2.5 py-1 rounded-full text-[10.5px] font-mono uppercase tracking-[0.12em] bg-white/10 border border-white/15 text-(--color-bone-soft)">
+                    <span class="px-2.5 py-1 rounded-full text-[10.5px] font-mono uppercase tracking-[0.12em]"
+                      :style="CATEGORIA_STYLES[h.categoria] || 'background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12); color: #a8b3ad;'">
                       {{ h.categoria }}
                     </span>
-                    <span class="px-2.5 py-1 rounded-full text-[10.5px] font-mono uppercase tracking-[0.12em]" :style="getEstadoStyle(h.estado)">
+                    <span class="px-2.5 py-1 rounded-full text-[10.5px] font-mono uppercase tracking-[0.12em]" :style="ESTADO_STYLES[h.estado] || ''">
                       {{ h.estado.toLowerCase() }}
                     </span>
                   </div>
@@ -282,19 +283,16 @@ function closeModal() {
   selectedParkForModal.value = null;
 }
 
-const getEstadoStyle = (estado: string) => {
-  if (!estado) return '';
-  switch (estado.toLowerCase()) {
-    case 'disponible':
-      return 'background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.15); color: #cbd5e1;';
-    case 'ocupado':
-      return 'background: rgba(255,138,123,0.14); border: 1px solid rgba(255,138,123,0.4); color: #ff9b8a;';
-    case 'mantenimiento':
-      return 'background: rgba(245,158,11,0.14); border: 1px solid rgba(245,158,11,0.4); color: #fbbf24;';
-    default:
-      return '';
-  }
-};
+const ESTADO_STYLES: Record<string, string> = {
+  DISPONIBLE: 'background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.15); color: #cbd5e1;',
+  OCUPADO: 'background: rgba(255,138,123,0.14); border: 1px solid rgba(255,138,123,0.4); color: #ff9b8a;',
+  MANTENIMIENTO: 'background: rgba(245,158,11,0.14); border: 1px solid rgba(245,158,11,0.4); color: #fbbf24;',
+}
+const CATEGORIA_STYLES: Record<string, string> = {
+  FAMILIAR: 'background: rgba(168, 85, 247, 0.12); border: 1px solid rgba(168, 85, 247, 0.35); color: #a855f7;',
+  PAREJA: 'background: rgba(236, 72, 153, 0.12); border: 1px solid rgba(236, 72, 153, 0.35); color: #ec4899;',
+  INDIVIDUAL: 'background: rgba(56, 189, 248, 0.12); border: 1px solid rgba(56, 189, 248, 0.35); color: #38bdf8;',
+}
 </script>
 
 <style scoped>
