@@ -29,7 +29,7 @@ export interface Hospedaje {
   num_camas: number | null;
   num_banos: number | null;
   descripcion: string;
-  tarifa_noche: number;
+  precio: number;
   imagenes : ImagenHospedaje[];
 }
 
@@ -49,7 +49,7 @@ export interface ReservaResumen {
   tipo: TipoHospedaje | null;
   personas: number;
   unidad: Hospedaje | null; // selección final
-  tarifa_noche?: number; // del hospedaje seleccionado
+  precio?: number; // del hospedaje seleccionado
   subtotal?: number;
   servicio?: number;
   total?: number;
@@ -170,7 +170,7 @@ export const useReservationStore = defineStore('reservation', {
         this.unidadSeleccionada
       ) {
         const nights = this.calcularNoches(this.llegada, this.salida);
-        const tarifa = (this.unidadSeleccionada.tarifa_noche || 0);
+        const tarifa = (this.unidadSeleccionada.precio || 0);
         const subtotal = tarifa * nights;
         const servicio = subtotal * 0.05; 
         const total = subtotal + servicio;
@@ -183,7 +183,7 @@ export const useReservationStore = defineStore('reservation', {
           tipo: this.tipoHospedaje,
           personas: this.personas,
           unidad: this.unidadSeleccionada,
-          tarifa_noche: tarifa,
+          precio: tarifa,
           subtotal,
           servicio,
           total,
