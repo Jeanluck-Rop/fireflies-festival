@@ -61,6 +61,7 @@ export const useParksStore = defineStore('parks', () => {
   const priceMax = ref<number|string>('')
   const timeOpen = ref('')
   const timeClose = ref('')
+  const sortBy = ref('name-asc')
 
   const priceError = ref<string>('')
   watch([priceMin, priceMax], ([min, max]) => {
@@ -100,15 +101,16 @@ export const useParksStore = defineStore('parks', () => {
     priceError.value = ''
     visitorsError.value = ''
     timeError.value = ''
+    sortBy.value = 'name-asc'
   }
 
   const filteredParks = computed(() => {
-    return parks.value.filter(p => {
+    const result = parks.value.filter(p => {
       const searchStr = searchQuery.value.trim().toLowerCase()
-      if ( searchStr && !p.nombre.toLowerCase().includes(searchStr) && !p.direccion.toLowerCase().includes(searchStr)) return false
+      if (searchStr && !p.nombre.toLowerCase().includes(searchStr) && !p.direccion.toLowerCase().includes(searchStr)) return false
       if (filterType.value === 'cabin' && !p.hasCabin) return false
       if (filterType.value === 'camping' && p.hasCabin) return false
-      if ( visitors.value !== '' && Number(visitors.value) > 0 && 
+      if (visitors.value !== '' && Number(visitors.value) > 0 && 
       (Number(visitors.value) < p.capacidad_minima || Number(visitors.value) > p.capacidad_maxima)) return false
       if (priceMin.value !== '' && p.precio_maximo < Number(priceMin.value)) return false
       if (priceMax.value !== '' && p.precio_minimo > Number(priceMax.value)) return false
@@ -116,6 +118,24 @@ export const useParksStore = defineStore('parks', () => {
       if (timeClose.value && p.horario_cierre > timeClose.value) return false
 
       return true
+    })
+    return [...result].sort((a, b) => {
+      switch (sortBy.value) {
+        case 'name-asc':
+          return a.nombre.localeCompare(b.nombre)
+        case 'name-desc':
+          return b.nombre.localeCompare(a.nombre)
+        case 'capacity-asc':
+          return a.capacidad_maxima - b.capacidad_maxima
+        case 'capacity-desc':
+          return b.capacidad_maxima - a.capacidad_maxima
+        case 'avail':
+          const totalAvailA = (a.cabanas_libres || 0) + (a.campings_libres || 0)
+          const totalAvailB = (b.cabanas_libres || 0) + (b.campings_libres || 0)
+          return totalAvailB - totalAvailA
+        default:
+          return 0
+      }
     })
   })
 
@@ -126,7 +146,8 @@ export const useParksStore = defineStore('parks', () => {
     priceMin.value !== '' ||
     priceMax.value !== '' ||
     timeOpen.value !== '' ||
-    timeClose.value !== ''
+    timeClose.value !== '' ||
+    sortBy.value !== 'name-asc'
   )
 
   async function loadParks() {
@@ -147,7 +168,7 @@ export const useParksStore = defineStore('parks', () => {
   }
 
   return { parks, selectedPark, loading, selectPark, loadParks, 
-    resetFilters, searchQuery, filterType, visitors, priceMin, priceMax, timeOpen, timeClose,
+    resetFilters, searchQuery, filterType, visitors, priceMin, priceMax, timeOpen, timeClose, sortBy,
     filteredParks, hasFilters, priceError, visitorsError, timeError
   }
 })

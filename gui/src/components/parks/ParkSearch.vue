@@ -14,7 +14,7 @@
               <span class="h-px w-6 bg-(--color-accent)/60"></span>
               Mapa del festival
               <span class="h-px w-6 bg-(--color-accent)/60"></span>
-              {{ useParksStore().filteredParks.length }} parque{{ useParksStore().filteredParks.length===1?'':'s' }} para explorar
+              {{ parksStore.filteredParks.length }} parque{{ parksStore.filteredParks.length===1?'':'s' }} para explorar
               <span class="h-px w-6 bg-(--color-accent)/60"></span>
             </span>
             <h1 class="font-serif font-normal leading-[0.95] tracking-tight text-[clamp(2.6rem,6vw,5rem)] mt-5">
@@ -27,8 +27,8 @@
             </p>
             <div class="flex items-center gap-6 shrink-0 w-full justify-end pr-8">
               <div class="text-right">
-                <div class="font-serif text-4xl text-(--color-accent)">{{ useParksStore().filteredParks.length }}</div>
-                <div class="text-[10px] uppercase tracking-wider text-(--color-bone-mute)">Parque{{ useParksStore().filteredParks.length===1?'':'s' }} oficial{{ useParksStore().filteredParks.length===1?'':'es' }}</div>
+                <div class="font-serif text-4xl text-(--color-accent)">{{ parksStore.filteredParks.length }}</div>
+                <div class="text-[10px] uppercase tracking-wider text-(--color-bone-mute)">Parque{{ parksStore.filteredParks.length===1?'':'s' }} oficial{{ parksStore.filteredParks.length===1?'':'es' }}</div>
               </div>
               <div class="w-px h-12 bg-white/20"></div>
               <div class="text-right">

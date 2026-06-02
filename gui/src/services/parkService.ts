@@ -291,7 +291,6 @@ const MOCK_PARQUES: Parque[] = [
 
 export async function fetchParks(): Promise<Parque[]> {
     const store = useParksStore()
-    store.loading = true
 
     if (USE_MOCK) {
       await new Promise(r => setTimeout(r, 700))

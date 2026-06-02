@@ -12,7 +12,7 @@
           <template v-else>Sin coincidencias <em class="font-display italic font-normal text-glow">por ahora</em></template>
         </h2>
       </div>
-      <AppLink href="/parques" variant="outline" :icon="Shrub">
+      <AppLink href="/all" variant="outline" :icon="Shrub">
         Ver todos los parques
       </AppLink>
     </div>
