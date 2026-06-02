@@ -17,7 +17,9 @@
         <div class="relative" v-click-outside="() => parkOpen = false">
           <button class="select-trigger" :class="{ 'is-open': parkOpen }" @click="parkOpen = !parkOpen">
             <template v-if="store.parqueSeleccionado">
-              <span class="park-thumb w-9! h-9! rounded-lg!"></span>
+              <span class="park-thumb flex items-center justify-center text-[#7ad3a4]">
+                <component :is="getIconForPark(store.parqueSeleccionado.id)" class="w-5 h-5 opacity-70" />
+              </span>
               <div class="text-left flex-1 min-w-0">
                 <div class="text-[14px] leading-tight truncate">{{ store.parqueSeleccionado.nombre }}</div>
                 <div class="text-[11.5px] text-bone-soft mt-0.5 truncate">{{ store.parqueSeleccionado.direccion }} · {{ store.parqueSeleccionado.horario_apertura }} · {{ store.parqueSeleccionado.horario_cierre }}</div>
@@ -34,7 +36,9 @@
             <div v-if="parkOpen" class="absolute z-50 mt-2 w-full glass-strong rounded-2xl p-2 shadow-2xl max-h-90 overflow-y-auto">
               <div class="px-3 py-2 label-mono"> {{ store.parques.length }} parques disponibles</div>
               <div v-for="p in store.parques" :key="p.id" class="park-option flex items-center gap-3.5 px-4 py-3.5 rounded-[10px] cursor-pointer transition-colors duration-150 ease-out hover:bg-[#e8ff7a]/5" :class="{'is-on': store.parqueSeleccionado?.id === p.id}" @click="onSelectPark(p)">
-                <span class="park-thumb"></span>
+                <span class="park-thumb flex items-center justify-center text-[#7ad3a4]">
+                  <component :is="getIconForPark(p.id)" class="w-5 h-5 opacity-70" />
+                </span>
                 <div class="flex-1 min-w-0">
                   <div class="text-[14px] leading-tight truncate">{{ p.nombre }}</div>
                   <div class="text-[11.5px] text-bone-soft mt-0.5">{{ p.direccion }} · {{ p.horario_apertura }} · {{ p.horario_cierre }}</div>
@@ -93,11 +97,48 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
-import { MapPin, House, Tent } from 'lucide-vue-next';
+import type { Directive } from 'vue';
+import { MapPin, House, Tent, 
+  Trees, TentTree, TreeDeciduous, Mountain, SunMoon,
+  Moon, CloudMoon, CloudSun, Sparkles, MoonStar,
+  Sunset, Leaf, Sprout, LeafyGreen, Clover, 
+  Flower2, Compass } from 'lucide-vue-next';
 import { useReservationStore } from '../../stores/reservationStore.ts';
 
 const store = useReservationStore();
 const parkOpen = ref(false);
+
+interface ClickOutsideElement extends HTMLElement {
+  __clickOutside__?: (event: MouseEvent) => void
+}
+
+const vClickOutside: Directive = {
+  mounted(el: ClickOutsideElement, binding) {
+    el.__clickOutside__ = (event: MouseEvent) => {
+      const target = event.target as Node
+
+      if (!el.contains(target)) {
+        binding.value(event)
+      }
+    }
+
+    document.addEventListener('click', el.__clickOutside__)
+  },
+
+  unmounted(el: ClickOutsideElement) {
+    if (el.__clickOutside__) {
+      document.removeEventListener('click', el.__clickOutside__)
+    }
+  }
+}
+
+const parkIcons = [Trees, TentTree, Mountain, CloudMoon, Sunset, Leaf, Sprout, Compass, 
+  TreeDeciduous, SunMoon, LeafyGreen, Moon, Flower2, Sparkles, Clover, MoonStar, CloudSun
+]
+
+const getIconForPark = (id: number) => {
+  return parkIcons[id % parkIcons.length];
+}
 
 onMounted(() => {
   if (store.parques.length === 0) {

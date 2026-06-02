@@ -1,7 +1,11 @@
 <template>
   <div class="auth-scene">
-    <RouterLink to="/admin/login" class="admin-access-link">
+    <RouterLink to="/admin/login" class="corner-link right">
       Acceso Admin
+    </RouterLink>
+
+    <RouterLink to="/" class="corner-link left">
+      Volver al inicio
     </RouterLink>
     
     <div class="auth-card" :class="'mode-' + mode">
@@ -391,7 +395,7 @@ const strength = computed(() =>
    return {
      title: 'Recupera tu acceso',
      sub: 'Te enviaremos un código de verificación a tu correo registrado',
-     cta: 'Volver al inicio',
+     cta: 'Volver al login',
      action: () => setMode('login'),
    }
  })
@@ -421,10 +425,9 @@ const strength = computed(() =>
    z-index: 0;
  }
 
- .admin-access-link {
+ .corner-link {
   position: absolute;
   top: 1.5rem;
-  right: 1.5rem;
   z-index: 10;
   font-size: 11.5px;
   font-family: var(--font-mono);
@@ -436,7 +439,14 @@ const strength = computed(() =>
   border-radius: var(--radius-full);
   transition: color 0.2s, border-color 0.2s;
 }
- .admin-access-link:hover {
+.corner-link.left {
+  left: 1.5rem;
+}
+
+.corner-link.right {
+  right: 1.5rem;
+}
+ .corner-link:hover {
    color: var(--color-admin-accent);
    border-color: rgba(123,167,212,0.3);
  }
