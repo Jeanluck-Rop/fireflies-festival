@@ -38,8 +38,8 @@
       </div>
     </section>
       <!-- Search Bar -->
-    <section class="sticky top-21 z-50 pb-5 mt-10 animate-fade-up">
-      <div class="glass-strong rounded-2xl p-3 flex flex-col gap-3">
+    <section class="flex top-21 z-50 pb-5 mt-10 animate-fade-up">
+      <div class="glass-strong rounded-2xl p-3 flex flex-col gap-3 w-full">
         <div class="flex flex-col xl:flex-row xl:items-center gap-3">
           <div class="relative flex-3 min-w-55">
             <span class="absolute left-4 top-1/2 -translate-y-1/2 text-(--color-bone-soft) pointer-events-none">
@@ -76,29 +76,32 @@
             {{ parksStore.visitorsError }}
           </span>
           <div class="relative">
-            <button class="flex items-center gap-2 px-4 h-11 bg-white/5 border border-white/10 hover:border-white/20 rounded-full text-sm text-(--color-bone) transition duration-200 cursor-pointer select-none" 
+            <button ref="buttonRef" class="flex items-center gap-2 px-4 h-11 bg-white/5 border border-white/10 hover:border-white/20 rounded-full text-sm text-(--color-bone) transition duration-200 cursor-pointer select-none" 
               :class="{ 'border-(--color-green)/40 bg-(--color-green)/5': sortOpen }"
               @click="sortOpen=!sortOpen">
               <SlidersHorizontal :size="13" class="text-(--color-bone-soft)" />
               <span class="font-medium">{{ sortLabel }}</span>
               <ChevronDown :size="14" class="text-(--color-bone-soft) transition-transform duration-300" :class="{ 'rotate-180 text-(--color-green)': sortOpen }" />
             </button>
-            <transition name="pop">
-              <div v-if="sortOpen" 
-                class="absolute right-0 mt-2 w-56 glass-strong border border-white/10 rounded-2xl p-1.5 shadow-2xl z-100 backdrop-blur-xl animate-in fade-in zoom-in-95 duration-150" >
-                <div class="px-3 py-1.5 text-[10px] font-mono uppercase tracking-wider text-(--color-bone-mute) border-b border-white/5 mb-1">
-                  Ordenar por
+            <Teleport to="body">
+              <transition name="pop">
+                <div v-if="sortOpen" 
+                  class="fixed glass-strong border border-white/10 rounded-2xl p-1.5 shadow-2xl z-9999 backdrop-blur-xl animate-in fade-in zoom-in-95 duration-150"
+                  :style="getDropdownPosition()">
+                  <div class="px-3 py-1.5 text-[10px] font-mono uppercase tracking-wider text-(--color-bone-mute) border-b border-white/5 mb-1">
+                    Ordenar por
+                  </div>
+                  <button v-for="s in sorts" :key="s.id" 
+                    class="w-full text-left px-3 py-2.5 rounded-xl text-[13.5px] transition-all duration-200 flex items-center justify-between group cursor-pointer" 
+                    :class="parksStore.sortBy === s.id ? 'bg-(--color-green)/10 text-(--color-green) font-medium' : 'text-(--color-bone-soft) hover:bg-white/5 hover:text-(--color-bone)'" 
+                    @click="parksStore.sortBy = s.id; sortOpen = false"
+                  >
+                    {{ s.label }}
+                    <Check v-if="parksStore.sortBy === s.id" :size="14" class="text-(--color-green)" />
+                  </button>
                 </div>
-                <button v-for="s in sorts" :key="s.id" 
-                  class="w-full text-left px-3 py-2.5 rounded-xl text-[13.5px] transition-all duration-200 flex items-center justify-between group cursor-pointer" 
-                  :class="parksStore.sortBy === s.id ? 'bg-(--color-green)/10 text-(--color-green) font-medium' : 'text-(--color-bone-soft) hover:bg-white/5 hover:text-(--color-bone)'" 
-                  @click="parksStore.sortBy = s.id; sortOpen = false"
-                >
-                  {{ s.label }}
-                  <Check v-if="parksStore.sortBy === s.id" :size="14" class="text-(--color-green)" />
-                </button>
-              </div>
-            </transition>
+              </transition>
+            </Teleport>
           </div>
           <div class="xl:ml-auto flex items-center gap-3 justify-between xl:justify-end border-t border-white/5 pt-2 xl:pt-0 xl:border-0">
             <span class="font-mono text-[11px] uppercase tracking-[0.14em] text-[#9AA39E]">{{ parksStore.filteredParks.length }} resultado{{ parksStore.filteredParks.length===1?'':'s' }}</span>
@@ -113,7 +116,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { Search, Users, Home, Tent, SlidersHorizontal, ChevronDown, Check, } from 'lucide-vue-next'
 import { useParksStore } from '../../stores/parks'
 
@@ -133,11 +136,45 @@ const sorts = ref([
   { id: 'avail', label: 'Disponibles primero' },
 ])
 
-const sort = ref('name-asc')
 const sortOpen = ref(false)
 const sortLabel = computed(() => {
-  const s = sorts.value.find(s => s.id === sort.value);
+  const s = sorts.value.find(s => s.id === parksStore.sortBy);
   return s ? s.label : 'Ordenar';
+})
+
+const buttonRef = ref<HTMLElement | null>(null)
+
+const getDropdownPosition = () => {
+  if (!buttonRef.value) return {}
+  
+  const rect = buttonRef.value.getBoundingClientRect()
+  return {
+    top: `${rect.bottom + 8}px`,
+    right: `${window.innerWidth - rect.right}px`,
+    width: '224px'
+  }
+}
+
+const handleClickOutside = (event: MouseEvent) => {
+  if (buttonRef.value && !buttonRef.value.contains(event.target as Node)) {
+    sortOpen.value = false
+  }
+}
+
+const handleScroll = () => {
+  if (sortOpen.value) {
+    sortOpen.value = false
+  }
+}
+
+onMounted(() => {
+  document.addEventListener('click', handleClickOutside)
+  window.addEventListener('scroll', handleScroll, { passive: true })
+})
+
+onUnmounted(() => {
+  document.removeEventListener('click', handleClickOutside)
+  window.removeEventListener('scroll', handleScroll)
 })
 </script>
 

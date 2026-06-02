@@ -46,7 +46,7 @@
       </div>
 
       <div class="flex items-center gap-2 border-t border-white/5">
-        <AppLink :href="`/parquesInfo/${park.id}`" variant="outline" class="mt-3 w-35">
+        <AppLink :href="`/all#park-${park.id}`" variant="outline" class="mt-3 w-35">
           Ver detalles
         </AppLink>
         <AppLink v-if="park.activo" :href="auth.token ? `/reservar?park=${park.id}` : '/auth'" variant="yellow" class="mt-3 w-50" :iconRight="ArrowRight">
