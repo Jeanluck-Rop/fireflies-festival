@@ -1,3 +1,5 @@
+//G-Prompt EasterEgg (Chiste local)
+
 <template>
   <div v-if="isActivated" class="konami-monkey" :style="monkeyStyle">
     <!-- Renderizamos el emoji actual usando el índice -->
@@ -13,7 +15,7 @@ const isActivated = ref(false)
 const mouse = reactive({ x: 0, y: 0 })
 const monkey = reactive({ x: 0, y: 0 })
 const monkeyEmojis = ['🙈', '🙉'] // Lista de emojis
-const currentEmojiIndex = ref(0) // Empieza con el primero
+const currentEmojiIndex = ref(0)
 let lastEmojiSwitchTime = 0 // Control de tiempo para el cambio
 
 // --- CONFIGURACIÓN KONAMI ---
@@ -52,10 +54,10 @@ const startAnimation = () => {
     monkey.y += (mouse.y - monkey.y) * ease
 
     // --- 2. LÓGICA DE CAMBIO DE EMOJI (SECUENCIAL) ---
-    const switchInterval = 1000 // Tiempo en milisegundos entre cambios (300ms)
+    const switchInterval = 1000 // Tiempo en milisegundos entre cambios
 
     if (time - lastEmojiSwitchTime > switchInterval) {
-      lastEmojiSwitchTime = time // Actualizamos el marcador de tiempo
+      lastEmojiSwitchTime = time
       
       // Cambiamos al siguiente índice (ciclando secuencialmente)
       currentEmojiIndex.value = (currentEmojiIndex.value + 1) % monkeyEmojis.length
@@ -94,7 +96,6 @@ const monkeyStyle = computed(() => {
   pointer-events: none; 
   z-index: 9999;
   will-change: transform;
-  /* Centramos el emoji con flexbox para que no salte al cambiar de tamaño */
   display: flex;
   align-items: center;
   justify-content: center;
