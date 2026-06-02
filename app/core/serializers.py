@@ -1,6 +1,6 @@
 # serializers.py
 from rest_framework import serializers
-from .models import Parque, ImagenParque, Usuario, Hospedaje, Reservacion, ImagenHospedaje
+from .models import Parque, ImagenParque, Usuario, Hospedaje, Reservacion, ImagenHospedaje, ServicioParque
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -101,12 +101,28 @@ class ImagenParqueSerializer(serializers.ModelSerializer):
         model = ImagenParque
         fields = ['id', 'url'] 
 
+class ServicioParqueSerializer(serializers.ModelSerializer):
+    icono = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = ServicioParque
+        fields = ['id', 'nombre', 'icono']
+        
+    def get_icono(self, obj):
+        return None
+
 class ParqueSerializer(serializers.ModelSerializer):
     cabanas_libres = serializers.IntegerField(read_only=True)
     campings_libres = serializers.IntegerField(read_only=True)
+    
+    precio_minimo = serializers.DecimalField(max_digits=10, decimal_places=2, read_only=True)
+    precio_maximo = serializers.DecimalField(max_digits=10, decimal_places=2, read_only=True)
+    capacidad_minima = serializers.IntegerField(read_only=True)
+    capacidad_maxima = serializers.IntegerField(read_only=True)
+    
     # Traemos la galería de imágenes
     imagenes = ImagenParqueSerializer(many=True, read_only=True)
-    
+    servicios = ServicioParqueSerializer(many=True, read_only=True)
     hasCabin = serializers.SerializerMethodField()
 
     class Meta:
@@ -116,7 +132,10 @@ class ParqueSerializer(serializers.ModelSerializer):
             'latitud', 'longitud', 'imagen_mapa', 'imagenes',
             'cabanas_libres', 'campings_libres',
             'horario_apertura', 'horario_cierre',
-            'hasCabin'
+            'hasCabin', 'servicios',
+            'precio_minimo', 'precio_maximo',
+            'capacidad_minima', 'capacidad_maxima',
+            'activo'
         ]
 
     def get_hasCabin(self, obj):

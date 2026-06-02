@@ -1,7 +1,7 @@
 # views.py
 from rest_framework.decorators import action
 from datetime import datetime, timedelta, date
-from django.db.models import Count, Q
+from django.db.models import Count, Q, Min, Max
 from decimal import Decimal
 from django.core.mail import send_mail, EmailMessage
 from django.conf import settings
@@ -199,5 +199,9 @@ class ParqueViewSet(viewsets.ReadOnlyModelViewSet):
         # Add count of available rooms today to the queryset
         return Parque.objects.filter(activo=True).annotate(
             cabanas_libres=Count('hospedajes', filter=filtro_cabanas),
-            campings_libres=Count('hospedajes', filter=filtro_campings)
+            campings_libres=Count('hospedajes', filter=filtro_campings),
+            precio_minimo=Min('hospedajes__precio_por_noche'),
+            precio_maximo=Max('hospedajes__precio_por_noche'),
+            capacidad_minima=Min('hospedajes__capacidad'),
+            capacidad_maxima=Max('hospedajes__capacidad')
         )

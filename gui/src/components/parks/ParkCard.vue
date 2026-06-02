@@ -49,10 +49,10 @@
         <AppLink :href="`/parquesInfo/${park.id}`" variant="outline" class="mt-3 w-35">
           Ver detalles
         </AppLink>
-        <AppLink v-if="statusClass !== 'status-unavailable'" :href="auth.isLoggedIn ? `/reservar?park=${park.id}` : '/auth'" variant="yellow" class="mt-3 w-50" :iconRight="ArrowRight">
+        <AppLink v-if="park.activo" :href="auth.token ? `/reservar?park=${park.id}` : '/auth'" variant="yellow" class="mt-3 w-50" :iconRight="ArrowRight">
           Reservar
         </AppLink>
-        <AppButton v-else :disabled=true variant="primary" class="mt-3 w-50">
+        <AppButton v-else disabled variant="primary" class="mt-3 w-50">
           Reservar
         </AppButton>
       </div>
