@@ -71,7 +71,7 @@
             </div>
 
             <div class="flex flex-wrap gap-2.5">
-              <AppButton variant="primary" @click.stop="selectPark(hero)">
+              <AppButton variant="primary" @click.stop="goToPark(hero)">
                 Conocer este parque
                 <ArrowUpRight class="h-4 w-4 ml-2" :stroke-width="2" />
               </AppButton>
@@ -152,9 +152,11 @@ import FireflyLogo from '../ui/FireflyLogo.vue'
 import { is24Hours, getParkStatusText, getParkStatusClass } from '../../utils/parkStatus'
 import { useParksStore } from '../../stores/parks'
 import type { Parque } from '../../stores/parks'
+import { useRouter } from 'vue-router'
 
 const store = useParksStore()
 const selectedId = computed(() => store.selectedPark?.id ?? null)
+const router = useRouter()
 
 /* --- 3 recomendaciones al azar, estables (se eligen al cargar los parques) --- */
 function shuffle<T>(arr: T[]): T[] {
@@ -164,6 +166,10 @@ function shuffle<T>(arr: T[]): T[] {
     ;[a[i], a[j]] = [a[j], a[i]]
   }
   return a
+}
+
+function goToPark(p: Parque) {
+  router.push(`/all#park-${p.id}`)
 }
 
 const picked = ref<Parque[]>([])
