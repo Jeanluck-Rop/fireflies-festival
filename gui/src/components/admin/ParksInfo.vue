@@ -260,7 +260,8 @@
                 :saving="savingHospedaje === h.id"
                 :show-estado="true"
                 @save="saveHospedaje(h.id)"
-                @cancel="expandedHospedaje = null">
+                @cancel="expandedHospedaje = null"
+                @remove-image="removeHospedajeImage(h.id, $event)">
                 <template #extra-actions>
                   <button class="btn-danger-outline" @click="confirmDeleteHospedaje(h.id)">
                     Eliminar hospedaje
@@ -308,7 +309,6 @@
 	</div>
 	
       </div>
-
     </template>
 
     <!-- Modal: Nuevo parque -->
@@ -399,7 +399,7 @@
 </template>
 
 <script setup lang="ts">
- import { ref, reactive, computed, watch } from 'vue'
+ import { ref, reactive, computed, watch, onMounted } from 'vue'
  import { useAuthStore } from '../../stores/auth'
  import { useNotification } from '../../composables/useNotification'
  import AppConfirmDialog from '../ui/AppConfirmDialog.vue'
@@ -447,7 +447,7 @@
 
  interface HospedajeMock {
    id: number;
-   parque_id: number;
+   parque: { id: number; nombre: string };
    tipo: 'CABANA' | 'CAMPING'
    categoria: 'INDIVIDUAL' | 'PAREJA' | 'FAMILIAR';
    capacidad: number
@@ -463,7 +463,7 @@
 
  interface ReservMock {
    id: number;
-   parque_id: number
+   parque: { id: number; nombre: string }
    usuario: { nombre: string; apellidos: string; email: string }
    hospedaje: { id: number; tipo: string }
    fecha_inicio: string;
@@ -475,11 +475,11 @@
  }
 
  //Mock data
- const mockParques = ref<ParqueMock[]>([
-   { id:1, nombre:'Parque Sierra Chincua',  direccion:'Angangueo, Michoacán', descripcion:'Santuario de mariposa monarca en la sierra michoacana.', latitud:19.6186, longitud:-100.2736, horario_apertura:'08:00', horario_cierre:'18:00', imagen_mapa:null, activo:true  },
-   { id:2, nombre:'Parque Piedra Herrada',  direccion:'Valle de Bravo, Estado de México', descripcion:'Reserva natural con senderos y avistamiento de monarcas.', latitud:19.1878, longitud:-100.1411, horario_apertura:'09:00', horario_cierre:'17:00', imagen_mapa:null, activo:true  },
-   { id:3, nombre:'Parque El Rosario',      direccion:'Ocampo, Michoacán', descripcion:'El mayor santuario de mariposa monarca del mundo.', latitud:19.6472, longitud:-100.2800, horario_apertura:'08:00', horario_cierre:'18:00', imagen_mapa:null, activo:false },
- ])
+ const mockParques = ref<ParqueMock[]>([])
+ const mockHospedajes = ref<HospedajeMock[]>([])
+ const mockReservas = ref<ReservMock[]>([])
+ 
+ /*
  const mockHospedajes = ref<HospedajeMock[]>([
    { id:1, parque_id:1, tipo:'CABANA',  categoria:'FAMILIAR',   capacidad:8, estado:'DISPONIBLE',   num_camas:4, num_banos:2, tiene_agua:true, tiene_luz:true, tiene_regadera:true,  descripcion:'Cabaña familiar con vista al bosque', precio:1800 },
    { id:2, parque_id:1, tipo:'CABANA',  categoria:'PAREJA',     capacidad:2, estado:'OCUPADO',       num_camas:1, num_banos:1, tiene_agua:true, tiene_luz:true, tiene_regadera:true,  descripcion:'Cabaña íntima con terraza privada',   precio:900  },
@@ -494,7 +494,47 @@
    { id:2, parque_id:1, usuario:{ nombre:'Ana',      apellidos:'García', email:'ana@example.com'     }, hospedaje:{ id:2, tipo:'CABANA' }, fecha_inicio:'2026-07-01', fecha_fin:'2026-07-05', num_personas:2, tipo_visita:'CABANA', estado:'EN_PROCESO', created_at:'2026-05-10T14:00:00Z' },
    { id:3, parque_id:1, usuario:{ nombre:'Carlos',   apellidos:'López',  email:'carlos@example.com'  }, hospedaje:{ id:3, tipo:'CAMPING'}, fecha_inicio:'2026-04-01', fecha_fin:'2026-04-03', num_personas:1, tipo_visita:'CAMPING', estado:'COMPLETADA', created_at:'2026-03-01T09:00:00Z' },
    { id:4, parque_id:2, usuario:{ nombre:'Fulanito', apellidos:'Pérez',  email:'fulanito@example.com'}, hospedaje:{ id:5, tipo:'CABANA' }, fecha_inicio:'2026-08-10', fecha_fin:'2026-08-15', num_personas:5, tipo_visita:'CABANA', estado:'ACTIVA',     created_at:'2026-05-20T11:00:00Z' },
- ])
+ ])*/
+
+ onMounted(async () => {
+   if (USE_MOCK) {
+     mockParques.value = [
+       { id:1, nombre:'Parque Sierra Chincua',  direccion:'Angangueo, Michoacán', descripcion:'Santuario de mariposa monarca en la sierra michoacana.', latitud:19.6186, longitud:-100.2736, horario_apertura:'08:00', horario_cierre:'18:00', imagen_mapa:null, activo:true  },
+       { id:2, nombre:'Parque Piedra Herrada',  direccion:'Valle de Bravo, Estado de México', descripcion:'Reserva natural con senderos y avistamiento de monarcas.', latitud:19.1878, longitud:-100.1411, horario_apertura:'09:00', horario_cierre:'17:00', imagen_mapa:null, activo:true  },
+       { id:3, nombre:'Parque El Rosario',      direccion:'Ocampo, Michoacán', descripcion:'El mayor santuario de mariposa monarca del mundo.', latitud:19.6472, longitud:-100.2800, horario_apertura:'08:00', horario_cierre:'18:00', imagen_mapa:null, activo:false },
+     ]
+     return
+   }
+
+   try {
+     const [resParques, resHosp, resReserv] = await Promise.all([
+       fetch(`${API}/api/parques/mis_parques/`, { headers: { Authorization: `Bearer ${auth.token}` } }),
+       fetch(`${API}/api/hospedajes/`, { headers: { Authorization: `Bearer ${auth.token}` } }),
+       fetch(`${API}/api/reservaciones/`, { headers: { Authorization: `Bearer ${auth.token}` } })
+     ])
+
+     if (resParques.ok) {
+       const d = await resParques.json()
+       mockParques.value = Array.isArray(d) ? d : d.results || []
+     }
+     if (resHosp.ok) {
+       const d = await resHosp.json()
+       mockHospedajes.value = Array.isArray(d) ? d : d.results || []
+     }
+     if (resReserv.ok) {
+       const d = await resReserv.json()
+       console.log("--- DEPURACIÓN DE RESERVACIONES ---")
+       console.log("¿Qué me regresa Django?", d)
+       console.log("¿Es un Array directo?", Array.isArray(d))
+       console.log("¿Tiene la propiedad results?", d && typeof d === 'object' + ' && "results" in d')
+       
+       mockReservas.value = Array.isArray(d) ? d : d.results || []
+     }
+   } catch (error) {
+     console.error("Error cargando el dashboard de parques:", error)
+     show('error', 'Error de red al cargar la información.')
+   }
+ })
 
  //Seleccion de parque
  const selectedParkId = ref<number | ''>(
@@ -540,7 +580,7 @@
  const reservFilter = ref('')
  
  const parkHospedajes = computed<HospedajeMock[]>(() => {
-   let result = mockHospedajes.value.filter(h => h.parque_id === Number(selectedParkId.value))
+   let result = mockHospedajes.value.filter(h => h.parque === Number(selectedParkId.value))
    if (hospFilters.value.nombre) {
      const q = hospFilters.value.nombre.toLowerCase()
      result = result.filter(h =>
@@ -563,7 +603,7 @@
  const reservFilters = ref<FilterValues>({ usuario: '', fechas_desde: '', fechas_hasta: '' })
  
  const filteredParkReservaciones = computed<ReservMock[]>(() => {
-   let result = mockReservas.value.filter(r => r.parque_id === Number(selectedParkId.value))
+   let result = mockReservas.value.filter(r => r.parque && r.parque.id === Number(selectedParkId.value))
    if (reservFilter.value)
      result = result.filter(r => r.estado === reservFilter.value)
    if (reservFilters.value.usuario) {
@@ -593,6 +633,7 @@
    horario_apertura: false, horario_cierre: false,
  })
 
+ const parkImageInput = ref<HTMLInputElement | null>(null)
  const parkImages = ref<Imagen[]>([])
  const savingPark = ref(false)
  const showDeletePark = ref(false)
@@ -609,13 +650,76 @@
      horario_cierre: selectedPark.value.horario_cierre,
      activo: selectedPark.value.activo,
    })
-   parkImages.value = []
+   if ((selectedPark.value as any).imagenes) {
+     parkImages.value = (selectedPark.value as any).imagenes.map((img: any) => ({
+       id: img.id,
+       url: img.url // Tu ImagenParqueSerializer ya manda la URL absoluta de la foto
+     }))
+   } else {
+     parkImages.value = []
+   }
    Object.keys(parkEditing).forEach(k => (parkEditing as any)[k] = false)
  }
 
  function toggleParkEdit(field: keyof typeof parkEditing) {
    parkEditing[field] = !parkEditing[field]
  }
+
+ const hospedajeImageInput = ref<HTMLInputElement | null>(null)
+
+function addHospedajeImages(hospedajeId: number, e: Event) {
+  const files = (e.target as HTMLInputElement).files
+  if (!files) return
+
+  Array.from(files).forEach(file => {
+    const reader = new FileReader()
+    reader.onload = ev => {
+      const form = getHospedajeEditForm(hospedajeId)
+      if (!form.imagenes) form.imagenes = []
+      form.imagenes.push({ id: null, url: ev.target?.result as string, file })
+    }
+    reader.readAsDataURL(file)
+  })
+
+  if (USE_MOCK) {
+    // solo memoria
+  } else {
+    try {
+      const formData = new FormData()
+      Array.from(files).forEach(file => formData.append('imagenes', file))
+      fetch(`${API}/api/hospedajes/${hospedajeId}/imagenes/`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${auth.token}` },
+        body: formData
+      })
+    } catch (error) {
+      show('error', 'No se pudieron subir las imágenes')
+    } finally {
+      if (hospedajeImageInput.value) hospedajeImageInput.value.value = ''
+    }
+  }
+}
+
+function removeHospedajeImage(hospedajeId: number, idx: number) {
+  const form = getHospedajeEditForm(hospedajeId)
+  if (!form.imagenes) return
+
+  if (USE_MOCK) {
+    form.imagenes.splice(idx, 1)
+  } else {
+    try {
+      fetch(`${API}/api/hospedajes/${hospedajeId}/imagenes/?url=${encodeURIComponent(form.imagenes[idx].url)}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${auth.token}` },
+      })
+    } catch (error) {
+      show('error', 'No se pudo eliminar la imagen')
+    } finally {
+      if (hospedajeImageInput.value) hospedajeImageInput.value.value = ''
+    }
+    form.imagenes.splice(idx, 1)
+  }
+}
 
  watch(selectedPark, syncParkForm, { immediate: true })
 
@@ -635,7 +739,19 @@
      Object.keys(parkEditing).forEach(k => (parkEditing as any)[k] = false)
      show('exito', 'Parque actualizado correctamente')
    } else {
-     // TODO backend: PATCH /api/parques/{id}/
+     try {
+       const res = await fetch(`${API}/api/parques/${selectedParkId.value}/`, {
+         method: 'PATCH',
+         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${auth.token}` },
+         body: JSON.stringify(parkForm)
+       })
+       if (res.ok) {
+         show('exito', 'Parque actualizado correctamente')
+         Object.keys(parkEditing).forEach(k => (parkEditing as any)[k] = false)
+         const idx = mockParques.value.findIndex(p => p.id === Number(selectedParkId.value))
+         if (idx >= 0) Object.assign(mockParques.value[idx], parkForm)
+       } else throw new Error()
+     } catch { show('error', 'No se pudo actualizar el parque') }
    }
    savingPark.value = false
  }
@@ -646,7 +762,18 @@
      selectedParkId.value = ''
      show('normal', 'Parque eliminado')
    } else {
-     // TODO backend: DELETE /api/parques/{id}/
+     try {
+       const res = await fetch(`${API}/api/parques/${selectedParkId.value}/`, {
+         method: 'DELETE',
+         headers: {Authorization: `Bearer ${auth.token}` },
+       })
+       if (res.ok) {
+         show('exito', 'Parque eliminado correctamente')
+         Object.keys(parkEditing).forEach(k => (parkEditing as any)[k] = false)
+         const idx = mockParques.value.findIndex(p => p.id === Number(selectedParkId.value))
+         if (idx >= 0) Object.assign(mockParques.value[idx], parkForm)
+       } else throw new Error()
+     } catch { show('error', 'No se pudo eliminar el parque') }
    }
  }
 
@@ -661,12 +788,54 @@
      }
      reader.readAsDataURL(file)
    })
-   // TODO backend: POST /api/parques/{id}/imagenes/
+   if (USE_MOCK) {
+    const input = parkImageInput.value as HTMLInputElement
+    if (input) input.value = ''
+   } else {
+    try {
+      fetch(`${API}/api/parques/${selectedParkId.value}/imagenes/`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${auth.token}` },
+        body: (() => {
+          const formData = new FormData()
+          Array.from(files).forEach(file => formData.append('imagenes', file))
+          return formData
+        })()
+      })
+    }
+    catch (error) {
+      console.error("Error subiendo imagenes:", error)
+      show('error', 'No se pudieron subir las imágenes')
+    }
+    finally {
+      const input = parkImageInput.value as HTMLInputElement
+      if (input) input.value = ''
+    }
+   }
  }
 
  function removeParkImage(idx: number) {
    // TODO backend: DELETE /api/parques/{id}/imagenes/{imageId}/
-   parkImages.value.splice(idx, 1)
+   if (USE_MOCK) {
+    parkImages.value.splice(idx, 1)
+   }
+   else {
+    try {
+      fetch(`${API}/api/parques/${selectedParkId.value}/imagenes/?url=${encodeURIComponent(parkImages.value[idx].url)}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${auth.token}` },
+      })
+    }
+    catch (error) {
+      console.error("Error subiendo imagenes:", error)
+      show('error', 'No se pudo eliminar las imágenes')
+    }
+    finally {
+      const input = parkImageInput.value as HTMLInputElement
+      if (input) input.value = ''
+    }
+    parkImages.value.splice(idx, 1)
+  }
  }
 
  //Nuevo parque
@@ -693,7 +862,23 @@
      showNewParkModal.value = false
      show('exito', `Parque "${newParkForm.nombre}" creado correctamente`)
    } else {
-     // TODO backend: POST /api/parques/
+     try {
+       const res = await fetch(`${API}/api/parques/`, {
+         method: 'POST',
+         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${auth.token}` },
+         body: JSON.stringify({ ...newParkForm, activo: true })
+       })
+       if (res.ok) {
+         const data = await res.json()
+         mockParques.value.push(data)
+         selectedParkId.value = data.id
+         showNewParkModal.value = false
+         show('exito', 'Parque creado exitosamente')
+       } else throw new Error()
+       
+     } catch {
+       show('error', 'Error al crear el parque') 
+     }
    }
    creatingPark.value = false
  }
@@ -749,6 +934,7 @@
 
  async function saveHospedaje(id: number) {
    savingHospedaje.value = id
+   const payload = hospedajeEditForms[id]
    if (USE_MOCK) {
      await new Promise(r => setTimeout(r, 400))
      const idx = mockHospedajes.value.findIndex(h => h.id === id)
@@ -757,7 +943,23 @@
      expandedHospedaje.value = null
      show('exito', 'Hospedaje actualizado correctamente')
    } else {
-     // TODO backend: PATCH /api/hospedajes/{id}/
+     try {
+       const payload = hospedajeEditForms[id]
+       const res = await fetch(`${API}/api/hospedajes/${id}/`, {
+         method: 'PATCH',
+         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${auth.token}` },
+         body: JSON.stringify(payload)
+       })
+       if (res.ok) {
+         const idx = mockHospedajes.value.findIndex(h => h.id === id)
+         if (idx >= 0) Object.assign(mockHospedajes.value[idx], payload)
+         expandedHospedaje.value = null
+         show('exito', 'Hospedaje actualizado correctamente')
+       } else throw new Error()
+       
+     } catch {
+       show('error', 'No se pudo actualizar el hospedaje') 
+     }
    }
    savingHospedaje.value = null
  }
@@ -767,11 +969,35 @@
    if (USE_MOCK) {
      await new Promise(r => setTimeout(r, 400))
      const newId = Math.max(...mockHospedajes.value.map(h => h.id)) + 1
-     mockHospedajes.value.push({ ...newHospedajeForm, id: newId, parque_id: Number(selectedParkId.value) })
+     mockHospedajes.value.push({ ...newHospedajeForm, id: newId, parque: Number(selectedParkId.value) })
      showNewHospedaje.value = false
      show('exito', 'Hospedaje creado correctamente')
    } else {
-     // TODO backend: POST /api/hospedajes/
+     try {
+       const res = await fetch(`${API}/api/hospedajes/`, {
+         method: 'POST',
+         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${auth.token}` },
+         body: JSON.stringify({ ...newHospedajeForm, parque: Number(selectedParkId.value) })
+       })
+       if (res.ok) {
+         const data = await res.json()
+
+         const nuevas = (newHospedajeForm as any).imagenes?.filter((img: any) => img.file) ?? []
+         if (nuevas.length > 0) {
+           const formData = new FormData()
+           nuevas.forEach((img: any) => formData.append('imagenes', img.file))
+           await fetch(`${API}/api/hospedajes/${data.id}/imagenes/`, {
+             method: 'POST',
+             headers: { Authorization: `Bearer ${auth.token}` },
+             body: formData
+           })
+        }
+
+         mockHospedajes.value.push(data)
+         showNewHospedaje.value = false
+         show('exito', 'Hospedaje creado correctamente')
+       } else throw new Error()
+     } catch { show('error', 'Error al crear el hospedaje') }
    }
    creatingHospedaje.value = false
  }
@@ -789,7 +1015,19 @@
      expandedHospedaje.value = null
      show('normal', 'Hospedaje eliminado')
    } else {
-     // TODO backend: DELETE /api/hospedajes/{id}/
+     try {
+       const res = await fetch(`${API}/api/hospedajes/${id}/`, {
+         method: 'DELETE',
+         headers: { Authorization: `Bearer ${auth.token}` }
+       })
+       if (res.ok) {
+         mockHospedajes.value = mockHospedajes.value.filter(h => h.id !== id)
+         expandedHospedaje.value = null
+         show('normal', 'Hospedaje eliminado')
+       } else throw new Error()
+     } catch {
+       show('error', 'No se pudo eliminar el hospedaje')
+     }
    }
    deleteHospedajeId.value = null
  }
@@ -812,7 +1050,17 @@
        mockReservas.value[idx].estado = 'CANCELADA'
      show('normal', `Reservación #${id} cancelada`)
    } else {
-     // TODO backend: PATCH /api/reservaciones/{id}/cancelar/
+     try {
+       const res = await fetch(`${API}/api/reservaciones/${id}/cancelar/`, {
+         method: 'PATCH',
+         headers: { Authorization: `Bearer ${auth.token}` }
+       })
+       if (res.ok) {
+         const idx = mockReservas.value.findIndex(r => r.id === id)
+         if (idx >= 0) mockReservas.value[idx].estado = 'CANCELADA'
+         show('normal', `Reservación #${id} cancelada`)
+       } else throw new Error()
+     } catch { show('error', 'No se pudo cancelar la reservación') }
    }
    cancelReservId.value = null
  }

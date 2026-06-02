@@ -1,7 +1,7 @@
 # serializers.py
 from djoser.serializers import UserCreateSerializer, UserSerializer
 from rest_framework import serializers
-from .models import Parque, ImagenParque, Usuario, Reservacion, Hospedaje
+from .models import Parque, ImagenParque, Usuario, Reservacion, Hospedaje, ImagenHospedaje
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -51,7 +51,13 @@ class ImagenParqueSerializer(serializers.ModelSerializer):
     url = serializers.ImageField(source='imagen')
     class Meta:
         model = ImagenParque
-        fields = ['id', 'url'] 
+        fields = ['id', 'url']
+
+class ImagenHospedajeSerializer(serializers.ModelSerializer):
+    url = serializers.ImageField(source='imagen')
+    class Meta:
+        model = ImagenHospedaje
+        fields = ['id', 'url']
 
 class ParqueSerializer(serializers.ModelSerializer):
     cabanas_libres = serializers.IntegerField(read_only=True)
@@ -103,11 +109,16 @@ class HospedajeResumenSerializer(serializers.ModelSerializer):
 
     def get_nombre(self, obj):
         return f"{obj.get_tipo_display()} {obj.get_categoria_display()}"
+    
+class UsuarioResumenSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Usuario
+        fields = ['id', 'nombre', 'apellidos', 'email']
 
 class ReservacionSerializer(serializers.ModelSerializer):
     parque = ParqueResumenSerializer(read_only=True)
     hospedaje = HospedajeResumenSerializer(read_only=True)
-    
+    usuario = UsuarioResumenSerializer(read_only=True)
     monto = serializers.SerializerMethodField()
 
     class Meta:
@@ -115,7 +126,7 @@ class ReservacionSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'estado', 'tipo_visita', 'fecha_inicio',
             'fecha_fin', 'num_personas', 'monto', 'created_at',
-            'parque', 'hospedaje'
+            'parque', 'hospedaje', 'usuario'
         ]
 
     def get_monto(self, obj):
@@ -124,18 +135,18 @@ class ReservacionSerializer(serializers.ModelSerializer):
         return 500.00
     
 class HospedajeSerializer(serializers.ModelSerializer):
+    imagenes = ImagenHospedajeSerializer(many=True, read_only=True)
     precio = serializers.DecimalField(
         source='precio_por_noche', 
         max_digits=10, 
         decimal_places=2, 
-        read_only=True
     )
 
     class Meta:
         model = Hospedaje
         fields = [
             'id', 
-            'parque_id',
+            'parque',
             'tipo', 
             'categoria', 
             'capacidad', 
@@ -146,5 +157,6 @@ class HospedajeSerializer(serializers.ModelSerializer):
             'tiene_luz', 
             'tiene_regadera', 
             'descripcion', 
-            'precio'
+            'precio',
+            'imagenes'
         ]

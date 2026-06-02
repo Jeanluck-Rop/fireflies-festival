@@ -8,13 +8,14 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.parsers import MultiPartParser, FormParser
 from django.contrib.auth.forms import PasswordResetForm
 from djoser.views import UserViewSet
-from .models import Parque, Usuario, Reservacion, Hospedaje
-from .serializers import ParqueSerializer, UserSerializer, AvatarSerializer, ReservacionSerializer, HospedajeSerializer
+from .models import Parque, Usuario, Reservacion, Hospedaje, ImagenParque, ImagenHospedaje
+from .serializers import ImagenParqueSerializer, ParqueSerializer, UserSerializer, AvatarSerializer, ReservacionSerializer, HospedajeSerializer, ImagenParqueSerializer, ImagenHospedajeSerializer
 
 from django.db import transaction
 from django.contrib.auth.hashers import make_password
 from django.db.models import Q, Count
 from datetime import datetime, date
+from django.conf import settings
 
 class UserMeView(APIView):
     """ Gestiona los datos del usuario logueado """
@@ -179,7 +180,7 @@ class ReservacionViewSet(viewsets.ModelViewSet):
         except Exception as e:
             return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
     
-class ParqueViewSet(viewsets.ReadOnlyModelViewSet):
+class ParqueViewSet(viewsets.ModelViewSet):
     serializer_class = ParqueSerializer
     permission_classes = [AllowAny]
     def get_queryset(self):
@@ -224,9 +225,49 @@ class ParqueViewSet(viewsets.ReadOnlyModelViewSet):
 
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
+
+    @action(
+        detail=True, 
+        methods=['post', 'delete'], # 💥 Agregamos DELETE para que Vue pueda borrar
+        parser_classes=[MultiPartParser, FormParser]
+    )
+    def imagenes(self, request, pk=None):
+        parque = self.get_object()
+        
+        # --- SUBIR IMÁGENES ---
+        if request.method == 'POST':
+            archivos = request.FILES.getlist('imagenes')
+            
+            if not archivos:
+                return Response({"detail": "No se enviaron imágenes."}, status=status.HTTP_400_BAD_REQUEST)
+                
+            nuevas_imagenes = []
+            for archivo in archivos:
+                img = ImagenParque.objects.create(parque=parque, imagen=archivo)
+                nuevas_imagenes.append(img)
+                
+            serializer = ImagenParqueSerializer(nuevas_imagenes, many=True, context={'request': request})
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+            
+        elif request.method == 'DELETE':
+            url_imagen = request.query_params.get('url')
+            if not url_imagen:
+                return Response({"detail": "Falta la URL de la imagen."}, status=status.HTTP_400_BAD_REQUEST)
+            
+            from urllib.parse import urlparse
+            path = urlparse(url_imagen).path
+            if path.startswith(settings.MEDIA_URL):
+                path = path[len(settings.MEDIA_URL):]
+                
+            imagen = ImagenParque.objects.filter(parque=parque, imagen=path).first()
+            if imagen:
+                imagen.delete()
+                return Response({"detail": "Imagen eliminada"}, status=status.HTTP_204_NO_CONTENT)
+                
+            return Response({"detail": "Imagen no encontrada"}, status=status.HTTP_404_NOT_FOUND)
     
 
-class HospedajeViewSet(viewsets.ReadOnlyModelViewSet):
+class HospedajeViewSet(viewsets.ModelViewSet):
     queryset = Hospedaje.objects.all()
     serializer_class = HospedajeSerializer
 
@@ -260,6 +301,42 @@ class HospedajeViewSet(viewsets.ReadOnlyModelViewSet):
 
         serializer = self.get_serializer(disponibles, many=True)
         return Response(serializer.data)
+    
+    @action(
+        detail=True,
+        methods=['post', 'delete'],
+        parser_classes=[MultiPartParser, FormParser]
+    )
+    def imagenes(self, request, pk=None):
+        hospedaje = self.get_object()
+
+        if request.method == 'POST':
+            archivos = request.FILES.getlist('imagenes')
+            if not archivos:
+                return Response({"detail": "No se enviaron imágenes."}, status=400)
+            nuevas = []
+            for archivo in archivos:
+                img = ImagenHospedaje.objects.create(hospedaje=hospedaje, imagen=archivo)
+                nuevas.append(img)
+            serializer = ImagenHospedajeSerializer(nuevas, many=True, context={'request': request})
+            return Response(serializer.data, status=201)
+
+        elif request.method == 'DELETE':
+            url_imagen = request.query_params.get('url')
+            if not url_imagen:
+                return Response({"detail": "Falta la URL de la imagen."}, status=status.HTTP_400_BAD_REQUEST)
+            
+            from urllib.parse import urlparse
+            path = urlparse(url_imagen).path
+            if path.startswith(settings.MEDIA_URL):
+                path = path[len(settings.MEDIA_URL):]
+                
+            imagen = ImagenHospedaje.objects.filter(hospedaje=hospedaje, imagen=path).first()
+            if imagen:
+                imagen.delete()
+                return Response({"detail": "Imagen eliminada"}, status=status.HTTP_204_NO_CONTENT)
+                
+            return Response({"detail": "Imagen no encontrada"}, status=status.HTTP_404_NOT_FOUND)
     
 class StaffViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
