@@ -1,6 +1,6 @@
 # serializers.py
 from rest_framework import serializers
-from .models import Parque, ImagenParque, Usuario, Hospedaje, Reservacion
+from .models import Parque, ImagenParque, Usuario, Hospedaje, Reservacion, ImagenHospedaje
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -41,11 +41,6 @@ class UserSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Este correo ya se encuentra registrado por otro usuario.")
         return value
 
-class HospedajeSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Hospedaje
-        fields = '__all__'
-
 class ReservacionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Reservacion
@@ -57,15 +52,28 @@ class ReservacionSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         rep = super().to_representation(instance)
+        request = self.context.get('request')
+        
         rep['parque'] = {
             'id': instance.parque.id,
             'nombre': instance.parque.nombre,
             'imagen_mapa': instance.parque.imagen_mapa
         }
+        
+        imagenes_urls = []
+        for img in instance.hospedaje.imagenes.all():
+            if img.imagen:
+                url = img.imagen.url
+                if request is not None:
+                    url = request.build_absolute_uri(url)
+                imagenes_urls.append(url)
+
         rep['hospedaje'] = {
             'id': instance.hospedaje.id,
-            'nombre': f"{instance.hospedaje.get_tipo_display()} {instance.hospedaje.get_categoria_display()}"
+            'nombre': f"{instance.hospedaje.get_tipo_display()} {instance.hospedaje.get_categoria_display()}",
+            'imagenes': imagenes_urls
         }
+        
         rep['monto'] = rep['precio_total']
         return rep
 
@@ -73,6 +81,19 @@ class AvatarSerializer(serializers.ModelSerializer):
     class Meta:
         model = Usuario
         fields = ['avatar']
+
+class ImagenHospedajeSerializer(serializers.ModelSerializer):
+    url = serializers.ImageField(source='imagen')
+    class Meta:
+        model = ImagenHospedaje
+        fields = ['id', 'url']
+
+class HospedajeSerializer(serializers.ModelSerializer):
+    imagenes = ImagenHospedajeSerializer(many=True, read_only=True)
+    
+    class Meta:
+        model = Hospedaje
+        fields = '__all__'
 
 class ImagenParqueSerializer(serializers.ModelSerializer):
     url = serializers.ImageField(source='imagen')
