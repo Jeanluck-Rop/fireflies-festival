@@ -128,7 +128,10 @@ class ReservacionViewSet(viewsets.ModelViewSet):
         subtotal = hospedaje.precio_por_noche * noches
         precio_total = subtotal + (subtotal * Decimal('0.05'))
 
-        reservacion = serializer.save(usuario=self.request.user, precio_total=precio_total)
+        reservacion = serializer.save(usuario=self.request.user, 
+                                      precio_total=precio_total, 
+                                      hospedaje=hospedaje, 
+                                      parque=hospedaje.parque)
 
         try:            
             asunto = '¡Tu Reservación está Confirmada! - Festival Luciérnagas 2026'
