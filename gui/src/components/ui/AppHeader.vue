@@ -1,7 +1,7 @@
 <template>
   <header
     :class="[
-      'fixed top-0 inset-x-0 z-50 transition-transform duration-500 ease-out',
+      'fixed top-0 inset-x-0 z-500 transition-transform duration-500 ease-out',
       showHeader ? 'translate-y-0' : '-translate-y-full'
     ]"
   >

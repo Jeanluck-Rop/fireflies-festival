@@ -91,7 +91,7 @@
           v-if="reservacion.estado === 'ACTIVA' || reservacion.estado === 'EN_PROCESO'"
           class="btn-cancelar"
           :disabled="cancelando"
-          @click="showCancel = true">
+          @click.stop.prevent="showCancel = true">
           Cancelar
         </button>
       </div>
@@ -185,6 +185,7 @@
 <script setup lang="ts">
  import { ref, computed } from 'vue'
  import type { Reservacion } from '../../stores/reservations'
+ import { reservationService } from '../../services/reservationService'
  import FireflyLogo    from '../ui/FireflyLogo.vue'
  import IconDot from '../svg/IconDot.vue'
  import IconInfo from '../svg/IconInfo.vue'
@@ -203,10 +204,11 @@
  
  const props = defineProps<{
    reservacion: Reservacion
-   cancelando?: boolean
  }>()
 
  const emit = defineEmits<{ cancelar: [reservacion: Reservacion] }>()
+
+ const cancelando = ref(false)
 
  //Caroussel
  const images = computed(() => props.reservacion.hospedaje.imagenes ?? [])
@@ -240,7 +242,22 @@
      emit('cancelar', props.reservacion)
      return
    }
-   // TODO backend: PATCH /api/reservaciones/:id/cancelar/
+   
+   cancelando.value = true;
+   try {
+     await reservationService.cancelarReservacion(props.reservacion.id);
+     
+     alert("¡Reservación cancelada exitosamente!");
+     showCancel.value = false;
+     
+     emit('cancelar', props.reservacion);
+     
+   } catch (e: any) {
+     console.error(e);
+     alert("Hubo un error al intentar cancelar.");
+   } finally {
+     cancelando.value = false;
+   }
  }
  
  //Fechas

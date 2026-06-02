@@ -16,7 +16,7 @@ const MOCK_PARQUES: Parque[] = [
     imagen_mapa: null,
   },
   {
-    id: 2,
+    id: 3,
     nombre: "Parque de los Sueños",
     direccion: "Avenida Imaginaria, 456",
     horario_apertura: "09:00",
@@ -29,7 +29,7 @@ const MOCK_PARQUES: Parque[] = [
 const MOCK_HOSPEDAJES: Hospedaje[] = [
   {
     id: 1,
-    parque_id: 1,
+    parque_id: 3,
     tipo: "CABANA",
     categoria: "PAREJA",
     capacidad: 2,
@@ -42,7 +42,7 @@ const MOCK_HOSPEDAJES: Hospedaje[] = [
   },
   {
     id: 2,
-    parque_id: 1,
+    parque_id: 3,
     tipo: "CAMPING",
     categoria: "FAMILIAR",
     capacidad: 6,
