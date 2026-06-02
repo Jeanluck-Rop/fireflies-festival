@@ -291,18 +291,28 @@ const MOCK_PARQUES: Parque[] = [
 
 export async function fetchParks(): Promise<Parque[]> {
     const store = useParksStore()
+    store.loading = true
 
     if (USE_MOCK) {
       await new Promise(r => setTimeout(r, 700))
+      store.loading = false
       return MOCK_PARQUES
     }
 
-    // TODO: conexion con back
-    // const res = await fetch(`${API}/api/parques/`)
-    // if (!res.ok)
-    //   throw new Error('Error cargando parques')
-    // const data = await res.json()
-    // store.setParks(data)
-    store.loading = false
-    return []
+    try {
+      const res = await fetch(`${API}/api/parques/`)
+      
+      if (!res.ok) {
+        throw new Error('Error cargando parques desde el servidor')
+      }
+      
+      const data = await res.json()
+      return data
+      
+    } catch (error) {
+      console.error('Fetch Parks Error:', error)
+      return []
+    } finally {
+      store.loading = false
+    }
 }

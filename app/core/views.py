@@ -5,7 +5,7 @@ from decimal import Decimal
 from django.conf import settings
 from django.core.mail import EmailMessage
 from django.db import transaction
-from django.db.models import Count, Q
+from django.db.models import Count, Q, Min, Max
 from django.contrib.auth.hashers import make_password
 
 from rest_framework import viewsets, status, serializers, generics
@@ -128,10 +128,12 @@ class ReservacionViewSet(viewsets.ModelViewSet):
         subtotal = hospedaje.precio_por_noche * noches
         precio_total = subtotal + (subtotal * Decimal('0.05'))
 
-        reservacion = serializer.save(usuario=self.request.user, 
-                                      precio_total=precio_total, 
-                                      hospedaje=hospedaje, 
-                                      parque=hospedaje.parque)
+        reservacion = serializer.save(
+            usuario=self.request.user, 
+            precio_total=precio_total, 
+            hospedaje=hospedaje, 
+            parque=hospedaje.parque
+        )
 
         try:            
             asunto = '¡Tu Reservación está Confirmada! - Festival Luciérnagas 2026'
@@ -249,7 +251,11 @@ class ParqueViewSet(viewsets.ModelViewSet):
 
         return Parque.objects.filter(activo=True).annotate(
             cabanas_libres=Count('hospedajes', filter=filtro_cabanas),
-            campings_libres=Count('hospedajes', filter=filtro_campings)
+            campings_libres=Count('hospedajes', filter=filtro_campings),
+            precio_minimo=Min('hospedajes__precio_por_noche'),
+            precio_maximo=Max('hospedajes__precio_por_noche'),
+            capacidad_minima=Min('hospedajes__capacidad'),
+            capacidad_maxima=Max('hospedajes__capacidad')
         )
     
     @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
