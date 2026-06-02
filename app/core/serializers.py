@@ -1,4 +1,4 @@
-# serializers.py
+from djoser.serializers import UserCreateSerializer, UserSerializer as BaseUserSerializer
 from rest_framework import serializers
 from .models import Parque, ImagenParque, Usuario, Hospedaje, Reservacion, ImagenHospedaje
 
@@ -9,9 +9,9 @@ class UserSerializer(serializers.ModelSerializer):
             'id', 'nombre', 'apellidos', 'email', 'genero', 
             'fecha_nacimiento', 'metodo_pago', 'avatar', 
             'rol', 'is_staff', 'is_superuser', 'created_at',
-            'parque_asignado'
+            'parque_asignado', 'nivel_admin'
         ]
-        read_only_fields = ['id', 'avatar', 'rol', 'is_staff', 'is_superuser', 'created_at', 'parque_asignado']
+        read_only_fields = ['id', 'avatar', 'rol', 'is_staff', 'is_superuser', 'created_at']
 
     def to_internal_value(self, data):
         mutable_data = data.copy() if hasattr(data, 'copy') else data
@@ -41,46 +41,16 @@ class UserSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Este correo ya se encuentra registrado por otro usuario.")
         return value
 
-class ReservacionSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Reservacion
-        fields = [
-            'id', 'parque', 'hospedaje', 'fecha_inicio', 'fecha_fin', 
-            'num_personas', 'tipo_visita', 'estado', 'created_at', 'precio_total'
-        ]
-        read_only_fields = ['id', 'estado', 'created_at', 'precio_total']
-
-    def to_representation(self, instance):
-        rep = super().to_representation(instance)
-        request = self.context.get('request')
-        
-        rep['parque'] = {
-            'id': instance.parque.id,
-            'nombre': instance.parque.nombre,
-            'imagen_mapa': instance.parque.imagen_mapa
-        }
-        
-        imagenes_urls = []
-        for img in instance.hospedaje.imagenes.all():
-            if img.imagen:
-                url = img.imagen.url
-                if request is not None:
-                    url = request.build_absolute_uri(url)
-                imagenes_urls.append(url)
-
-        rep['hospedaje'] = {
-            'id': instance.hospedaje.id,
-            'nombre': f"{instance.hospedaje.get_tipo_display()} {instance.hospedaje.get_categoria_display()}",
-            'imagenes': imagenes_urls
-        }
-        
-        rep['monto'] = rep['precio_total']
-        return rep
-
 class AvatarSerializer(serializers.ModelSerializer):
     class Meta:
         model = Usuario
         fields = ['avatar']
+
+class ImagenParqueSerializer(serializers.ModelSerializer):
+    url = serializers.ImageField(source='imagen')
+    class Meta:
+        model = ImagenParque
+        fields = ['id', 'url']
 
 class ImagenHospedajeSerializer(serializers.ModelSerializer):
     url = serializers.ImageField(source='imagen')
@@ -88,25 +58,10 @@ class ImagenHospedajeSerializer(serializers.ModelSerializer):
         model = ImagenHospedaje
         fields = ['id', 'url']
 
-class HospedajeSerializer(serializers.ModelSerializer):
-    imagenes = ImagenHospedajeSerializer(many=True, read_only=True)
-    
-    class Meta:
-        model = Hospedaje
-        fields = '__all__'
-
-class ImagenParqueSerializer(serializers.ModelSerializer):
-    url = serializers.ImageField(source='imagen')
-    class Meta:
-        model = ImagenParque
-        fields = ['id', 'url'] 
-
 class ParqueSerializer(serializers.ModelSerializer):
     cabanas_libres = serializers.IntegerField(read_only=True)
     campings_libres = serializers.IntegerField(read_only=True)
-    # Traemos la galería de imágenes
     imagenes = ImagenParqueSerializer(many=True, read_only=True)
-    
     hasCabin = serializers.SerializerMethodField()
 
     class Meta:
@@ -115,9 +70,90 @@ class ParqueSerializer(serializers.ModelSerializer):
             'id', 'nombre', 'direccion', 'descripcion', 
             'latitud', 'longitud', 'imagen_mapa', 'imagenes',
             'cabanas_libres', 'campings_libres',
-            'horario_apertura', 'horario_cierre',
-            'hasCabin'
+            'horario_apertura', 'horario_cierre', 'activo', 'hasCabin'
         ]
 
     def get_hasCabin(self, obj):
         return obj.hospedajes.filter(tipo='CABANA').exists()
+
+class UsuarioCreateSerializer(UserCreateSerializer):
+    class Meta(UserCreateSerializer.Meta):
+        model = Usuario
+        fields = ('id', 'email', 'nombre', 'apellidos', 'password')
+
+# --- Serializers de Resumen para el Panel de Administrador ---
+
+class ParqueResumenSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Parque
+        fields = ['id', 'nombre', 'imagen_mapa']
+
+class HospedajeResumenSerializer(serializers.ModelSerializer):
+    nombre = serializers.SerializerMethodField()
+    class Meta:
+        model = Hospedaje
+        fields = ['id', 'nombre']
+
+    def get_nombre(self, obj):
+        return f"{obj.get_tipo_display()} {obj.get_categoria_display()}"
+    
+class UsuarioResumenSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Usuario
+        fields = ['id', 'nombre', 'apellidos', 'email']
+
+class HospedajeSerializer(serializers.ModelSerializer):
+    imagenes = ImagenHospedajeSerializer(many=True, read_only=True)
+    precio = serializers.DecimalField(
+        source='precio_por_noche', 
+        max_digits=10, 
+        decimal_places=2, 
+    )
+
+    class Meta:
+        model = Hospedaje
+        fields = [
+            'id', 'parque', 'tipo', 'categoria', 'capacidad', 
+            'estado', 'num_camas', 'num_banos', 'tiene_agua', 
+            'tiene_luz', 'tiene_regadera', 'descripcion', 
+            'precio', 'imagenes'
+        ]
+
+class ReservacionSerializer(serializers.ModelSerializer):
+    # Lectura anidada
+    parque = ParqueResumenSerializer(read_only=True)
+    hospedaje = HospedajeResumenSerializer(read_only=True)
+    usuario = UsuarioResumenSerializer(read_only=True)
+    
+    # Escritura (para cuando creas la reservación por API mandando solo los IDs)
+    parque_id = serializers.PrimaryKeyRelatedField(queryset=Parque.objects.all(), source='parque', write_only=True, required=False)
+    hospedaje_id = serializers.PrimaryKeyRelatedField(queryset=Hospedaje.objects.all(), source='hospedaje', write_only=True, required=False)
+
+    class Meta:
+        model = Reservacion
+        fields = [
+            'id', 'parque', 'parque_id', 'hospedaje', 'hospedaje_id', 'usuario',
+            'fecha_inicio', 'fecha_fin', 'num_personas', 'tipo_visita', 
+            'estado', 'created_at', 'precio_total'
+        ]
+        read_only_fields = ['id', 'estado', 'created_at', 'precio_total']
+
+    def to_representation(self, instance):
+        rep = super().to_representation(instance)
+        request = self.context.get('request')
+        
+        # Agregamos alias de 'monto' apuntando al precio_total real
+        rep['monto'] = rep.get('precio_total')
+        
+        # Agregamos las URLs de imágenes al hospedaje anidado
+        if 'hospedaje' in rep and rep['hospedaje'] and instance.hospedaje:
+            imagenes_urls = []
+            for img in instance.hospedaje.imagenes.all():
+                if img.imagen:
+                    url = img.imagen.url
+                    if request is not None:
+                        url = request.build_absolute_uri(url)
+                    imagenes_urls.append(url)
+            rep['hospedaje']['imagenes'] = imagenes_urls
+            
+        return rep

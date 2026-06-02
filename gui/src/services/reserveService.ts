@@ -1,5 +1,6 @@
 import { useReservationsStore } from '../stores/reservations'
 import type { Reservacion } from '../stores/reservations'
+import { useAuthStore } from '../stores/auth'
 
 const API = import.meta.env.VITE_API_URL || null
 const USE_MOCK = import.meta.env.VITE_USE_MOCK === 'true'
@@ -79,5 +80,26 @@ export const reserveService = {
     store.setReservaciones(data)
     
     store.loading = false
+  },
+
+  async obtenerPorUsuario(userId: number, token: string) {
+    const res = await fetch(`${API}/api/reservaciones/?usuario_id=${userId}`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    })
+    
+    if (!res.ok) throw new Error(`Error del servidor: ${res.status}`)
+    return await res.json()
+  },
+
+  async cancelar(reservacionId: number, token: string): Promise<void> {
+    const res = await fetch(`${API}/api/reservaciones/${reservacionId}/cancelar/`, {
+      method: 'PATCH',
+      headers: { 'Authorization': `Bearer ${token}` }
+    })
+    
+    if (!res.ok) throw new Error('No se pudo cancelar la reservación')
   }
 }

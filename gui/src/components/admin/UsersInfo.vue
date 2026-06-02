@@ -14,8 +14,10 @@
         v-for="u in filteredUsers"
         :key="u.id"
         :usuario="u"
-        :reservaciones="reservacionesDe(u.email)"
-        @delete="handleDelete" />
+        :reservaciones="reservacionesPorUsuario[u.id] || []"
+        :cargando="cargandoUsuario[u.id] || false"
+        @expand="handleExpand"
+        @delete="handleDelete"/>
 
       <div v-if="filteredUsers.length === 0" class="empty-state">
         No se encontraron usuarios con los filtros aplicados
@@ -26,17 +28,23 @@
 </template>
 
 <script setup lang="ts">
- import { ref, computed } from 'vue'
+ import { ref, computed, onMounted } from 'vue'
  import { useNotification } from '../../composables/useNotification'
  import SearchBar   from '../ui/SearchBar.vue'
  import AdminUserRow from './AdminUserRow.vue'
+ import { useAuthStore } from '../../stores/auth'
+ import { userService } from '../../services/userService'
+ import { reserveService } from '../../services/reserveService.ts' 
  import type { UsuarioAdmin } from './AdminUserRow.vue'
  import type { Reservacion } from '../../stores/reservations'
  import type { FilterDef, FilterValues } from '../ui/SearchBar.vue'
 
  const { show } = useNotification()
+ const authStore = useAuthStore()
  const USE_MOCK = import.meta.env.VITE_USE_MOCK !== 'false'
-
+ const listaUsuarios = ref<UsuarioAdmin[]>([])
+ const cargando = ref(false)
+ const errorMsg = ref('')
  //Mock usuarios
  const mockUsers = ref<UsuarioAdmin[]>([
    { id:1,  nombre:'Fulanito',  apellidos:'Pérez',     email:'fulanito@example.com', rol:'CLIENTE', metodo_pago:'CREDITO',  created_at:'2026-01-15T10:00:00Z'},
@@ -90,6 +98,32 @@
    },
  ])
 
+ const clientes = async () => {
+   if (USE_MOCK) {
+     listaUsuarios.value = mockUsers.value
+     return
+   }
+   cargando.value = true
+   errorMsg.value = ''
+   try {
+     if (!authStore.token) {
+       show('error', 'No tienes una sesión activa')
+       return
+     }
+     const data = await userService.obtenerClientes(authStore.token)
+     listaUsuarios.value = data
+   } catch (error) {
+     errorMsg.value = 'Error al cargar usuarios'
+     console.error(error)
+   } finally {
+     cargando.value = false
+   }
+ }
+
+  onMounted(() => {
+    clientes()
+  })
+
  function reservacionesDe(email: string): Reservacion[] {
    return mockReservaciones.value
 			   .filter(r => r.usuario_email === email)
@@ -107,7 +141,7 @@
  const filters = ref<FilterValues>({ nombre: '', rol: '', estado: '' })
 
  const filteredUsers = computed(() => {
-   let r = mockUsers.value
+   let r = listaUsuarios.value
    if (filters.value.nombre) {
      const q = filters.value.nombre.toLowerCase()
      r = r.filter(u =>
@@ -131,6 +165,51 @@
      return
    }
    // TODO backend: PATCH /api/usuarios/{id}/desactivar/
+   try {
+     if (!authStore.token) {
+       show('error', 'No tienes una sesión activa')
+       return
+     }
+     await userService.eliminarUsuario(id, authStore.token)
+     listaUsuarios.value = listaUsuarios.value.filter(u => u.id !== id)
+     show('exito', 'Usuario eliminado')
+   } catch (error) {
+     show('error', 'Error al eliminar usuario')
+     console.error(error)
+   }
+ }
+
+ // Diccionarios para reservaciones por usuario y estado de carga
+ const reservacionesPorUsuario = ref<Record<number, Reservacion[]>>({})
+ const cargandoUsuario = ref<Record<number, boolean>>({})
+
+ async function handleExpand(userId: number) {
+   if (reservacionesPorUsuario.value[userId]) return
+   cargandoUsuario.value[userId] = true
+
+   if (USE_MOCK) {
+     await new Promise(r => setTimeout(r, 600))
+     const usuarioTarget = listaUsuarios.value.find(u => u.id === userId)
+     
+     if (usuarioTarget) {
+       reservacionesPorUsuario.value[userId] = reservacionesDe(usuarioTarget.email)
+     } else {
+       reservacionesPorUsuario.value[userId] = []
+     }
+     
+     cargandoUsuario.value[userId] = false
+     return
+   }
+
+   try {
+     reservacionesPorUsuario.value[userId] = await reserveService.obtenerPorUsuario(
+     userId, authStore.token!
+    )
+   } catch (error) {
+     show('error', 'Error al cargar el historial')
+   } finally {
+     cargandoUsuario.value[userId] = false
+   }
  }
 
  async function handleActivate(id: number) {

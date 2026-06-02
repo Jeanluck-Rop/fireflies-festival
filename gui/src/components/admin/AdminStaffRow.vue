@@ -24,9 +24,13 @@
     <div class="parque-section">
       <label class="parque-label">Parque asignado</label>
       <div class="parque-control">
-        <select v-model="parqueLocal" class="parque-select">
+        <select 
+          :value="parqueLocal" 
+          @change="parqueLocal = $event.target.value ? Number($event.target.value) : null" 
+          class="parque-select"
+        >
           <option :value="null">Sin asignar</option>
-          <option v-for="p in PARQUES" :key="p.id" :value="p.id">{{ p.nombre }}</option>
+          <option v-for="p in listaParques" :key="p.id" :value="p.id">{{ p.nombre }}</option>
         </select>
         <button
           v-if="parqueChanged"
@@ -62,12 +66,9 @@
 <script setup lang="ts">
  import { ref, computed, watch } from 'vue'
  import { useAuthStore } from '../../stores/auth'
- import { useNotification } from '../../composables/useNotification'
  import AppConfirmDialog from '../ui/AppConfirmDialog.vue'
 
  const auth = useAuthStore()
- const { show } = useNotification()
- const USE_MOCK = import.meta.env.VITE_USE_MOCK !== 'false'
  const isSuperuser = computed(() => !!(auth.user as any)?.is_superuser)
 
  export interface StaffData {
@@ -79,46 +80,32 @@
    avatar?: string | null
  }
 
- const PARQUES = [
-   { id: 1, nombre: 'Parque Sierra Chincua'  },
-   { id: 2, nombre: 'Parque Piedra Herrada'  },
-   { id: 3, nombre: 'Parque El Rosario'      },
- ]
+ // 1. Recibimos los datos y el catálogo dinámico desde el Padre
+ const props = defineProps<{ 
+   staff: StaffData,
+   listaParques: { id: number; nombre: string }[] 
+ }>()
 
- const props = defineProps<{ staff: StaffData }>()
  const emit  = defineEmits<{
    delete: [id: number]
    updateParque: [id: number, parqueId: number | null]
  }>()
 
  const parqueLocal  = ref<number | null>(props.staff.parque_asignado)
- const savingParque = ref(false)
  const showDeleteDialog = ref(false)
 
  const parqueChanged = computed(() => parqueLocal.value !== props.staff.parque_asignado)
 
- //Si el prop cambia desde afuera, sincronizar
  watch(() => props.staff.parque_asignado, v => { parqueLocal.value = v })
 
- async function saveParque() {
-   savingParque.value = true
-   if (USE_MOCK) {
-     await new Promise(r => setTimeout(r, 400))
-     emit('updateParque', props.staff.id, parqueLocal.value)
-     const nombre = PARQUES.find(p => p.id === parqueLocal.value)?.nombre ?? 'sin parque'
-     show('exito', `Parque de ${props.staff.nombre} actualizado a ${nombre}`)
-     // Backend enviaria correo de reasignación
-   } else {
-     // TODO backend: PATCH /api/staff/{id}/ con parque_asignado
-     // El backend envía correo de reasignación al staff
-   }
-   savingParque.value = false
+ function saveParque() {
+   emit('updateParque', props.staff.id, parqueLocal.value)
  }
 
  const initials = computed(() =>
    ((props.staff.nombre[0] ?? '') + (props.staff.apellidos[0] ?? '')).toUpperCase()
  )
-</script>
+ </script>
 
 <style scoped>
  .staff-row {

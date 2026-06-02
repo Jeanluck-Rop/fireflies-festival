@@ -95,12 +95,14 @@
  import { ref, computed } from 'vue'
  import { useAuthStore } from '../../stores/auth'
  import { useNotification } from '../../composables/useNotification'
+ import { reserveService } from '../../services/reserveService.ts'
  import type { Reservacion } from '../../stores/reservations'
  import AppConfirmDialog from '../ui/AppConfirmDialog.vue'
  import ReservationRow   from '../reservations/ReservationRow.vue'
  import IconDot          from '../svg/IconDot.vue'
  import IconChevronUp    from '../svg/IconChevronUp.vue'
  import IconChevronDown  from '../svg/IconChevronDown.vue'
+ import router from '../../router/index.ts'
 
  const auth = useAuthStore()
  const { show } = useNotification()
@@ -119,17 +121,26 @@
 
  const props = defineProps<{
    usuario: UsuarioAdmin
-   reservaciones: Reservacion[]   // ya filtradas por este usuario
+   reservaciones: Reservacion[]
+   cargando: boolean
  }>()
 
- defineEmits<{ delete: [id: number] }>()
+ const emit = defineEmits<{ 
+  delete: [id: number], 
+  expand: [id: number]
+ }>()
 
  //Expand
  const isExpanded         = ref(false)
  const showDeactivateDialog = ref(false)
  const filterEstado       = ref('')
 
- function toggle() { isExpanded.value = !isExpanded.value }
+ function toggle() {
+  isExpanded.value = !isExpanded.value
+  if (isExpanded.value) {
+     emit('expand', props.usuario.id)
+   }
+}
 
  const filteredReserv = computed(() => {
    if (!filterEstado.value) return props.reservaciones
@@ -137,12 +148,25 @@
  })
 
  //Cancelar reservacion (perspectiva admin)
- function handleCancelReserv(r: Reservacion) {
+ async function handleCancelReserv(r: Reservacion) {
    if (USE_MOCK) {
      show('normal', `Reservación #${r.id} cancelada`)
      return
    }
-   // TODO backend: PATCH /api/reservaciones/{id}/cancelar/
+   try {
+     if (!auth.token) {
+        show('error', 'Sesión expirada')
+        router.push('/login')
+        return
+     }
+     await reserveService.cancelar(r.id, auth.token)
+     r.estado = 'CANCELADA'
+     show('exito', `Reservación #${r.id} cancelada`)
+
+   } catch (error) {
+     show('error', 'Error al intentar cancelar la reservación')
+     console.error(error)
+   }
  }
 
  //Helpers

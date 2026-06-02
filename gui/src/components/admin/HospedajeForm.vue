@@ -80,11 +80,11 @@
     <div class="field-group">
       <label class="field-label">Imágenes</label>
       <div class="images-gallery">
-        <div v-for="(img, idx) in localImages" :key="idx" class="img-thumb">
+        <div v-for="(img, idx) in (form.imagenes ?? [])" :key="idx" class="img-thumb">
           <img :src="img.url" alt="imagen" />
-	  <button class="img-remove" @click="localImages.splice(idx, 1)">
-	    <IconCross size="8px" />
-	  </button>
+        <button class="img-remove" @click="$emit('removeImage', idx)">
+          <IconCross size="8px" />
+        </button>
         </div>
         <label class="img-add">
           <input type="file" accept="image/*" multiple style="display:none" @change="addImages" />
@@ -112,25 +112,27 @@
  import IconCross from '../svg/IconCross.vue'
 
  const props = defineProps<{
-   form: any
-   saving?: boolean
-   showEstado?: boolean
+  form: any
+  saving?: boolean
+  showEstado?: boolean
  }>()
 
- defineEmits<{ save: []; cancel: [] }>()
+ defineEmits<{ save: []; cancel: []; removeImage: [idx: number] }>()
 
- const localImages = ref<{ url: string }[]>([])
 
- function addImages(e: Event) {
-   const files = (e.target as HTMLInputElement).files
-   if (!files) return
-   Array.from(files).forEach(file => {
-     const reader = new FileReader()
-     reader.onload = ev => localImages.value.push({ url: ev.target?.result as string })
-     reader.readAsDataURL(file)
-     // TODO backend: POST /api/hospedajes/{id}/imagenes/
-   })
- }
+ if (!props.form.imagenes) props.form.imagenes = []
+
+function addImages(e: Event) {
+  const files = (e.target as HTMLInputElement).files
+  if (!files) return
+  Array.from(files).forEach(file => {
+    const reader = new FileReader()
+    reader.onload = ev => {
+      props.form.imagenes.push({ id: null, url: ev.target?.result as string, file })
+    }
+    reader.readAsDataURL(file)
+  })
+}
 </script>
 
 <style scoped>
