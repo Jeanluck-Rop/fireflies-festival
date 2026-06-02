@@ -1,5 +1,5 @@
 <template>
-  <div class="card-images" @mouseenter="stop" @mouseleave="start">
+  <div class="card-images" :class="aspect" @mouseenter="stop" @mouseleave="start">
     <transition name="fade-img" mode="out-in">
       <img
         v-if="images?.length"
@@ -44,10 +44,18 @@ interface ImageItem {
   url: string;
 }
 
-const props = defineProps<{
-  images?: ImageItem[];
-  alt?: string;
-}>();
+const props = withDefaults(
+  defineProps<{
+    images?: ImageItem[];
+    alt?: string;
+    aspect?: string;
+  }>(),
+  {
+    images: () => [],
+    alt: "",
+    aspect: "aspect-video",
+  }
+);
 
 const {
   currentIndex: currentImageIndex,
@@ -63,15 +71,19 @@ const {
 .card-images {
   position: relative;
   width: 100%;
-  height: 200px;
   overflow: hidden;
   background: #0d1a10;
+  display: flex;
 }
 
 .card-img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  object-position: center;
+  position: absolute;
+  top: 0;
+  left: 0;
 }
 
 .card-img-placeholder {
@@ -79,6 +91,7 @@ const {
   align-items: center;
   justify-content: center;
   height: 100%;
+  width: 100%;
 }
 
 /* botones */
