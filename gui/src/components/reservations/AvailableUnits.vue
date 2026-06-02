@@ -58,7 +58,7 @@
 
           <div class="mt-auto pt-4 border-t border-white/5 flex items-center justify-between">
             <span class="text-[15px] font-medium text-white">
-              {{ formatCurrency(u.tarifa_noche) }} <span class="text-[11px] font-mono text-bone-soft uppercase tracking-widest font-normal">/ noche</span>
+              {{ formatCurrency(u.precio) }} <span class="text-[11px] font-mono text-bone-soft uppercase tracking-widest font-normal">/ noche</span>
             </span>
             
             <div class="w-6 h-6 rounded-full border flex items-center justify-center transition-colors duration-200"
