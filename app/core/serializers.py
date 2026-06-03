@@ -101,6 +101,23 @@ class UsuarioCreateSerializer(UserCreateSerializer):
     class Meta(UserCreateSerializer.Meta):
         model = Usuario
         fields = ('id', 'email', 'nombre', 'apellidos', 'password')
+# No lo borren, papus, es para el admin
+class UsuarioSerializer(UserSerializer):
+    class Meta(UserSerializer.Meta):
+        model = Usuario
+        fields = (
+            'id', 
+            'email', 
+            'nombre', 
+            'apellidos', 
+            'rol', 
+            'metodo_pago', 
+            'is_staff', 
+            'is_superuser',
+            'nivel_admin',
+            'created_at',
+            'parque_asignado'
+        )
 
 # --- Serializers de Resumen para el Panel de Administrador ---
 
