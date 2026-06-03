@@ -16,6 +16,8 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.parsers import MultiPartParser, FormParser
 
 from djoser.views import UserViewSet
+from djoser.signals import user_registered
+from django.dispatch import receiver
 
 from .models import Parque, Usuario, Hospedaje, Reservacion, EmailNotificacion, ImagenParque, ImagenHospedaje
 from .serializers import (ParqueSerializer, UserSerializer, AvatarSerializer, 
@@ -45,7 +47,20 @@ class UserMeView(APIView):
 
     def delete(self, request):
         user = request.user
+        email_dest = user.email
+        nombre_dest = user.nombre
+        
         user.delete()
+
+        # CASO 2: CORREO CUANDO EL USUARIO BORRA SU PROPIA CUENTA
+        try:
+            asunto = 'Lamentamos verte partir - Festival Luciérnagas'
+            mensaje = f"Hola {nombre_dest},\n\nTu cuenta ha sido eliminada de nuestro sistema correctamente. Te extrañaremos en el bosque. Esperamos verte de nuevo en el futuro."
+            correo = EmailMessage(asunto, mensaje, settings.EMAIL_HOST_USER, [email_dest])
+            correo.send(fail_silently=True)
+        except Exception as e:
+            print(f"Error correo eliminación: {e}")
+
         return Response({"detail": "Cuenta eliminada correctamente."}, status=status.HTTP_204_NO_CONTENT)
 
 
@@ -62,6 +77,24 @@ class UserAvatarView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
+@receiver(user_registered)
+def enviar_correo_bienvenida_djoser(sender, user, request, **kwargs):
+    try:
+        asunto = '¡Bienvenido al Festival de las Luciérnagas 2026!'
+        mensaje = f"""Hola {user.nombre},
+
+¡Tu cuenta ha sido creada exitosamente! 
+
+Gracias por unirte a nuestra plataforma. Ya puedes iniciar sesión, explorar nuestros parques y realizar tus reservaciones para vivir la magia del bosque.
+
+Saludos,
+El equipo del Festival."""
+        correo = EmailMessage(asunto, mensaje, settings.EMAIL_HOST_USER, [user.email])
+        correo.send(fail_silently=True)
+    except Exception as e:
+        print(f"Error correo bienvenida: {e}")
+
+
 class ClienteViewSet(UserViewSet):
     # This excludes superusers
     def get_queryset(self):
@@ -76,18 +109,33 @@ class ClienteViewSet(UserViewSet):
     
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
+        email_dest = instance.email
+        nombre_dest = instance.nombre
+
         if request.user.is_staff or request.user.is_superuser or request.user.rol == 'ADMIN':
             instance.delete()
+            self._enviar_correo_eliminacion(email_dest, nombre_dest)
             return Response(status=status.HTTP_204_NO_CONTENT)
             
         elif request.user == instance:
-            return super().destroy(request, *args, **kwargs)
+            response = super().destroy(request, *args, **kwargs)
+            self._enviar_correo_eliminacion(email_dest, nombre_dest)
+            return response
 
         else:
             return Response(
                 {"detail": "Unauthorized deletion."},
                 status=status.HTTP_403_FORBIDDEN
             )
+            
+    def _enviar_correo_eliminacion(self, email_dest, nombre_dest):
+        try:
+            asunto = 'Lamentamos verte partir - Festival Luciérnagas'
+            mensaje = f"Hola {nombre_dest},\n\nTu cuenta ha sido eliminada de nuestro sistema correctamente. Te extrañaremos en el bosque. Esperamos verte de nuevo en el futuro."
+            correo = EmailMessage(asunto, mensaje, settings.EMAIL_HOST_USER, [email_dest])
+            correo.send(fail_silently=True)
+        except Exception as e:
+            print(f"Error correo eliminación: {e}")
             
 
 class ReservacionViewSet(viewsets.ModelViewSet):
@@ -215,6 +263,32 @@ Detalles de tu viaje:
                     precio_total=precio_calculado,
                     estado=Reservacion.Estado.ACTIVA
                 )
+
+                try:            
+                    asunto = '¡Tu Reservación está Confirmada! - Festival Luciérnagas 2026'
+                    mensaje = f"""Hola {usuario.nombre},
+
+¡Tu reservación ha sido generada con éxito desde nuestra administración!
+
+Detalles de tu viaje:
+- Parque: {parque.nombre}
+- Llegada: {d1}
+- Salida: {d2}
+- Tipo: {hospedaje.get_tipo_display()}
+- Personas: {data['num_personas']}
+- Total a pagar: ${precio_calculado} MXN
+
+¡Te esperamos para vivir la magia del bosque!
+"""
+                    correo = EmailMessage(
+                        subject=asunto,
+                        body=mensaje,
+                        from_email=settings.EMAIL_HOST_USER,
+                        to=[usuario.email]
+                    )
+                    correo.send(fail_silently=False)
+                except Exception as e:
+                    print(f"Error al enviar correo de reservación desde admin: {e}")
 
                 return Response({
                     "detail": "Reservación creada exitosamente",
