@@ -96,7 +96,6 @@ class Parque(models.Model):
     longitud = models.FloatField()
     horario_apertura = models.TimeField()
     horario_cierre = models.TimeField()
-    imagen_mapa = models.CharField(max_length=500, null=True, blank=True)
     activo = models.BooleanField(default=True)
 
     class Meta:
@@ -148,8 +147,6 @@ class Hospedaje(models.Model):
     tiene_agua = models.BooleanField(default=False)
     tiene_luz = models.BooleanField(default=False)
     tiene_regadera = models.BooleanField(default=False)
-    pos_x = models.FloatField(null=True, blank=True)
-    pos_y = models.FloatField(null=True, blank=True)
     descripcion = models.TextField(null=True, blank=True)
 
     class Meta:
