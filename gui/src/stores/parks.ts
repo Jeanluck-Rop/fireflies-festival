@@ -4,7 +4,6 @@ import * as parksApi from '../services/parkService'
 
 export interface ImagenParque {
   id: number
-  parque: number
   url: string
 }
 
@@ -33,23 +32,6 @@ export interface Parque {
   capacidad_maxima: number
   cabanas_libres?: number
   campings_libres?: number
-}
-
-export interface HospedajeDetalle {
-  id: number
-  parque: number
-  tipo: 'CABANA' | 'CAMPING'
-  categoria: string
-  capacidad: number
-  estado: 'DISPONIBLE' | 'OCUPADO' | 'MANTENIMIENTO'
-  num_camas: number | null
-  num_banos: number | null
-  tiene_agua: boolean
-  tiene_luz: boolean
-  tiene_regadera: boolean
-  descripcion: string
-  precio: number
-  imagenes: Array<{id: number, url: string}>
 }
 
 export const useParksStore = defineStore('parks', () => {
