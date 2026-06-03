@@ -238,6 +238,21 @@ Detalles de tu viaje:
                         rol=Usuario.Rol.CLIENTE,
                         password=make_password(password_temporal)
                     )
+                    try:
+                        asunto = '¡Tu cuenta ha sido creada! - Festival Luciérnagas'
+                        mensaje = f"""Hola {usuario.nombre},
+Hemos creado una cuenta para ti desde nuestra administración.
+
+Tus credenciales de acceso son:
+- Correo: {usuario.email}
+- Contraseña temporal: {password_temporal}
+
+Te recomendamos iniciar sesión y cambiar tu contraseña lo antes posible.
+"""
+                        correo = EmailMessage(asunto, mensaje, settings.EMAIL_HOST_USER, [usuario.email])
+                        correo.send(fail_silently=True)
+                    except Exception as e:
+                        print(f"Error al enviar contraseña temporal al cliente: {e}")
                 else:
                     return Response({"detail": "Faltan datos del cliente"}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -496,6 +511,22 @@ class StaffViewSet(viewsets.ModelViewSet):
                     password=make_password(password_temporal),
                     parque_asignado_id=data.get('parque_asignado')
                 )
+                try:
+                    asunto = 'Cuenta de Administrador Creada'
+                    mensaje = f"""Hola {nuevo_staff.nombre},
+
+Se te ha asignado una cuenta de administrador en el sistema.
+
+Tus credenciales de acceso son:
+- Correo: {nuevo_staff.email}
+- Contraseña temporal: {password_temporal}
+
+Por motivos de seguridad, cambia tu contraseña al iniciar sesión por primera vez.
+"""
+                    correo = EmailMessage(asunto, mensaje, settings.EMAIL_HOST_USER, [nuevo_staff.email])
+                    correo.send(fail_silently=True)
+                except Exception as e:
+                    print(f"Error al enviar contraseña temporal al staff: {e}")
                 return Response({
                     "id": nuevo_staff.id,
                     "nombre": nuevo_staff.nombre,
