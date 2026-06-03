@@ -96,6 +96,11 @@ export const reservationService = {
   async crearReservacion(reservaData: any) {
     const auth = useAuthStore();
 
+    if (USE_MOCK) {
+      await new Promise((r) => setTimeout(r, 500));
+      return;
+    }
+
     const payload = {
       parque: reservaData.parque.id,
       hospedaje: reservaData.unidad.id,
