@@ -35,28 +35,48 @@ def poblar_base_de_datos():
     print("Creando usuarios...")
     usuarios_creados = []
     
-    # Crear 2 Administradores
-    for i in range(1, 3):
-        admin = Usuario.objects.create(
-            nombre=f"Admin{i}",
-            apellidos="Sistema",
-            email=f"admin{i}@festival.com",
-            password=make_password("password123"),
-            rol=Usuario.Rol.ADMIN,
-            is_staff=True
-        )
-        usuarios_creados.append(admin)
+    # 1. Crear el Administrador del Sistema del README
+    admin_principal = Usuario.objects.create_superuser(
+        nombre="Super",
+        apellidos="Admin",
+        email="admin_sistema@luciernagas.com", # El del README
+        password="AdminPassword123",           # El del README
+        rol=Usuario.Rol.ADMIN
+    )
+    usuarios_creados.append(admin_principal)
 
-    # Crear 20 Clientes
+    # 2. Crear un segundo Administrador de respaldo
+    admin_respaldo = Usuario.objects.create_superuser(
+        nombre="Admin2",
+        apellidos="Sistema",
+        email="admin2@festival.com",
+        password="password123",
+        rol=Usuario.Rol.ADMIN
+    )
+    usuarios_creados.append(admin_respaldo)
+
+    # 3. Crear el Cliente de Prueba específico del README
+    cliente_principal = Usuario.objects.create_user(
+        nombre="Juan",
+        apellidos="Pérez",
+        email="cliente@luciernagas.com", # El del README
+        password="Password123",          # El del README
+        rol=Usuario.Rol.CLIENTE,
+        genero=Usuario.Genero.MASCULINO,
+        fecha_nacimiento=date(1990, 5, 15)
+    )
+    usuarios_creados.append(cliente_principal)
+
+    # Crear los otros 19 Clientes aleatorios restantes para completar los 20
     nombres_base = ["Carlos", "Ana", "Luis", "Maria", "Jorge", "Lucia", "Miguel", "Sofia", "Pedro", "Elena", "Raul", "Laura", "Diego", "Carmen", "Andres", "Marta", "Fernando", "Patricia", "Roberto", "Teresa"]
     apellidos_base = ["Gomez", "Perez", "Rodriguez", "Lopez", "Martinez", "Gonzalez", "Hernandez", "Garcia", "Fernandez", "Ruiz"]
 
-    for i in range(20):
-        cliente = Usuario.objects.create(
+    for i in range(19): # Ajustado a 19 porque ya creamos al cliente principal arriba
+        cliente = Usuario.objects.create_user(
             nombre=nombres_base[i],
             apellidos=random.choice(apellidos_base),
             email=f"cliente{i+1}@correo.com",
-            password=make_password("password123"),
+            password="password123",
             rol=Usuario.Rol.CLIENTE,
             genero=random.choice([Usuario.Genero.MASCULINO, Usuario.Genero.FEMENINO]),
             fecha_nacimiento=date(random.randint(1980, 2000), random.randint(1, 12), random.randint(1, 28))
