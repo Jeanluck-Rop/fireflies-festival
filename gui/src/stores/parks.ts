@@ -37,15 +37,19 @@ export interface Parque {
 
 export interface HospedajeDetalle {
   id: number
+  parque: number
   tipo: 'CABANA' | 'CAMPING'
   categoria: string
   capacidad: number
-  tarifa_noche: number
+  estado: 'DISPONIBLE' | 'OCUPADO' | 'MANTENIMIENTO'
+  num_camas: number | null
+  num_banos: number | null
   tiene_agua: boolean
   tiene_luz: boolean
   tiene_regadera: boolean
   descripcion: string
-  imagenes: string[]
+  precio: number
+  imagenes: Array<{id: number, url: string}>
 }
 
 export const useParksStore = defineStore('parks', () => {
@@ -67,6 +71,8 @@ export const useParksStore = defineStore('parks', () => {
   watch([priceMin, priceMax], ([min, max]) => {
     if (min !== '' && max !== '' && Number(min) > Number(max)) {
       priceError.value = 'El mínimo no puede exceder el máximo.'
+    } else if ((min !== '' && (isNaN(Number(min)) || Number(min) < 0)) || (max !== '' && (isNaN(Number(max)) || Number(max) < 0))) {
+      priceError.value = 'Los precios deben ser números válidos y no negativos.'
     } else {
       priceError.value = ''
     }
@@ -76,6 +82,8 @@ export const useParksStore = defineStore('parks', () => {
   watch(visitors, (val) => {
     if (val !== '' && (!/^\d+$/.test(String(val)) || Number(val) < 1)) {
       visitorsError.value = 'El número debe ser mayor que cero.'
+    } else if (val !== '' && isNaN(Number(val))) {
+      visitorsError.value = 'El número de visitantes debe ser un número válido.'
     } else {
       visitorsError.value = ''
     }
@@ -114,8 +122,8 @@ export const useParksStore = defineStore('parks', () => {
       (Number(visitors.value) < p.capacidad_minima || Number(visitors.value) > p.capacidad_maxima)) return false
       if (priceMin.value !== '' && p.precio_maximo < Number(priceMin.value)) return false
       if (priceMax.value !== '' && p.precio_minimo > Number(priceMax.value)) return false
-      if (timeOpen.value && p.horario_apertura < timeOpen.value) return false
-      if (timeClose.value && p.horario_cierre > timeClose.value) return false
+      if (timeOpen.value && p.horario_apertura > timeOpen.value) return false
+      if (timeClose.value && p.horario_cierre < timeClose.value) return false
 
       return true
     })

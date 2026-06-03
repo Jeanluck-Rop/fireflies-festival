@@ -1,5 +1,5 @@
 import { useParksStore } from '../stores/parks'
-import type { Parque } from '../stores/parks'
+import type { Parque, HospedajeDetalle } from '../stores/parks'
 import cabinnight from '../assets/cabin-night.jpg'
 import campingnight from '../assets/camping-night.jpg'
 import fireflires1 from '../assets/fireflires_auth_background.jpg'
@@ -295,7 +295,6 @@ export async function fetchParks(): Promise<Parque[]> {
 
     if (USE_MOCK) {
       await new Promise(r => setTimeout(r, 700))
-      store.loading = false
       return MOCK_PARQUES
     }
 
@@ -315,4 +314,115 @@ export async function fetchParks(): Promise<Parque[]> {
     } finally {
       store.loading = false
     }
+}
+
+export async function fetchHospedajesByPark(parkId: number): Promise<HospedajeDetalle[]> {
+    if (USE_MOCK) {
+      await new Promise(r => setTimeout(r, 500))
+      // Retorna datos mock según el parque
+      return getMockHospedajes(parkId)
+    }
+
+    if (!API) return []
+
+    try {
+      const response = await fetch(`${API}/api/hospedajes/?parque_id=${parkId}`)
+      if (!response.ok) throw new Error('Error fetching hospedajes')
+      return await response.json()
+    } catch (error) {
+      console.error('Error cargando hospedajes:', error)
+      return []
+    }
+}
+
+function getMockHospedajes(parkId: number): HospedajeDetalle[] {
+  const mockData: Record<number, HospedajeDetalle[]> = {
+    1: [
+      {
+        id: 1,
+        parque: 1,
+        tipo: 'CABANA',
+        categoria: 'PAREJA',
+        capacidad: 2,
+        estado: 'DISPONIBLE',
+        num_camas: 1,
+        num_banos: 1,
+        tiene_agua: true,
+        tiene_luz: true,
+        tiene_regadera: true,
+        descripcion: 'Cabaña acogedora con vista al bosque',
+        precio: 1200,
+        imagenes: [{id: 1, url: fireflires1}, {id: 2, url: fireflires2}, 
+        {id: 3, url: fireflires3}, {id: 4, url: hero}, 
+        {id: 5, url: cabinnight}, {id: 6, url: campingnight}],
+      },
+      {
+        id: 2,
+        parque: 1,
+        tipo: 'CABANA',
+        categoria: 'FAMILIAR',
+        capacidad: 6,
+        estado: 'OCUPADO',
+        num_camas: 3,
+        num_banos: 2,
+        tiene_agua: true,
+        tiene_luz: true,
+        tiene_regadera: true,
+        descripcion: 'Cabaña grande perfecta para familias',
+        precio: 2000,
+        imagenes: []
+      },
+      {
+        id: 3,
+        parque: 1,
+        tipo: 'CAMPING',
+        categoria: 'INDIVIDUAL',
+        capacidad: 1,
+        estado: 'DISPONIBLE',
+        num_camas: 0,
+        num_banos: null,
+        tiene_agua: true,
+        tiene_luz: false,
+        tiene_regadera: false,
+        descripcion: 'Zona de camping individual',
+        precio: 500,
+        imagenes: []
+      },
+      {
+        id: 4,
+        parque: 1,
+        tipo: 'CAMPING',
+        categoria: 'PAREJA',
+        capacidad: 2,
+        estado: 'MANTENIMIENTO',
+        num_camas: 0,
+        num_banos: null,
+        tiene_agua: false,
+        tiene_luz: false,
+        tiene_regadera: false,
+        descripcion: 'Zona de camping para parejas',
+        precio: 800,
+        imagenes: []
+      }
+    ],
+    2: [
+      {
+        id: 5,
+        parque: 2,
+        tipo: 'CAMPING',
+        categoria: 'PAREJA',
+        capacidad: 2,
+        estado: 'DISPONIBLE',
+        num_camas: 0,
+        num_banos: null,
+        tiene_agua: true,
+        tiene_luz: true,
+        tiene_regadera: false,
+        descripcion: 'Camping con electricidad para parejas',
+        precio: 800,
+        imagenes: []
+      }
+    ]
+  }
+  return mockData[parkId] || []
 }

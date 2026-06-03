@@ -86,7 +86,7 @@ class ParqueSerializer(serializers.ModelSerializer):
         model = Parque
         fields = [
             'id', 'nombre', 'direccion', 'descripcion', 
-            'latitud', 'longitud', 'imagen_mapa', 'imagenes',
+            'latitud', 'longitud', 'imagenes',
             'cabanas_libres', 'campings_libres',
             'horario_apertura', 'horario_cierre', 'activo',
             'hasCabin', 'servicios',
@@ -107,7 +107,7 @@ class UsuarioCreateSerializer(UserCreateSerializer):
 class ParqueResumenSerializer(serializers.ModelSerializer):
     class Meta:
         model = Parque
-        fields = ['id', 'nombre', 'imagen_mapa']
+        fields = ['id', 'nombre']
 
 class HospedajeResumenSerializer(serializers.ModelSerializer):
     nombre = serializers.SerializerMethodField()
