@@ -1,10 +1,10 @@
 import { defineStore } from "pinia";
 import { ref } from "vue";
 import * as parkService from "../services/parkService";
-import type { HospedajeDetalle } from "./parks";
+import type { Hospedaje } from "./reservationStore";
 
 export const useLodgingStore = defineStore("lodging", () => {
-  const hospedajes = ref<HospedajeDetalle[]>([]);
+  const hospedajes = ref<Hospedaje[]>([]);
   const loading = ref(false);
   const currentParkId = ref<number | null>(null);
 
