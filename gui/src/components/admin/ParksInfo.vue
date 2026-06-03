@@ -944,7 +944,16 @@ function removeHospedajeImage(hospedajeId: number, idx: number) {
      show('exito', 'Hospedaje actualizado correctamente')
    } else {
      try {
-       const payload = hospedajeEditForms[id]
+        const nuevas = (payload.imagenes ?? []).filter((img: any) => img.file)
+       if (nuevas.length > 0) {
+         const formData = new FormData()
+         nuevas.forEach((img: any) => formData.append('imagenes', img.file))
+         await fetch(`${API}/api/hospedajes/${id}/imagenes/`, {
+           method: 'POST',
+           headers: { Authorization: `Bearer ${auth.token}` },
+           body: formData
+         })
+       }
        const res = await fetch(`${API}/api/hospedajes/${id}/`, {
          method: 'PATCH',
          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${auth.token}` },
