@@ -1,6 +1,7 @@
 <template>
   <div class="flex flex-col">
     <HeroSection />
+    <KonamiMonkey />
     <HowToSection />
     <CabinVsCamping />
     <DidYouKnow />
@@ -16,4 +17,5 @@ import CabinVsCamping from '../components/landing/CabinVsCamping.vue';
 import DidYouKnow from '../components/landing/DidYouKnow.vue';
 import FinalCTA from '../components/landing/FinalCTA.vue';
 import FooterSection from '../components/landing/FooterSection.vue';
+import KonamiMonkey from '../components/landing/KonamiMonkey.vue';
 </script>
