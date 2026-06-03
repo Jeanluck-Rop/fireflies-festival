@@ -82,14 +82,19 @@
 import AppLink from '../ui/AppLink.vue';
 import { MapPinned, UserPlus, MoonStar, MonitorSmartphone, Shrub, CalendarDays, CalendarSearch } from 'lucide-vue-next';
 import { startFireflies } from '../../utils/fireflies';
-import { onMounted, onBeforeUnmount, ref } from 'vue';
+import { onMounted, onBeforeUnmount, ref, computed } from 'vue';
 import { useAuthStore } from '../../stores/auth';
+import { useParksStore } from '../../stores/parks';
 
 const auth = useAuthStore();
+const parksStore = useParksStore();
 
 const canvasRef = ref<HTMLCanvasElement | null>(null);
 let stop: (() => void) | null = null
 onMounted(() => {
+  if (parksStore.parks.length === 0) {
+    parksStore.loadParks();
+  }
   if (!canvasRef.value) return;
   stop = startFireflies(canvasRef.value, {
     count: 50
@@ -101,18 +106,14 @@ onBeforeUnmount(() => {
 
 const badges = [
   { label: "100% reservas en línea", icon: MonitorSmartphone },
-  { label: "8 parques oficiales", icon: Shrub },
+  { label: "Parques oficiales", icon: Shrub },
   { label: "3 meses de festival", icon: CalendarDays },
 ]
 
-const lugares = [
-  'Bosque Encantado',
-  'Valle de las Sombras',
-  'Río Susurrante',
-  'Colina de los Suspiros',
-  'Pradera Estelar',
-  'Cueva de los Ecos',
-];
+const lugares = computed(() => {
+  const nombres = parksStore.parks.map(parque => parque.nombre);
+  return nombres.length > 0 ? nombres : ['Cargando lugares mágicos...'];
+});
 </script>
 
 <style scoped>
