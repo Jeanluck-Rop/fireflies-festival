@@ -38,7 +38,7 @@
             <div class="hairline-flat" style="background: var(--color-accent);"></div>
             <div class="flex items-baseline justify-between gap-3">
               <span class="label-mono">Tarifa por noche</span>
-              <span class="text-[13.5px]">{{ formatCurrency(store.reservaResumen.tarifa_noche) }}</span>
+              <span class="text-[13.5px]">{{ formatCurrency(store.reservaResumen.precio) }}</span>
             </div>
             <div class="flex items-baseline justify-between gap-3">
               <span class="label-mono">Subtotal</span>
@@ -118,9 +118,11 @@ import { Info, CircleQuestionMark, Mail } from 'lucide-vue-next';
 import { useReservationStore } from '../../stores/reservationStore.ts';
 import { reservationService } from '../../services/reservationService.ts';
 import AppButton from '../ui/AppButton.vue';
+import { useNotification } from '../../composables/useNotification.ts';
 
 const store = useReservationStore();
 const loadingReserva = ref(false);
+const { show } = useNotification();
 
 const formatDate = (isoString: string | null) => {
   if (!isoString) return '—';
@@ -172,8 +174,10 @@ const handleReservation = async () => {
     
   } catch (error: any) {
     console.error("Fallo en el backend:", error);
-    const msjError = error.error || error.detail || error.fecha_inicio || "Hubo un problema al crear la reservación.";
-    alert("Error: " + msjError);
+    const msjError = error.error || error.detail || 
+    (Array.isArray(error.fecha_inicio) ? error.fecha_inicio[0] : error.fecha_inicio) || "Hubo un problema al crear la reservación.";
+    show('error', msjError, 10000);
+    store.resetearReserva();
   } finally {
     loadingReserva.value = false;
   }

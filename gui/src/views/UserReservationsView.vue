@@ -129,7 +129,7 @@
         </div>
       </div>
     </div>
-
+    <FooterSection />
   </div>
 </template>
 
@@ -145,6 +145,7 @@
  import { useReservationsStore } from '../stores/reservations'
  import type { Reservacion }    from '../stores/reservations'
  import type { FilterDef, FilterValues } from '../components/ui/SearchBar.vue'
+ import FooterSection from '../components/landing/FooterSection.vue'
 
  const router = useRouter()
  const store  = useReservationsStore()

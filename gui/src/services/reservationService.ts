@@ -37,7 +37,7 @@ const MOCK_HOSPEDAJES: Hospedaje[] = [
     num_camas: 1,
     num_banos: 1,
     descripcion: "Cabaña sencilla para parejas",
-    tarifa_noche: 1200,
+    precio: 1200,
     imagenes: [],
   },
   {
@@ -50,7 +50,7 @@ const MOCK_HOSPEDAJES: Hospedaje[] = [
     num_camas: 0,
     num_banos: 0,
     descripcion: "Zona de camping familiar, hasta 6 personas",
-    tarifa_noche: 480,
+    precio: 480,
     imagenes: [],
   },
 ];
