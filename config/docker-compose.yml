@@ -15,6 +15,7 @@ services:
       timeout: 3s
       retries: 5
       start_period: 10s
+
   app:
     build:
       context: ..
@@ -24,11 +25,16 @@ services:
     volumes:
       - ../app:/app
     depends_on:
-      - db
+      db:
+        condition: service_healthy # Espera a que la BD esté 100% lista
     env_file:
       - ../app/.env
     environment:
       DB_HOST: db
+    # Aplica migraciones automáticamente antes de levantar el servidor
+    command: >
+      sh -c "python manage.py migrate && 
+             python manage.py runserver 0.0.0.0:8000"
 
   gui:
     build:
@@ -38,8 +44,11 @@ services:
       - "5173:5173"
     volumes:
       - ../gui:/app
+      - /app/node_modules # Aísla los módulos para que no se borren
     depends_on:
       - app
+    # Instala dependencias nuevas automáticamente antes de iniciar Vue
+    command: sh -c "npm install && npm run dev -- --host"
 
 volumes:
   postgres_data:
