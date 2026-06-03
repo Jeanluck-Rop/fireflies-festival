@@ -1,4 +1,6 @@
 *~
+fireflies/*~
+core/*~
 
 __pycache__/
 fireflies/__pycache__/
@@ -22,6 +24,8 @@ db.sqlite3
 
 .DS_Store
 Thumbs.db
+
+media/
 
 dist/
 build/

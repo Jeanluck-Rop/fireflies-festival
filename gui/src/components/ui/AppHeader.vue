@@ -1,0 +1,280 @@
+<template>
+  <header
+    :class="[
+      'fixed top-0 inset-x-0 z-500 transition-transform duration-500 ease-out',
+      showHeader ? 'translate-y-0' : '-translate-y-full'
+    ]"
+  >
+    <div class="mx-auto max-w-330 px-6 pt-5">
+
+      <nav
+        :class="[
+          'relative rounded-full pl-5 pr-3 py-2.5 flex items-center justify-between',
+          isAdmin ? 'nav-admin' : 'glass'
+        ]">
+	
+        <div class="shrink-0">
+          <AppLink :href="isAdmin ? '/admin/reservaciones' : '/'" variant="brand">
+            <FireflyLogo :pulse="true" :drift="true" />
+            <span class="font-serif text-[22px] tracking-tightest leading-none">
+              Luciernagas
+            </span>
+	    <span
+              v-if="isAdmin"
+              class="text-[9px] font-mono uppercase tracking-[0.2em] pl-2 border-l border-white/10 ml-2"
+              style="color: var(--color-admin-accent)">
+              Admin
+            </span>
+            <span v-else class="text-[10px] font-mono uppercase tracking-[0.18em] text-bone-soft pl-2 border-l border-white/10 ml-2">
+              Festival 2026
+            </span>
+          </AppLink>
+        </div>
+
+	<div class="flex-1" />
+
+	<!-- Nav: modo usuario -->
+        <ul v-if="!isAdmin"class="flex items-center gap-1">
+          <li><AppLink href="/" variant="nav">Inicio</AppLink></li>
+          <li><AppLink href="/parques" variant="nav">Parques</AppLink></li>
+	  <li>
+	    <AppLink :href="auth.isLoggedIn ? '/reservar' : '/auth'" variant="nav">Reservar</AppLink>
+	  </li>
+        </ul>
+
+	<!-- Nav: modo admin -->
+        <ul v-else class="flex items-center gap-1">
+          <li><AppLink href="/admin/reservaciones" variant="nav-admin">Reservaciones</AppLink></li>
+          <li>
+	    <AppLink href="/admin/parques" variant="nav-admin">
+	      {{ isSuperuser ? 'Parques' : 'Hospedajes' }}
+	    </AppLink>
+	  </li>
+          <li><AppLink href="/admin/usuarios" variant="nav-admin">Usuarios</AppLink></li>
+          <li v-if="isSuperuser">
+            <AppLink href="/admin/staff" variant="nav-admin">Staff</AppLink>
+          </li>
+        </ul>
+	
+        <div class="flex items-center gap-2">
+	  
+	  <!-- Modo ADMIN: siempre loggeado -->
+          <template v-if="isAdmin">
+            <div class="w-px h-4 bg-white/10 mx-1" />
+            <div class="relative" ref="dropdownRef">
+              <button
+                class="flex items-center gap-2 pl-2 pr-1 py-1 rounded-full hover:bg-white/5 transition"
+                @click="profileOpen = !profileOpen">
+                <img v-if="userAvatar" :src="userAvatar" class="w-9 h-9 rounded-full object-cover border border-white/15" alt="Avatar">
+                <span v-else class="w-9 h-9 rounded-full inline-flex items-center justify-center font-semibold text-[13px] border border-white/15 bg-linear-to-br from-[#7BA7D4] to-[#A8C8F0] text-[#0A1525]">
+                  {{ userInitials }}
+                </span>
+              </button>
+              <transition name="pop">
+                <div v-if="profileOpen" class="absolute right-0 mt-2 w-64 rounded-2xl p-2 shadow-2xl z-50 popup-admin">
+                  <div class="px-3 py-3 border-b border-white/5 flex items-center gap-3">
+                    <img v-if="userAvatar" :src="userAvatar" class="w-9 h-9 rounded-full object-cover border border-white/15" alt="Avatar">
+                    <span v-else class="w-9 h-9 rounded-full inline-flex items-center justify-center font-semibold text-[13px] bg-linear-to-br from-[#7BA7D4] to-[#A8C8F0] text-[#0A1525]">
+                      {{ userInitials }}
+                    </span>
+                    <div class="min-w-0">
+                      <div class="text-[14px] font-medium leading-tight truncate">
+                        {{ user!.nombre }} {{ user!.apellidos }}
+                      </div>
+                      <div class="text-[11.5px] text-bone-soft truncate">{{ user!.email }}</div>
+                      <span class="admin-level-badge">
+                        {{ isSuperuser ? 'Superusuario' : 'Staff' }}
+                      </span>
+                    </div>
+                  </div>
+                  <ul class="py-1 text-[13.5px]">
+                    <li><AppLink href="/perfil" variant="popover">Perfil</AppLink></li>
+                    <li class="border-t border-white/5 mt-1 pt-1">
+                      <button
+                        class="flex items-center gap-2.5 px-3 py-2.5 rounded-lg hover:bg-white/5 w-full text-left text-[13.5px] hover:text-[#FF8A7B] transition-colors"
+                        @click="handleLogout">
+                        Cerrar sesión
+                      </button>
+                    </li>
+                  </ul>
+                </div>
+              </transition>
+            </div>
+          </template>
+
+          <!-- Modo USUARIO -->
+          <template v-else>
+	    
+            <template v-if="!user">
+              <AppLink href="/auth" variant="outline">Iniciar sesión</AppLink>
+              <AppLink href="/auth?mode=signup" variant="yellow">Registrarse</AppLink>
+            </template>
+	    
+            <template v-else>
+	      <div class="w-px h-4 bg-white/10 mx-1" />
+	      
+              <AppLink href="/reservaciones" variant="nav">Mis Reservaciones</AppLink>
+              <div class="relative" ref="dropdownRef">
+		
+		<button class="flex items-center gap-2 pl-2 pr-1 py-1 rounded-full hover:bg-white/5 transition" @click="profileOpen = !profileOpen">
+                  <span class="hidden text-[13px]">{{ userShortName }}</span>
+                  <img v-if="userAvatar" :src="userAvatar" class="w-9 h-9 rounded-full object-cover border border-white/15" alt="Avatar">
+                  <span v-else class="w-9 h-9 rounded-full bg-linear-to-br from-[#7BD8B0] to-[#E8FF7A] inline-flex items-center justify-center text-[#07090A] font-semibold text-[13px] border border-white/15">
+                    {{ userInitials }}
+                  </span>
+		</button>
+		
+		<transition name="pop">
+                  <div v-if="profileOpen" class="absolute right-0 mt-2 w-60 glass rounded-2xl p-2 shadow-2xl z-50">
+                    <div class="px-3 py-3 border-b border-white/5 flex items-center gap-3">
+                      <img v-if="userAvatar" :src="userAvatar" class="w-9 h-9 rounded-full object-cover border border-white/15" alt="Avatar">
+                      <span v-else class="w-9 h-9 rounded-full bg-linear-to-br from-[#7BD8B0] to-[#E8FF7A] inline-flex items-center justify-center text-[#07090A] font-semibold text-[13px]">
+			{{ userInitials }}
+                      </span>
+                      <div class="min-w-0">
+			<div class="text-[14px] font-medium leading-tight truncate">
+			  {{ user.nombre }} {{ user.apellidos }}
+			</div>
+			<div class="text-[11.5px] text-bone-soft truncate">{{ user.email }}</div>
+                      </div>
+                    </div>
+                    <ul class="py-1 text-[13.5px]">
+                      <li><AppLink href="/perfil" variant="popover">Perfil</AppLink></li>
+                      <li class="border-t border-white/5 mt-1 pt-1">
+			<button
+			  class="flex items-center gap-2.5 px-3 py-2.5 rounded-lg hover:bg-white/5 w-full text-left text-[13.5px] hover:text-[#FF8A7B] transition-colors"
+			  @click="handleLogout">
+			  Cerrar sesión
+			</button>
+		      </li>
+                    </ul>
+                  </div>
+		</transition>
+              </div>
+            </template>
+	    
+	  </template>
+        </div>
+	
+      </nav>
+    </div>
+  </header>
+</template>
+
+<script setup lang="ts">
+ import { useRouter, useRoute } from 'vue-router'
+ import { ref, onMounted, onUnmounted, computed, watch } from 'vue';
+ import { useAuthStore } from '../../stores/auth';
+ import { authService } from '../../services/authService';
+ import type { Usuario } from '../../stores/auth'
+
+ import AppLink from './AppLink.vue';
+ import FireflyLogo from './FireflyLogo.vue';
+ 
+ const router = useRouter()
+ const route = useRoute()
+ const auth = useAuthStore();
+  
+ const showHeader = ref(true);
+ let lastScrollY = 0;
+
+ const handleScroll = () => {
+   const currentScrollY = window.scrollY;
+   showHeader.value = currentScrollY < lastScrollY || currentScrollY <= 50;
+   lastScrollY = currentScrollY;
+ };
+
+ onMounted(() => window.addEventListener('scroll', handleScroll));
+ onUnmounted(() => window.removeEventListener('scroll', handleScroll));
+ watch(() => route.path, () => {
+   profileOpen.value = false
+ })
+ 
+ const props = defineProps<{
+   user: Usuario | null;
+ }>();
+
+ const isAdmin = computed(() => props.user?.rol === 'ADMIN')
+ const isSuperuser = computed(() => (props.user as any)?.is_superuser === true)
+ 
+ const profileOpen = ref(false);
+ const dropdownRef = ref<HTMLElement | null>(null);
+
+ const handleClickOutside = (event: MouseEvent) => {
+   if (dropdownRef.value && !dropdownRef.value.contains(event.target as Node)) {
+     profileOpen.value = false;
+   }
+ };
+ 
+ onMounted(() => document.addEventListener('click', handleClickOutside));
+ onUnmounted(() => document.removeEventListener('click', handleClickOutside));
+
+ async function handleLogout() {
+   await authService.logout()
+   router.push(isAdmin.value ? '/admin/login' : '/')
+ }
+
+ const userAvatar = computed(() => {
+   return (props.user as any)?.avatar || null;
+ });
+
+ const userInitials = computed(() => {
+   if (!props.user)
+     return '';
+   const n = props.user.nombre[0] ?? '';
+   const a = props.user.apellidos[0] ?? '';
+   return (n + a).toUpperCase();
+ });
+ const userShortName = computed(() => {
+   if (!props.user)
+     return '';
+   return `${props.user.nombre} ${props.user.apellidos[0]}.`
+ });
+</script>
+
+<style scoped>
+ .pop-enter-active,
+ .pop-leave-active {
+   transition:
+     opacity 0.15s ease,
+     transform 0.15s ease;
+ }
+
+ .pop-enter-from,
+ .pop-leave-to {
+   opacity: 0;
+   transform: translateY(-4px) scale(0.98);
+ }
+
+ /* Nav admin */
+ .nav-admin {
+   background-color: rgba(123, 167, 212, 0.06);
+   backdrop-filter: blur(12px);
+   border: 1px solid rgba(123, 167, 212, 0.18);
+   box-shadow:
+     0 20px 25px -5px rgba(0,0,0,0.1),
+     0 10px 10px -5px rgba(0,0,0,0.04);
+ }
+
+ /* Popup admin */
+ .popup-admin {
+   background-color: rgba(7, 16, 13, 0.97);
+   backdrop-filter: blur(12px);
+   border: 1px solid rgba(123, 167, 212, 0.18);
+   box-shadow: 0 24px 48px rgba(0,0,0,0.5);
+ }
+
+ /* Badge nivel admin */
+ .admin-level-badge {
+   display: inline-block;
+   margin-top: 2px;
+   font-size: 9px;
+   font-family: var(--font-mono);
+   text-transform: uppercase;
+   letter-spacing: 0.1em;
+   color: var(--color-admin-accent, #7BA7D4);
+   background: rgba(123,167,212,0.12);
+   border-radius: 4px;
+   padding: 1px 5px;
+ }
+</style>

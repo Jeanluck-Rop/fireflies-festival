@@ -8,7 +8,10 @@ djangorestframework==3.17.1
 fonttools==4.61.1
 mpi4py==4.1.1
 packaging==26.2
+djoser
+pillow
 psycopg2-binary==2.9.12
+djangorestframework-simplejwt==5.3.1
 python-decouple==3.8
 setuptools==80.10.2
 sqlparse==0.5.5

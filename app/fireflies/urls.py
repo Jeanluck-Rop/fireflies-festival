@@ -15,8 +15,12 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path
+from django.urls import path, include
+from django.conf import settings
+from django.conf.urls.static import static
 from django.http import JsonResponse
+
+from core.views import UserAvatarView, UserMeView
 
 def test(request):
     return JsonResponse({"message": "Backend working"})
@@ -24,4 +28,17 @@ def test(request):
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/test/', test),
+
+    path('api/', include('core.urls')),
+
+    path('auth/users/me/avatar/', UserAvatarView.as_view(), name='user-avatar'),
+    path('auth/users/me/', UserMeView.as_view(), name='user-me'),
+
+    # Rutas de Djoser para gestion de usuarios
+    path('auth/', include('djoser.urls')),
+    # Rutas de Djoser para JWT
+    path('auth/', include('djoser.urls.jwt')),
 ]
+
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

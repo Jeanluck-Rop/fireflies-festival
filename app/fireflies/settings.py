@@ -4,6 +4,7 @@ Django settings for fireflies project.
 
 from pathlib import Path
 from decouple import config, Csv
+from datetime import timedelta
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -23,9 +24,16 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'corsheaders',
+    'core',
+    #Agregadas para el backend de auth
+    'rest_framework_simplejwt',
+    'djoser',
 ]
 
+AUTH_USER_MODEL = 'core.Usuario'
+
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -33,10 +41,16 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'corsheaders.middleware.CorsMiddleware',
 ]
 
-CORS_ALLOW_ALL_ORIGINS = config('CORS_ALLOW_ALL', default=True, cast=bool)
+# Dir for images
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
+
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+]
 
 ROOT_URLCONF = 'fireflies.urls'
 
@@ -99,3 +113,43 @@ USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
 STATIC_URL = 'static/'
+
+# Configuración de Django REST Framework
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ),
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.IsAuthenticated',
+    ),
+}
+
+# Configuración de Djoser
+DJOSER = {
+    'LOGIN_FIELD': 'email',
+    'USER_CREATE_PASSWORD_RETYPE': False, # Pide confirmar la contraseña al registrarse
+    'SEND_CONFIRMATION_EMAIL': False, # Lo activaremos más adelante
+    'PASSWORD_RESET_CONFIRM_URL': 'password/reset/confirm/{uid}/{token}', # URL de tu frontend en Vue
+    'SERIALIZERS': {
+        # Aquí le decimos a Djoser que devuelva tus campos personalizados (nombre, apellidos, rol)
+        'user_create': 'core.serializers.UsuarioCreateSerializer',
+        'current_user': 'core.serializers.UserSerializer',
+        'user': 'core.serializers.UserSerializer'
+    },
+}
+
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=15), # Tokens válidos por 1 minuto
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=1), # Tokens de refresco válidos por 1 día
+}
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+
+EMAIL_HOST_USER = config('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
+
+SITE_NAME = 'Festival de las Luciérnagas 2026'
+DOMAIN = 'localhost:5173'
