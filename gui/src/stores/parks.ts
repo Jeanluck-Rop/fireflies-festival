@@ -162,7 +162,12 @@ export const useParksStore = defineStore('parks', () => {
     loading.value = true
     try {
       const data = await parksApi.fetchParks()
-      parks.value = data
+      parks.value = data.map(p => ({
+        ...p,
+        horario_apertura: p.horario_apertura.slice(0, 5),
+        horario_cierre: p.horario_cierre.slice(0, 5),
+      })
+      )
     } catch (error) {
       parks.value = []
       console.error('Error cargando parques:', error)

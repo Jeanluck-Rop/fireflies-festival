@@ -140,7 +140,6 @@
                     </div>
                     <ul class="py-1 text-[13.5px]">
                       <li><AppLink href="/perfil" variant="popover">Perfil</AppLink></li>
-                      <li><AppLink href="/ayuda" variant="popover">Ayuda</AppLink></li>
                       <li class="border-t border-white/5 mt-1 pt-1">
 			<button
 			  class="flex items-center gap-2.5 px-3 py-2.5 rounded-lg hover:bg-white/5 w-full text-left text-[13.5px] hover:text-[#FF8A7B] transition-colors"
