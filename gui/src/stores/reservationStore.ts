@@ -1,33 +1,26 @@
 import { defineStore } from 'pinia';
 import { reservationService } from '../services/reservationService';
+import type { Parque } from './parks';
 
 export type TipoHospedaje = 'CABANA' | 'CAMPING';
-export interface Parque {
-  id: number;
-  nombre: string;
-  direccion: string;
-  horario_apertura: string;
-  horario_cierre: string;
-  hasCabin: boolean;
-  imagen_mapa: string | null;
-}
-
+export type EstadoHospedaje = 'DISPONIBLE' | 'OCUPADO' | 'MANTENIMIENTO';
 export interface ImagenHospedaje {
   id: number
-  id_Parque: number
-  id_hospedaje: number
   url: string
 }
 
 export interface Hospedaje {
   id: number;
-  parque_id: number;
+  parque: number;
   tipo: TipoHospedaje;
   categoria: string;
   capacidad: number;
-  estado: string;
+  estado: EstadoHospedaje;
   num_camas: number | null;
   num_banos: number | null;
+  tiene_agua: boolean;
+  tiene_luz: boolean;
+  tiene_regadera: boolean;
   descripcion: string;
   precio: number;
   imagenes : ImagenHospedaje[];

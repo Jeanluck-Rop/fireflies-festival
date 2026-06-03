@@ -1,69 +1,19 @@
-import { useReservationStore, type Hospedaje, type Parque } from "../stores/reservationStore";
+import { useReservationStore } from "../stores/reservationStore";
+import type { Parque } from "../stores/parks";
 import { useReservationsStore } from "../stores/reservations";
 import { useAuthStore } from "../stores/auth";
+import { getMockHospedajes } from "../mocks/lodgingsMocks";
+import { createMockListaParques } from "../mocks/parksMocks";
+import { MOCK_RESERVACIONES } from "../mocks/reservationsMocks";
 
 const USE_MOCK = import.meta.env.VITE_USE_MOCK === "true";
 const API = import.meta.env.VITE_API_URL || null;
-
-const MOCK_PARQUES: Parque[] = [
-  {
-    id: 1,
-    nombre: "Parque de las Fireflies",
-    direccion: "Calle Ficticia, 123",
-    horario_apertura: "08:00",
-    horario_cierre: "20:00",
-    hasCabin: true,
-    imagen_mapa: null,
-  },
-  {
-    id: 3,
-    nombre: "Parque de los Sueños",
-    direccion: "Avenida Imaginaria, 456",
-    horario_apertura: "09:00",
-    horario_cierre: "21:00",
-    hasCabin: false,
-    imagen_mapa: null,
-  },
-];
-
-const MOCK_HOSPEDAJES: Hospedaje[] = [
-  {
-    id: 1,
-    parque_id: 3,
-    tipo: "CABANA",
-    categoria: "PAREJA",
-    capacidad: 2,
-    estado: "DISPONIBLE",
-    num_camas: 1,
-    num_banos: 1,
-    descripcion: "Cabaña sencilla para parejas",
-    precio: 1200,
-    imagenes: [],
-  },
-  {
-    id: 2,
-    parque_id: 3,
-    tipo: "CAMPING",
-    categoria: "FAMILIAR",
-    capacidad: 6,
-    estado: "DISPONIBLE",
-    num_camas: 0,
-    num_banos: 0,
-    descripcion: "Zona de camping familiar, hasta 6 personas",
-    precio: 480,
-    imagenes: [],
-  },
-];
-
-const MOCK_RESERVACIONES = [
-  { hospedaje_id: 1, inicio: '2026-06-15', fin: '2026-06-20' }
-];
 
 export const reservationService = {
   async obtenerParques(): Promise<Parque[]> {
     if (USE_MOCK) {
       await new Promise((r) => setTimeout(r, 400));
-      return MOCK_PARQUES;
+      return createMockListaParques();
     } else {
       const res = await fetch(`${API}/api/parques/`);
       if (!res.ok) throw new Error("Error al obtener parques");
@@ -82,9 +32,17 @@ export const reservationService = {
       // Simula request
       await new Promise((r) => setTimeout(r, 600));
       // Lógica para filtrar/fake según el store...
-      let disponibles = MOCK_HOSPEDAJES.filter((unit) =>
+      const parqueId = store.parqueSeleccionado?.id;
+      if (!parqueId) {
+        store.unidadesDisponibles = [];
+        store.errorDisponibilidad = "Por favor, selecciona un parque primero.";
+        store.buscandoDisponibilidad = false;
+        return;
+      }
+      const hospedajesDelParque = getMockHospedajes(parqueId);
+
+      let disponibles = hospedajesDelParque.filter((unit) =>
           unit.tipo === store.tipoHospedaje && 
-          unit.parque_id === store.parqueSeleccionado?.id &&
           unit.capacidad >= store.personas,
       );
       if (store.llegada && store.salida) {
@@ -137,6 +95,11 @@ export const reservationService = {
 
   async crearReservacion(reservaData: any) {
     const auth = useAuthStore();
+
+    if (USE_MOCK) {
+      await new Promise((r) => setTimeout(r, 500));
+      return;
+    }
 
     const payload = {
       parque: reservaData.parque.id,
